@@ -57,10 +57,10 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
             {/* Replaced the company logo with the new vendor image */}
             <img
               className="rounded-full w-[3vw]"
-              src="https://static.vecteezy.com/system/resources/previews/026/575/406/large_2x/a-set-of-colorful-shopping-bags-with-handles-paper-shopping-bags-close-up-shopping-days-concept-by-ai-generated-free-photo.jpg"
+              src="https://i.pinimg.com/originals/db/89/b4/db89b4276ee53c3571c939e7970fb0fd.png"
               alt="Vendor Logo"
             />
-            <h1 className="text-xs">Redeemly</h1>
+            <h1 className="text-xs">Veggyfy</h1>
           </div>
         </div>
       </div>

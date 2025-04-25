@@ -13,7 +13,6 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
   const handleLogout = async () => {
     try {
       await axios.post("https://credenhealth.onrender.com/api/admin/logout", {}, { withCredentials: true });
-
       localStorage.removeItem("authToken");
       alert("Logout successful");
       window.location.href = "/";
@@ -26,25 +25,39 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
   const elements = [
     {
       icon: <i className="ri-home-fill text-white"></i>,
-      name: "Home",
+      name: "Dashboard",
       path: "/dashboard",
     },
     {
-      icon: <i className="ri-building-fill text-white"></i>,
-      name: "Coupons",
+      icon: <i className="ri-folder-fill text-white"></i>,
+      name: "Categories",
       dropdown: [
-        { name: "Add Coupon", path: "/create-coupon" },
-        { name: "All Coupons", path: "/coupons" },
-        { name: "Coupons History", path: "/couponshistory" },
+        { name: "Create Category", path: "/categoryform" },
+        { name: "All Categories", path: "/categorylist" },
       ],
     },
     {
-      icon: <i className="ri-file-search-fill text-white"></i>,
-      name: "Documents",
+      icon: <i className="ri-shopping-bag-fill text-white"></i>,
+      name: "Products",
       dropdown: [
-        { name: "Upload Documents", path: "/upload-docs" },
-        { name: "Documents List", path: "/docs" },
+        { name: "Add Product", path: "/add-product" },
+        { name: "All Products", path: "/productlist" },
       ],
+    },
+    {
+      icon: <i className="ri-calendar-check-fill text-white"></i>,
+      name: "Orders",
+      dropdown: [
+        { name: "All Orders", path: "/allorders" },
+        { name: "Pending Orders", path: "/pendingorders" },
+        { name: "Completed Orders", path: "/completedorders" },
+        { name: "Cancelled Orders", path: "/cancelledorders" },
+      ],
+    },
+    {
+      icon: <i className="ri-settings-3-fill text-white"></i>,
+      name: "Settings",
+      path: "/settings",
     },
     {
       icon: <i className="ri-logout-box-fill text-white"></i>,
@@ -55,15 +68,11 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
 
   return (
     <div
-      className={`transition-all duration-300 ${isMobile ? (isCollapsed ? "w-0" : "w-64") : isCollapsed ? "w-16" : "w-64"} h-screen overflow-y-scroll no-scrollbar flex flex-col bg-black`}
+      className={`transition-all duration-300 ${isMobile ? (isCollapsed ? "w-0" : "w-64") : isCollapsed ? "w-16" : "w-64"} h-screen overflow-y-scroll no-scrollbar flex flex-col bg-[#1F2937]`}
     >
-    <div className="sticky top-0 p-4 font-bold bg-black text-white flex justify-center text-xl">
-    <span>Vendor Dashboard</span>
-  </div>
-  
-  {/* Divider with thicker and darker color */}
-  <div className="border-b-4 border-gray-800 my-2"></div>
-  
+      <div className="sticky top-0 p-4 font-bold text-white flex justify-center text-xl bg-[#1F2937] border-b border-gray-700">
+        <span>Vendor Dashboard</span>
+      </div>
 
       <nav className={`flex flex-col ${isCollapsed && "items-center"} space-y-4 mt-4`}>
         {elements.map((item, idx) => (
@@ -71,7 +80,7 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
             {item.dropdown ? (
               <>
                 <div
-                  className="flex items-center py-3 px-4 font-bold text-sm text-white mx-4 rounded-lg hover:bg-[#333333] hover:text-[#00B074] duration-300 cursor-pointer"
+                  className="flex items-center py-3 px-4 font-semibold text-sm text-white mx-4 rounded-lg hover:bg-gray-700 hover:text-[#00B074] duration-300 cursor-pointer"
                   onClick={() => toggleDropdown(item.name)}
                 >
                   <span className="text-xl">{item.icon}</span>
@@ -88,7 +97,7 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
                       <li key={subIdx}>
                         <Link
                           to={subItem.path}
-                          className="flex items-center space-x-2 py-2 font-bold cursor-pointer hover:text-[#00B074] hover:underline"
+                          className="flex items-center space-x-2 py-2 font-medium cursor-pointer hover:text-[#00B074] hover:underline"
                           onClick={() => setOpenDropdown(null)}
                         >
                           <span className="text-[#00B074]">•</span>
@@ -102,7 +111,7 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
             ) : (
               <Link
                 to={item.path}
-                className="flex items-center py-3 px-4 font-bold text-sm text-white mx-4 rounded-lg hover:bg-[#333333] hover:text-[#00B074] duration-300 cursor-pointer"
+                className="flex items-center py-3 px-4 font-semibold text-sm text-white mx-4 rounded-lg hover:bg-gray-700 hover:text-[#00B074] duration-300 cursor-pointer"
                 onClick={item.action ? item.action : null}
               >
                 <span className="text-xl">{item.icon}</span>

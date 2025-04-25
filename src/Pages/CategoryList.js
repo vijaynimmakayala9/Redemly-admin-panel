@@ -4,15 +4,24 @@ import { CSVLink } from "react-csv";
 import * as XLSX from "xlsx";
 import axios from "axios";
 
+const dummyImage =
+  "https://play-lh.googleusercontent.com/Q06nVYXRyFRTgqVu8sNeBbHvCyJguq6aqVLWnFcNjYhUcdvvSoac56KPuOr9ZQlnldqo";
+
 const CategoryList = () => {
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     axios
       .get("https://credenhealth.onrender.com/api/admin/getallcategory")
       .then((res) => {
-        setCategories(res.data); // <-- updated to match new API response format
+        const withImages = res.data.map((cat) => ({
+          ...cat,
+          image: dummyImage,
+        }));
+        setCategories(withImages);
       })
       .catch((err) => {
         console.error("Error fetching categories:", err);
@@ -22,6 +31,14 @@ const CategoryList = () => {
   const filteredCategories = categories.filter((cat) =>
     cat.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredCategories.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
 
   const handleBulkImport = (e) => {
     const file = e.target.files[0];
@@ -33,7 +50,6 @@ const CategoryList = () => {
       const workbook = XLSX.read(data, { type: "array" });
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const imported = XLSX.utils.sheet_to_json(worksheet);
-
       console.log("Imported Categories:", imported);
       alert("Category data imported successfully!");
     };
@@ -43,13 +59,10 @@ const CategoryList = () => {
 
   const handleEdit = (id) => {
     console.log(`Edit category with ID: ${id}`);
-    // Implement modal or navigation here
   };
 
   const handleDelete = (id) => {
-    console.log(`Delete category with ID: ${id}`);
     setCategories(categories.filter((cat) => cat._id !== id));
-    // Optional: Make DELETE request to backend
   };
 
   const headers = [
@@ -69,7 +82,10 @@ const CategoryList = () => {
           className="px-3 py-2 border rounded text-sm"
           placeholder="Search by category name..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setCurrentPage(1);
+          }}
         />
 
         <CSVLink
@@ -96,18 +112,26 @@ const CategoryList = () => {
         </label>
       </div>
 
-      <div className="overflow-y-auto max-h-[400px]">
+      <div className="overflow-x-auto">
         <table className="w-full border rounded text-sm">
           <thead className="bg-gray-200">
             <tr>
+              <th className="p-2 border text-left">Image</th>
               <th className="p-2 border text-left">Category Name</th>
               <th className="p-2 border text-left">Description</th>
               <th className="p-2 border text-left">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredCategories.map((cat) => (
+            {currentItems.map((cat) => (
               <tr key={cat._id} className="hover:bg-gray-100 border-b">
+                <td className="p-2 border">
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    className="w-10 h-10 object-cover rounded"
+                  />
+                </td>
                 <td className="p-2 border">{cat.name}</td>
                 <td className="p-2 border">{cat.description || "-"}</td>
                 <td className="p-2 border flex gap-2">
@@ -126,15 +150,32 @@ const CategoryList = () => {
                 </td>
               </tr>
             ))}
-            {filteredCategories.length === 0 && (
+            {currentItems.length === 0 && (
               <tr>
-                <td colSpan="3" className="text-center p-4 text-gray-500">
+                <td colSpan="4" className="text-center p-4 text-gray-500">
                   No categories found.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex justify-center mt-4 gap-2">
+        {Array.from({ length: totalPages }, (_, i) => (
+          <button
+            key={i + 1}
+            className={`px-3 py-1 border rounded ${
+              currentPage === i + 1
+                ? "bg-blue-500 text-white"
+                : "bg-white text-gray-700"
+            }`}
+            onClick={() => setCurrentPage(i + 1)}
+          >
+            {i + 1}
+          </button>
+        ))}
       </div>
     </div>
   );

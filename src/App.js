@@ -82,6 +82,12 @@ import CreateCoupon from "./Pages/CreateCoupon.js";
 import UploadDocuments from "./Pages/UploadDocuments.js";
 import DocumentTable from "./Pages/DocumentTable.js";
 import CouponHistoryTable from "./Pages/CouponHistoryTable.js";
+import CreateProductForm from "./Pages/CreateProduct.js";
+import ProductList from "./Pages/ProductList.js";
+import BookingList from "./Pages/BookingList.js";
+import PendingBookingList from "./Pages/PendingBookingList.js";
+import CompletedBookingList from "./Pages/CompletedBookingList .js";
+import CancelledBookingList from "./Pages/CancelledBookingList .js";
 
 
 
@@ -149,6 +155,12 @@ function App() {
               <Route path="/doctorpendingbookings" element={<DoctorAppointmentListPending />} />
               <Route path="/categoryform" element={<CategoryForm />} />
               <Route path="/categorylist" element={<CategoryList />} />
+              <Route path="/add-product" element={<CreateProductForm />} />
+              <Route path="/productlist" element={<ProductList />} />
+              <Route path="/allorders" element={<BookingList />} />
+              <Route path="/pendingorders" element={<PendingBookingList />} />
+              <Route path="/completedorders" element={<CompletedBookingList />} />
+              <Route path="/cancelledorders" element={<CancelledBookingList />} />
               <Route path="/companysidebar" element={<CompanySidebar />} />
               <Route path="/alldiagnostic" element={<AllDiagnostics />} />
               <Route path="/staff-history/:staffId" element={<StaffHistory />} /> {/* Route for StaffHistory */}
