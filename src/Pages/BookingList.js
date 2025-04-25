@@ -89,7 +89,7 @@ const BookingList = () => {
   };
 
   return (
-    <div className="p-6 bg-white rounded shadow">
+    <div className="p-6 bg-white rounded shadow ml-2">
       <h3 className="text-lg font-bold mb-4">Order List</h3>
       <div className="mb-4">
         <button
@@ -100,64 +100,68 @@ const BookingList = () => {
           Download Excel
         </button>
       </div>
-      <table className="min-w-full border-collapse">
-        <thead className="bg-green-100">
-          <tr className="border-b">
-            <th className="p-4 text-left">Order ID</th>
-            <th className="p-4 text-left">User Name</th>
-            <th className="p-4 text-left">Email</th>
-            <th className="p-4 text-left">Phone</th>
-            <th className="p-4 text-left">Booking Date</th>
-            <th className="p-4 text-left">Product</th>
-            <th className="p-4 text-left">Quantity</th>
-            <th className="p-4 text-left">Price</th>
-            <th className="p-4 text-left">Total Amount</th>
-            <th className="p-4 text-left">Status</th>
-            <th className="p-4 text-left">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {bookings.map((booking) => (
-            <tr key={booking.bookingId} className="border-b">
-              <td className="p-4">{booking.bookingId}</td>
-              <td className="p-4">{booking.userName}</td>
-              <td className="p-4">{booking.userEmail}</td>
-              <td className="p-4">{booking.userPhone}</td>
-              <td className="p-4">{booking.bookingDate}</td>
-              <td className="p-4">{booking.productName}</td>
-              <td className="p-4">{booking.quantity}</td>
-              <td className="p-4">₹{booking.price}</td>
-              <td className="p-4">₹{booking.totalAmount}</td>
-              <td className="p-4">
-                <span
-                  className={`px-4 py-2 rounded-full text-sm ${getStatusClass(
-                    booking.status
-                  )}`}
-                >
-                  {booking.status}
-                </span>
-              </td>
-              <td className="p-4 flex space-x-2">
-                <button
-                  className="text-blue-500 hover:text-blue-700"
-                  onClick={() => generateInvoicePDF(booking)}
-                >
-                  <FaFilePdf /> {/* PDF Invoice */}
-                </button>
-                <button className="text-blue-500 hover:text-blue-700">
-                  <FaEye /> {/* View icon */}
-                </button>
-                <button className="text-yellow-500 hover:text-yellow-700">
-                  <FaEdit /> {/* Edit icon */}
-                </button>
-                <button className="text-red-500 hover:text-red-700">
-                  <FaTrashAlt /> {/* Delete icon */}
-                </button>
-              </td>
+
+      {/* Add horizontal scroll wrapper here */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full border-collapse">
+          <thead className="bg-green-100">
+            <tr className="border-b">
+              <th className="p-4 text-left">Order ID</th>
+              <th className="p-4 text-left">User Name</th>
+              <th className="p-4 text-left">Email</th>
+              <th className="p-4 text-left">Phone</th>
+              <th className="p-4 text-left">Booking Date</th>
+              <th className="p-4 text-left">Product</th>
+              <th className="p-4 text-left">Quantity</th>
+              <th className="p-4 text-left">Price</th>
+              <th className="p-4 text-left">Total Amount</th>
+              <th className="p-4 text-left">Status</th>
+              <th className="p-4 text-left">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {bookings.map((booking) => (
+              <tr key={booking.bookingId} className="border-b">
+                <td className="p-4">{booking.bookingId}</td>
+                <td className="p-4">{booking.userName}</td>
+                <td className="p-4">{booking.userEmail}</td>
+                <td className="p-4">{booking.userPhone}</td>
+                <td className="p-4">{booking.bookingDate}</td>
+                <td className="p-4">{booking.productName}</td>
+                <td className="p-4">{booking.quantity}</td>
+                <td className="p-4">₹{booking.price}</td>
+                <td className="p-4">₹{booking.totalAmount}</td>
+                <td className="p-4">
+                  <span
+                    className={`px-4 py-2 rounded-full text-sm ${getStatusClass(
+                      booking.status
+                    )}`}
+                  >
+                    {booking.status}
+                  </span>
+                </td>
+                <td className="p-4 flex space-x-2">
+                  <button
+                    className="text-blue-500 hover:text-blue-700"
+                    onClick={() => generateInvoicePDF(booking)}
+                  >
+                    <FaFilePdf /> {/* PDF Invoice */}
+                  </button>
+                  <button className="text-blue-500 hover:text-blue-700">
+                    <FaEye /> {/* View icon */}
+                  </button>
+                  <button className="text-yellow-500 hover:text-yellow-700">
+                    <FaEdit /> {/* Edit icon */}
+                  </button>
+                  <button className="text-red-500 hover:text-red-700">
+                    <FaTrashAlt /> {/* Delete icon */}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
