@@ -1,184 +1,137 @@
-import React, { useEffect, useState } from "react";
-import { FaFileCsv, FaEdit, FaTrash, FaUpload } from "react-icons/fa";
-import { CSVLink } from "react-csv";
-import * as XLSX from "xlsx";
+import { useState, useEffect } from "react";
+import { FaEdit, FaTrash } from "react-icons/fa";
+import { utils, writeFile } from "xlsx";
 import axios from "axios";
 
-const dummyImage =
-  "https://play-lh.googleusercontent.com/Q06nVYXRyFRTgqVu8sNeBbHvCyJguq6aqVLWnFcNjYhUcdvvSoac56KPuOr9ZQlnldqo";
-
-const CategoryList = () => {
+export default function CategoryList() {
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const categoriesPerPage = 5;
 
   useEffect(() => {
     axios
-      .get("https://credenhealth.onrender.com/api/admin/getallcategory")
+      .get("https://posterbnaobackend.onrender.com/api/category/getall-cateogry")
       .then((res) => {
-        const withImages = res.data.map((cat) => ({
-          ...cat,
-          image: dummyImage,
-        }));
-        setCategories(withImages);
+        if (res.data && res.data.categories) {
+          setCategories(res.data.categories);
+        }
       })
-      .catch((err) => {
-        console.error("Error fetching categories:", err);
+      .catch((error) => {
+        console.error("Error fetching categories:", error);
       });
   }, []);
 
+  const exportData = (type) => {
+    const exportItems = filteredCategories.map(({ _id, categoryName, image }) => ({
+      id: _id,
+      categoryName: categoryName || "N/A",
+      image: image || "N/A",
+    }));
+    const ws = utils.json_to_sheet(exportItems);
+    const wb = utils.book_new();
+    utils.book_append_sheet(wb, ws, "Categories");
+    writeFile(wb, `categories.${type}`);
+  };
+
   const filteredCategories = categories.filter((cat) =>
-    cat.name.toLowerCase().includes(search.toLowerCase())
+    cat.categoryName.toLowerCase().includes(search.toLowerCase())
   );
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredCategories.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
-  const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
-
-  const handleBulkImport = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const data = new Uint8Array(event.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const imported = XLSX.utils.sheet_to_json(worksheet);
-      console.log("Imported Categories:", imported);
-      alert("Category data imported successfully!");
-    };
-
-    reader.readAsArrayBuffer(file);
-  };
-
-  const handleEdit = (id) => {
-    console.log(`Edit category with ID: ${id}`);
-  };
-
-  const handleDelete = (id) => {
-    setCategories(categories.filter((cat) => cat._id !== id));
-  };
-
-  const headers = [
-    { label: "Category Name", key: "name" },
-    { label: "Description", key: "description" },
-  ];
+  const indexOfLast = currentPage * categoriesPerPage;
+  const indexOfFirst = indexOfLast - categoriesPerPage;
+  const currentCategories = filteredCategories.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(filteredCategories.length / categoriesPerPage);
 
   return (
-    <div className="p-4 bg-white rounded shadow">
+    <div className="p-4 border rounded-lg shadow-lg bg-white">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Category List</h2>
+        <h2 className="text-xl font-semibold text-blue-900">All Categories</h2>
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="flex justify-between mb-4">
         <input
-          type="text"
-          className="px-3 py-2 border rounded text-sm"
+          className="w-1/3 p-2 border rounded"
           placeholder="Search by category name..."
           value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setCurrentPage(1);
-          }}
+          onChange={(e) => setSearch(e.target.value)}
         />
-
-        <CSVLink
-          data={filteredCategories}
-          headers={headers}
-          filename="category_list.csv"
-          className="px-4 py-2 bg-green-500 text-white rounded text-sm flex items-center gap-2"
-        >
-          <FaFileCsv /> CSV
-        </CSVLink>
-
-        <label
-          htmlFor="import-cat"
-          className="px-4 py-2 bg-purple-600 text-white rounded text-sm flex items-center gap-2 cursor-pointer"
-        >
-          <FaUpload /> Bulk Import
-          <input
-            type="file"
-            accept=".xlsx, .xls"
-            id="import-cat"
-            onChange={handleBulkImport}
-            className="hidden"
-          />
-        </label>
+        <div className="flex gap-2">
+          <button className="bg-gray-200 px-4 py-2 rounded" onClick={() => exportData("csv")}>
+            CSV
+          </button>
+          <button className="bg-gray-200 px-4 py-2 rounded" onClick={() => exportData("xlsx")}>
+            Excel
+          </button>
+        </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border rounded text-sm">
-          <thead className="bg-gray-200">
-            <tr>
-              <th className="p-2 border text-left">Image</th>
-              <th className="p-2 border text-left">Category Name</th>
-              <th className="p-2 border text-left">Description</th>
-              <th className="p-2 border text-left">Actions</th>
+      <div className="overflow-x-auto mb-4">
+        <table className="w-full border-collapse border border-gray-300">
+          <thead>
+            <tr className="bg-purple-600 text-white">
+              <th className="p-2 border">Sl</th>
+              <th className="p-2 border">Image</th>
+              <th className="p-2 border">Category Name</th>
+              <th className="p-2 border">Created At</th>
+              <th className="p-2 border">Action</th>
             </tr>
           </thead>
           <tbody>
-            {currentItems.map((cat) => (
-              <tr key={cat._id} className="hover:bg-gray-100 border-b">
+            {currentCategories.map((cat, index) => (
+              <tr key={cat._id} className="border-b">
+                <td className="p-2 border">{index + 1 + indexOfFirst}</td>
                 <td className="p-2 border">
                   <img
                     src={cat.image}
-                    alt={cat.name}
-                    className="w-10 h-10 object-cover rounded"
+                    alt={cat.categoryName}
+                    className="w-12 h-12 rounded object-cover"
+                    onError={(e) => (e.target.src = "/default-category.jpg")}
                   />
                 </td>
-                <td className="p-2 border">{cat.name}</td>
-                <td className="p-2 border">{cat.description || "-"}</td>
+                <td className="p-2 border">{cat.categoryName || "N/A"}</td>
+                <td className="p-2 border">
+                  {new Date(cat.createdAt).toLocaleDateString()}
+                </td>
                 <td className="p-2 border flex gap-2">
-                  <button
-                    onClick={() => handleEdit(cat._id)}
-                    className="text-blue-500 hover:text-blue-700"
-                  >
+                  <button className="bg-blue-500 text-white p-1 rounded">
                     <FaEdit />
                   </button>
-                  <button
-                    onClick={() => handleDelete(cat._id)}
-                    className="text-red-500 hover:text-red-700"
-                  >
+                  <button className="bg-red-500 text-white p-1 rounded">
                     <FaTrash />
                   </button>
                 </td>
               </tr>
             ))}
-            {currentItems.length === 0 && (
-              <tr>
-                <td colSpan="4" className="text-center p-4 text-gray-500">
-                  No categories found.
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
       </div>
 
-      {/* Pagination Controls */}
-      <div className="flex justify-center mt-4 gap-2">
-        {Array.from({ length: totalPages }, (_, i) => (
+      <div className="flex justify-center mt-4 gap-4">
+        <button
+          onClick={() => setCurrentPage(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="bg-gray-300 px-4 py-2 rounded"
+        >
+          Previous
+        </button>
+        {[...Array(totalPages)].map((_, index) => (
           <button
-            key={i + 1}
-            className={`px-3 py-1 border rounded ${
-              currentPage === i + 1
-                ? "bg-blue-500 text-white"
-                : "bg-white text-gray-700"
-            }`}
-            onClick={() => setCurrentPage(i + 1)}
+            key={index}
+            onClick={() => setCurrentPage(index + 1)}
+            className={`px-4 py-2 rounded ${currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-gray-200"}`}
           >
-            {i + 1}
+            {index + 1}
           </button>
         ))}
+        <button
+          onClick={() => setCurrentPage(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="bg-gray-300 px-4 py-2 rounded"
+        >
+          Next
+        </button>
       </div>
     </div>
   );
-};
-
-export default CategoryList;
+}

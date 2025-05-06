@@ -35,8 +35,8 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
   };
 
   return (
-    <nav className="bg-[#FFFFFF] text-black sticky top-0 w-full p-4 flex items-center shadow-lg z-50">
-      <button onClick={() => setIsCollapsed(!isCollapsed)} className="text-xl p-2">
+    <nav className="bg-gradient-to-r from-gray-800 to-blue-800 text-white sticky top-0 w-full p-4 flex items-center shadow-lg z-50">
+    <button onClick={() => setIsCollapsed(!isCollapsed)} className="text-xl p-2">
         {isCollapsed ? (
           <RiMenu2Line className="text-2xl text-[#AAAAAA]" />
         ) : (
@@ -57,10 +57,10 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
             {/* Replaced the company logo with the new vendor image */}
             <img
               className="rounded-full w-[3vw]"
-              src="https://i.pinimg.com/originals/db/89/b4/db89b4276ee53c3571c939e7970fb0fd.png"
+              src="https://mir-s3-cdn-cf.behance.net/projects/original/ec753e129429523.61a1e79332f16.png"
               alt="Vendor Logo"
             />
-            <h1 className="text-xs">Veggyfy</h1>
+            <h1 className="text-xs text-white">Poster Banavo</h1>
           </div>
         </div>
       </div>

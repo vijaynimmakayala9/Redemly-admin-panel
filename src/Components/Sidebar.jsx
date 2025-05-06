@@ -24,40 +24,76 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
 
   const elements = [
     {
-      icon: <i className="ri-home-fill text-white"></i>,
-      name: "Dashboard",
+      icon: <i className="ri-dashboard-fill text-white"></i>,
+      name: "Admin Panel",
       path: "/dashboard",
     },
     {
-      icon: <i className="ri-folder-fill text-white"></i>,
+      icon: <i className="ri-user-fill text-white"></i>,
+      name: "Users",
+      dropdown: [
+        { name: "User List", path: "/users" },
+      ],
+    },
+    {
+      icon: <i className="ri-image-fill text-white"></i>,
       name: "Categories",
       dropdown: [
-        { name: "Create Category", path: "/categoryform" },
-        { name: "All Categories", path: "/categorylist" },
+        { name: "Create Category", path: "/create-category" },
+        { name: "Get All Categories", path: "/categorylist" },
       ],
     },
     {
-      icon: <i className="ri-shopping-bag-fill text-white"></i>,
-      name: "Products",
+      icon: <i className="ri-image-fill text-white"></i>,
+      name: "Posters",
       dropdown: [
-        { name: "Add Product", path: "/add-product" },
-        { name: "All Products", path: "/productlist" },
+        { name: "Create Poster", path: "/create-poster" },
+        { name: "Get All Posters", path: "/posterlist" },
       ],
     },
     {
-      icon: <i className="ri-calendar-check-fill text-white"></i>,
+      icon: <i className="ri-palette-fill text-white"></i>,
+      name: "Logos",
+      dropdown: [
+        { name: "Create Logo", path: "/create-logo" },
+        { name: "Get All Logos", path: "/logolist" },
+      ],
+    },
+    {
+      icon: <i className="ri-file-list-fill text-white"></i>,
+      name: "Business Cards",
+      dropdown: [
+        { name: "Create Business Card", path: "/create-businesscard" },
+        { name: "Get All Business Cards", path: "/business-cards-list" },
+      ],
+    },
+    {
+      icon: <i className="ri-file-list-fill text-white"></i>,
+      name: "Subscription Plans",
+      dropdown: [
+        { name: "Create Plan", path: "/create-plan" },
+        { name: "Get All Plans", path: "/planlist" },
+        { name: "Purchased Plans", path: "/userplanlist" },
+      ],
+    },
+    {
+      icon: <i className="ri-shopping-cart-fill text-white"></i>,
       name: "Orders",
       dropdown: [
-        { name: "All Orders", path: "/allorders" },
-        { name: "Pending Orders", path: "/pendingorders" },
-        { name: "Completed Orders", path: "/completedorders" },
-        { name: "Cancelled Orders", path: "/cancelledorders" },
+        { name: "Get All Orders", path: "/orderlist" },
       ],
     },
     {
       icon: <i className="ri-settings-3-fill text-white"></i>,
       name: "Settings",
-      path: "/settings",
+      dropdown: [
+        { name: "Create Privacy & Policy", path: "/create-privacy" },
+        { name: "Get Privacy & Policy", path: "/get-policy" },
+        { name: "Create AboutUs", path: "/aboutus" },
+        { name: "Get AboutUs", path: "/getaboutus" },
+        { name: "Create ContactUs", path: "/contactus" },
+        { name: "Get ContactUs", path: "/getcontactus" },
+      ],
     },
     {
       icon: <i className="ri-logout-box-fill text-white"></i>,
@@ -68,10 +104,11 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
 
   return (
     <div
-      className={`transition-all duration-300 ${isMobile ? (isCollapsed ? "w-0" : "w-64") : isCollapsed ? "w-16" : "w-64"} h-screen overflow-y-scroll no-scrollbar flex flex-col bg-[#1F2937]`}
-    >
+    className={`transition-all duration-300 ${isMobile ? (isCollapsed ? "w-0" : "w-64") : isCollapsed ? "w-16" : "w-64"} h-screen overflow-y-scroll no-scrollbar flex flex-col bg-gradient-to-b from-gray-800 to-blue-800`}
+  >
+  
       <div className="sticky top-0 p-4 font-bold text-white flex justify-center text-xl bg-[#1F2937] border-b border-gray-700">
-        <span>Vendor Dashboard</span>
+        <span>Admin Panel</span>
       </div>
 
       <nav className={`flex flex-col ${isCollapsed && "items-center"} space-y-4 mt-4`}>

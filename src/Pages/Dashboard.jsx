@@ -1,183 +1,389 @@
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from "recharts";
+import React from "react";
 import { useState } from "react";
+import { FiFolder } from "react-icons/fi";
+import { AreaChart, Area, ResponsiveContainer } from "recharts";
+import { FaSearch } from "react-icons/fa";
+import { FiBell, FiHelpCircle } from "react-icons/fi";
+import {
+  FiFolderPlus,
+  FiFileText,
+  FiUploadCloud,
+  FiBriefcase,
+} from "react-icons/fi";
+import { FiClock } from "react-icons/fi";
+const earningsData = [
+  { day: "Mon", earnings: 400 },
+  { day: "Tue", earnings: 300 },
+  { day: "Wed", earnings: 600 },
+  { day: "Thu", earnings: 800 },
+  { day: "Fri", earnings: 700 },
+  { day: "Sat", earnings: 1000 },
+  { day: "Sun", earnings: 650 },
+];
+const hoursData = [
+  { hour: "9AM", value: 1 },
+  { hour: "10AM", value: 0.8 },
+  { hour: "11AM", value: 1.2 },
+  { hour: "12PM", value: 0.5 },
+  { hour: "1PM", value: 0.7 },
+  { hour: "2PM", value: 1.0 },
+];
+export const quickActions = [
+  {
+    id: 1,
+    label: "New Poster",
+    icon: FiFolderPlus,
+    color: "text-blue-500",
+  },
+  {
+    id: 2,
+    label: "Create Logo",
+    icon: FiFileText,
+    color: "text-green-500",
+  },
+  {
+    id: 3,
+    label: "Orders",
+    icon: FiUploadCloud,
+    color: "text-purple-500",
+  },
+  {
+    id: 4,
+    label: "Payment",
+    icon: FiBriefcase,
+    color: "text-yellow-500",
+  },
+];
 
 const Dashboard = () => {
-  const [timeframe, setTimeframe] = useState("Today");
-
-  const vendorSalesData = {
-    Today: [{ name: "Today", sales: 1200 }],
-    "This Week": [
-      { name: "Mon", sales: 300 },
-      { name: "Tue", sales: 250 },
-      { name: "Wed", sales: 450 },
-      { name: "Thu", sales: 500 },
-      { name: "Fri", sales: 400 },
-      { name: "Sat", sales: 700 },
-      { name: "Sun", sales: 600 },
-    ],
-    "Last Week": [
-      { name: "Mon", sales: 250 },
-      { name: "Tue", sales: 300 },
-      { name: "Wed", sales: 350 },
-      { name: "Thu", sales: 400 },
-      { name: "Fri", sales: 450 },
-      { name: "Sat", sales: 500 },
-      { name: "Sun", sales: 550 },
-    ],
-    "Last Month": [
-      { name: "Week 1", sales: 1200 },
-      { name: "Week 2", sales: 1500 },
-      { name: "Week 3", sales: 1800 },
-      { name: "Week 4", sales: 2000 },
-    ],
-  };
-
-  const handleTimeframeChange = (event) => {
-    setTimeframe(event.target.value);
-  };
-
-  // Define a list of colors for the bars
-  const barColors = [
-    "#FF9800", "#4CAF50", "#2196F3", "#9C27B0", "#FF5722", "#FFC107", "#03A9F4",
-  ];
-
-  // Define the orders data
-  const orders = [
-    { orderId: "ORD12347", product: "Pizza Margherita", category: "Restaurant", price: "$15", status: "Pending" },
-    { orderId: "ORD12346", product: "Organic Vegetables", category: "Groceries", price: "$25", status: "Completed" },
-    { orderId: "ORD12347", product: "Pizza Margherita", category: "Restaurant", price: "$15", status: "Pending" },
-    { orderId: "ORD12347", product: "Pizza Margherita", category: "Restaurant", price: "$15", status: "Pending" },
-    { orderId: "ORD12349", product: "Frozen Vegetables", category: "Groceries", price: "$12", status: "Completed" },
-    { orderId: "ORD12347", product: "Pizza Margherita", category: "Restaurant", price: "$15", status: "Pending" },
-  ];
-
-  // Filter pending orders
-  const pendingOrders = orders.filter(order => order.status === "Pending");
-
+  const [search, setSearch] = useState("");
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-gradient-to-r from-purple-200 to-pink-200">
-      {/* Stats Cards */}
-      <div className="md:col-span-4 p-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-r from-teal-400 to-teal-600 shadow-lg rounded-lg p-4 text-center text-white">
-          <div className="text-3xl font-bold">50</div>
-          <h4 className="text-lg font-semibold">Total Orders</h4>
-        </div>
+    <>
+      <div className="h-18 bg-white fixed right-0 top-0 z-50 flex justify-between px-10 items-center gap-20">
+      </div>
+      <div className="bg-gray-100 min-h-[calc(100vh-3.5rem)] p-8">
+        <div className="grid  grid-cols-1 md:grid-cols-[220px_1fr_300px] gap-4 mb-4">
+          <div className="flex flex-col gap-4">
+            <div className="bg-white flex rounded-lg shadow-md justify-between p-4 items-center max-h-max">
+              <div className="flex gap-3 items-center">
+                <FiFolder className="bg-blue-100 size-8 p-2 rounded-lg text-blue-700" />
+                <p className="w-8 text-xl font-semibold leading-tight">
+                  Active Users
+                </p>
+              </div>
 
-        <div className="bg-gradient-to-r from-green-400 to-green-600 shadow-lg rounded-lg p-4 text-center text-white">
-          <div className="text-3xl font-bold">45</div>
-          <h4 className="text-lg font-semibold">Completed Orders</h4>
-        </div>
+              <div className="text-xl">3</div>
+            </div>
+            <div className="bg-white rounded-lg shadow-md p-4 space-y-8">
+              <div className="font-bold text-2xl">Today's Orders</div>
+              <div className="space-y-4">
+                <div className="flex space-x-2 items-center">
+                  <FiClock className="bg-blue-100 size-8 p-2 rounded-lg text-blue-700 items-center" />
+                  <p className="font-semibold text-xl">Poster Design Order #101</p>
+                </div>
 
-        <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 shadow-lg rounded-lg p-4 text-center text-white">
-          <div className="text-3xl font-bold">$8,000</div>
-          <h4 className="text-lg font-semibold">Order Amount</h4>
-        </div>
+                <p className="text-gray-400 text-l">Due Sept 25 • Start Processing</p>
+              </div>
+              <div className="space-y-4">
+                <div className="flex space-x-2 items-center">
+                  <FiClock className="bg-blue-100 size-8 p-2 rounded-lg text-blue-700 items-center" />
+                  <p className="font-semibold text-xl">Revisions for Poster Order #102</p>
+                </div>
 
-        <div className="bg-gradient-to-r from-indigo-400 to-indigo-600 shadow-lg rounded-lg p-4 text-center text-white">
-          <div className="text-3xl font-bold">200</div>
-          <h4 className="text-lg font-semibold">Total Products</h4>
+                <p className="text-gray-400 text-l">Client Review • Due Today</p>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow-md px-4 py-3">
+              <p className="text-sm font-medium">Users</p>
+              <div className="flex items-center space-x-2 mt-4">
+                <img
+                  src="https://randomuser.me/api/portraits/men/1.jpg"
+                  alt="Robert"
+                  className="w-8 h-8 rounded-full"
+                />
+                <div>
+                  <p className="text-sm font-medium">Robert</p>
+                  <p className="text-xs text-gray-500">1 hr</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 mt-2">
+                <img
+                  src="https://randomuser.me/api/portraits/women/2.jpg"
+                  alt="Amanda"
+                  className="w-8 h-8 rounded-full"
+                />
+                <div>
+                  <p className="text-sm font-medium">Amanda</p>
+                  <p className="text-xs text-gray-500">4 hr</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-4 w-full items-stretch">
+              <div className="flex-1">
+                <div className="bg-white rounded-lg shadow-md items-center flex flex-col justify-center p-4 h-full">
+                  <div className="text-xl mb-1">This Week's Earnings</div>
+                  <div className="text-2xl font-bold mb-4">$2,150.00</div>
+                  <div className="w-full h-24">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={earningsData}>
+                        <defs>
+                          <linearGradient
+                            id="colorEarnings"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor="#3b82f6"
+                              stopOpacity={0.8}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor="#3b82f6"
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                        </defs>
+                        <Area
+                          type="monotone"
+                          dataKey="earnings"
+                          stroke="#3b82f6"
+                          strokeWidth={2}
+                          fill="url(#colorEarnings)"
+                          dot={false}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1">
+                <div className="bg-white rounded-lg shadow-md items-center flex flex-col justify-center p-4 h-full">
+                  <div className="flex flex-col items-center gap-2 text-xl mb-1 pt--1">
+                    Completed Orders
+                    <div className="flex items-center justify-between text-sm mb-1 w-full">
+                      15 Orders <FiHelpCircle className="text-gray-400" />
+                    </div>
+                  </div>
+
+                  <div className="w-full h-24">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={hoursData}>
+                        <defs>
+                          <linearGradient
+                            id="colorHours"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="5%"
+                              stopColor="#ef4444"
+                              stopOpacity={0.8}
+                            />
+                            <stop
+                              offset="95%"
+                              stopColor="#ef4444"
+                              stopOpacity={0}
+                            />
+                          </linearGradient>
+                        </defs>
+                        <Area
+                          type="monotone"
+                          dataKey="value"
+                          stroke="#ef4444"
+                          strokeWidth={2}
+                          fill="url(#colorHours)"
+                          dot={false}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow-md p-4">
+              <div className="font-bold mb-2 text-3xl">Quick Actions</div>
+              <div className="grid grid-cols-2 gap-2">
+                <button className="bg-gray-100 hover:bg-gray-200 p-2 rounded text-l">
+                  + New Poster
+                </button>
+                <button className="bg-gray-100 hover:bg-gray-200 p-2 rounded">
+                  Get Posters
+                </button>
+                <button className="bg-gray-100 hover:bg-gray-200 p-2 rounded">
+                  Orders
+                </button>
+                <button className="bg-gray-100 hover:bg-gray-200 p-2 rounded">
+                  Subcription
+                </button>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg shadow-md p-4">
+              <div className="font-bold mb-4 text-2xl">Quick Actions</div>
+              <div className="flex flex-col">
+                {quickActions.map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <div
+                      key={action.id}
+                      className="flex items-center justify-between hover:bg-gray-200 p-2 rounded transition cursor-pointer"
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className="bg-gray-200 p-2 rounded-lg">
+                          <Icon className={`text-2xl ${action.color}`} />
+                        </div>
+                        <span className="text-xl font-medium">
+                          {action.label}
+                        </span>
+                      </div>
+
+                      <div className="text-xl text-gray-500">4 hours</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-4">
+            <div className="bg-white rounded-lg shadow-md flex flex-col gap-6 p-4 text-xl font-semibold">
+              <div className="text-2xl font-bold">Today's User Birthday</div>
+              <div className="space-y-4">
+                {/* Example list of users with birthdays today */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <img
+                      src="https://randomuser.me/api/portraits/men/1.jpg"
+                      alt="User 1"
+                      className="w-8 h-8 rounded-full mr-2"
+                    />
+                    <p className="font-medium">Robert</p>
+                  </div>
+                  <p className="text-sm text-gray-500">25 years old</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <img
+                      src="https://randomuser.me/api/portraits/women/2.jpg"
+                      alt="User 2"
+                      className="w-8 h-8 rounded-full mr-2"
+                    />
+                    <p className="font-medium">Amanda</p>
+                  </div>
+                  <p className="text-sm text-gray-500">30 years old</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <img
+                      src="https://randomuser.me/api/portraits/men/3.jpg"
+                      alt="User 3"
+                      className="w-8 h-8 rounded-full mr-2"
+                    />
+                    <p className="font-medium">David</p>
+                  </div>
+                  <p className="text-sm text-gray-500">28 years old</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md p-4 text-start space-y-3">
+              <div className="font-semibold mb-2 text-2xl">
+                Today's User Anniversaries
+              </div>
+              <div className="space-y-4">
+                {/* Example list of users with anniversaries today */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <img
+                      src="https://randomuser.me/api/portraits/men/1.jpg"
+                      alt="User 1"
+                      className="w-8 h-8 rounded-full mr-2"
+                    />
+                    <p className="font-medium">Robert & Sarah</p>
+                  </div>
+                  <p className="text-sm text-gray-500">5th Anniversary</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <img
+                      src="https://randomuser.me/api/portraits/women/2.jpg"
+                      alt="User 2"
+                      className="w-8 h-8 rounded-full mr-2"
+                    />
+                    <p className="font-medium">Amanda & John</p>
+                  </div>
+                  <p className="text-sm text-gray-500">3rd Anniversary</p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <img
+                      src="https://randomuser.me/api/portraits/men/3.jpg"
+                      alt="User 3"
+                      className="w-8 h-8 rounded-full mr-2"
+                    />
+                    <p className="font-medium">David & Emma</p>
+                  </div>
+                  <p className="text-sm text-gray-500">1st Anniversary</p>
+                </div>
+              </div>
+              <button className="bg-gray-100 text-black text-xl font-semibold py-2 px-4 rounded-lg w-full">
+                Celebrate Now
+              </button>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md p-4 flex flex-col h-full justify-between">
+              <div className="space-y-5">
+                <h2 className="font-semibold text-2xl mb-2">
+                  Subscription Plans
+                </h2>
+
+                <ul className="space-y-3 text-sm">
+                  <li className="flex items-start space-x-2">
+                    <span className="text-blue-600 font-bold">•</span>
+                    <div>
+                      <p className="text-xl">Basic Plan</p>
+                      <div className="flex justify-between">
+                        <div className="text-gray-500 text-xs">For individuals</div>
+                        <div className="text-gray-500 text-xs">$10/month</div>
+                      </div>
+                    </div>
+                  </li>
+
+                  <li className="flex items-start space-x-2">
+                    <span className="text-green-600 font-bold">•</span>
+                    <div>
+                      <p className="text-xl">Professional Plan</p>
+                      <div className="flex justify-between">
+                        <div className="text-gray-500 text-xs">For small teams</div>
+                        <div className="text-gray-500 text-xs">$30/month</div>
+                      </div>
+                    </div>
+                  </li>
+
+                  <li className="flex items-start space-x-2">
+                    <span className="text-yellow-500 font-bold">•</span>
+                    <div>
+                      <p className="text-xl">Enterprise Plan</p>
+                      <div className="flex justify-between">
+                        <div className="text-gray-500 text-xs">For large teams</div>
+                        <div className="text-gray-500 text-xs">$75/month</div>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Sales Chart */}
-      <div className="md:col-span-4 p-4 bg-gradient-to-r from-blue-100 to-blue-200 rounded shadow-md">
-        <h3 className="text-lg font-semibold mb-2 text-gray-700">Sales Overview</h3>
-        
-        {/* Dropdown to select timeframe */}
-        <div className="mb-4">
-          <select
-            className="border rounded p-2"
-            value={timeframe}
-            onChange={handleTimeframeChange}
-          >
-            <option value="Today">Today</option>
-            <option value="This Week">This Week</option>
-            <option value="Last Week">Last Week</option>
-            <option value="Last Month">Last Month</option>
-          </select>
-        </div>
-
-        {/* BarChart based on selected timeframe */}
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={vendorSalesData[timeframe]}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#dcdcdc" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            {vendorSalesData[timeframe].map((data, index) => (
-              <Bar
-                key={index}
-                dataKey="sales"
-                fill={barColors[index % barColors.length]}  // Cycle through colors if more bars
-                name={data.name}
-              />
-            ))}
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Orders & Products Table */}
-      <div className="md:col-span-4 p-6 bg-gradient-to-r from-gray-100 to-gray-200 rounded-lg shadow-md mt-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-700">Recent Orders & Products</h3>
-        <table className="min-w-full table-auto border-collapse">
-          <thead>
-            <tr>
-              <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Order ID</th>
-              <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Product Name</th>
-              <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Category</th>
-              <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Price</th>
-              <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* Updated products & orders data */}
-            {orders.map((order) => (
-              <tr key={order.orderId}>
-                <td className="px-4 py-2 border-b text-sm">{order.orderId}</td>
-                <td className="px-4 py-2 border-b text-sm">{order.product}</td>
-                <td className="px-4 py-2 border-b text-sm">{order.category}</td>
-                <td className="px-4 py-2 border-b text-sm">{order.price}</td>
-                <td className={`px-4 py-2 border-b text-sm ${order.status === 'Completed' ? 'text-green-500' : 'text-yellow-500'}`}>
-                  {order.status}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pending Orders Table */}
-      <div className="md:col-span-4 p-6 bg-gradient-to-r from-red-100 to-red-200 rounded-lg shadow-md mt-6">
-        <h3 className="text-lg font-semibold mb-4 text-gray-700">Pending Orders</h3>
-        <table className="min-w-full table-auto border-collapse">
-          <thead>
-            <tr>
-              <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Order ID</th>
-              <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Product Name</th>
-              <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Category</th>
-              <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Price</th>
-              <th className="px-4 py-2 border-b text-left text-sm font-semibold text-gray-700">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* Pending orders data */}
-            {pendingOrders.map((order) => (
-              <tr key={order.orderId}>
-                <td className="px-4 py-2 border-b text-sm">{order.orderId}</td>
-                <td className="px-4 py-2 border-b text-sm">{order.product}</td>
-                <td className="px-4 py-2 border-b text-sm">{order.category}</td>
-                <td className="px-4 py-2 border-b text-sm">{order.price}</td>
-                <td className="px-4 py-2 border-b text-sm text-yellow-500">
-                  {order.status}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    </>
   );
 };
-
 export default Dashboard;
+

@@ -4,7 +4,6 @@ import { Route, Routes } from "react-router-dom";
 // Import your components
 import DepartmentList from "./Components/department";
 import SubDepartmentList from "./Components/subdepartment.js";
-import Position from "./Employee/Position.js";
 import AdminLayout from "./Layout/AdminLayout.jsx";
 import AttendanceForm from "./Pages/AttendanceForm.js";
 import Dashboard from "./Pages/Dashboard.jsx";
@@ -16,11 +15,6 @@ import MissingAttendance from "./Pages/MissingAttendance.js";
 import MonthlyAttendance from "./Pages/MonthlyAttendance.js";
 import WeeklyHoliday from "./Pages/WeeklyHoliday.js";
 import Recruitment from "./Components/recruitment.js";
-import Employees from "./Employee/Employees.js";
-import Manageemployeesalary from "./Employee/Manageemployeesalary.js";
-import Performance from "./Employee/Performance.js";
-import SalaryAdvance from "./Employee/SalaryAdvance.js";
-import SalaryGenerate from "./Employee/SalaryGenerate.js";
 import DiagnosticList from "./Pages/Awardlist.js";
 import BackupReset from "./Pages/BackupReset.js";
 import LanguageSetup from "./Pages/LanguageSetup.js";
@@ -52,31 +46,12 @@ import LoginPage from "./Pages/Login.js";
 import CategoryForm from "./Pages/CategoryForm.js";
 import CategoryList from "./Pages/CategoryList.js";
 import CompanySidebar from "./Components/CompanySidebar.js";
-import CompanyLayout from "./Layout/CompanyLayout.js";
-import CompanyDashboard from "./Comany/CompanyDashboard.js";
-import CompanyLoginPage from "./Components/CompanyLoginPage.js";
-import CompanyStaffDetailsForm from "./Comany/CompanyStaffDetailsForm.js";
-import CompanyStaffList from "./Comany/CompanyStaffList.js";
 import DiagnosticsAcceptedBooking from "./Pages/DiagnosticsAcceptedBooking.js";
 import DiagnosticsRejectedBooking from "./Pages/DiagnosticsRejectedBooking.js";
 import AcceptedAppointmentsList from "./Pages/AcceptedAppointmentsList.js";
 import RejectedAppointmentsList from "./Pages/RejectedAppointmentsList.js";
-import CompanyProfilePage from "./Comany/CompanyProfilePage.js";
-import DoctorLayout from "./Layout/DoctorLayout.js";
-import DoctorLoginPage from "./Doctor/DoctorLoginPage.js";
-import DoctorDashboard from "./Doctor/DoctorDashboard.js";
-import DoctorProfilePage from "./Doctor/DoctorProfilePage.js";
-import SingleDoctorAppointmentList from "./Doctor/DoctorAppointmentList.js";
-import AllDiagnostics from "./Comany/AllDiagnostics.js";
 import StaffHistory from "./Pages/StaffHistory.js";
 import DiagnosticBookingForm from "./Pages/DiagnosticBookingForm.js";
-import CompanyStaffHistory from "./Components/CompanyStaffHistory.js";
-import CompanyAllDiagnostics from "./Comany/CompanyAllDiagnostics.js";
-import DiagnosticLayout from "./Layout/DiagnosticLayout.js";
-import DiagnosticLoginPage from "./Diagnostic/DiagnosticLoginPage.js";
-import DiagnosticDashboard from "./Diagnostic/DiagnosticDashboard.js";
-import SingleDiagnosticDetail from "./Diagnostic/SingleDiagnosticDetail.js";
-import SingleDiagnosticBookings from "./Diagnostic/SingleDiagnosticBookings.js";
 import CouponsPage from "./Pages/CouponPage.js";
 import CreateCoupon from "./Pages/CreateCoupon.js";
 import UploadDocuments from "./Pages/UploadDocuments.js";
@@ -88,6 +63,23 @@ import BookingList from "./Pages/BookingList.js";
 import PendingBookingList from "./Pages/PendingBookingList.js";
 import CompletedBookingList from "./Pages/CompletedBookingList .js";
 import CancelledBookingList from "./Pages/CancelledBookingList .js";
+import UserList from "./Pages/UserList.js";
+import CreatePoster from "./Pages/CreatePoster.js";
+import CreateCategory from "./Pages/CreateCategory.js";
+import PosterList from "./Pages/PosterList.js";
+import CreateLogo from "./Pages/CreateLogo.js";
+import LogoList from "./Pages/LogoList.js";
+import CreateBusinessCard from "./Pages/CreateBusinessCard.js";
+import CreatePlan from "./Pages/CreatePlan.js";
+import PlanList from "./Pages/PlanList.js";
+import UsersPlansList from "./Pages/UsersPlansList.js";
+import OrdersList from "./Pages/OrdersList.js";
+import PrivacyPolicyForm from "./Pages/PrivacyPolicyForm.js";
+import PrivacyPolicyPage from "./Pages/PrivacyPolicyPage.js";
+import AboutUsFormPage from "./Pages/AboutUsFormPage.js";
+import GetAboutUsPage from "./Pages/GetAboutUsPage.js";
+import ContactUsPage from "./Pages/ContactUsPage.js";
+import GetContactUsPage from "./Pages/GetContactUsPage.js";
 
 
 
@@ -107,7 +99,6 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/department" element={<DepartmentList />} />
               <Route path="/subdepartment" element={<SubDepartmentList />} />
-              <Route path="/position" element={<Position />} />
               <Route path="/attendanceform" element={<AttendanceForm />} />
               <Route path="/monthlyattendance" element={<MonthlyAttendance />} />
               <Route path="/missingattendance" element={<MissingAttendance />} />
@@ -116,9 +107,7 @@ function App() {
               <Route path="/create-diagnostic" element={<DiagnostiCreate />} />
               <Route path="/leaves" element={<Leaves />} />
               <Route path="/leaveapproval" element={<LeaveApproval />} />
-              <Route path="/performance" element={<Performance />} />
               <Route path="/recruitment" element={<Recruitment />} />
-              <Route path="/employees" element={<Employees />} />
               <Route path="/setting" element={<Settings />} />
               <Route path="/languagesetup" element={<LanguageSetup />} />
               <Route path="/backupreset" element={<BackupReset />} />
@@ -127,9 +116,6 @@ function App() {
               <Route path="/noticelist" element={<NoticeList />} />
               <Route path="/sentlist" element={<SentMessagesTable />} />
               <Route path="/setuplist" element={<SetupRulesTable />} />
-              <Route path="/salaryadvance" element={<SalaryAdvance />} />
-              <Route path="/salarygenerate" element={<SalaryGenerate />} />
-              <Route path="/manageemployeesalary" element={<Manageemployeesalary />} />
               <Route path="/candidate-shortlist" element={<CandidateShortlist />} />
               <Route path="/interviewlist" element={<InterviewList />} />
               <Route path="/selectedcandidates" element={<CandidateSelection />} />
@@ -162,7 +148,6 @@ function App() {
               <Route path="/completedorders" element={<CompletedBookingList />} />
               <Route path="/cancelledorders" element={<CancelledBookingList />} />
               <Route path="/companysidebar" element={<CompanySidebar />} />
-              <Route path="/alldiagnostic" element={<AllDiagnostics />} />
               <Route path="/staff-history/:staffId" element={<StaffHistory />} /> {/* Route for StaffHistory */}
               <Route path="/book-diagnostic" element={<DiagnosticBookingForm />} />
               <Route path="/coupons" element={<CouponsPage />} />
@@ -171,6 +156,29 @@ function App() {
               <Route path="/upload-docs" element={<UploadDocuments />} />
               <Route path="/docs" element={<DocumentTable />} />
 
+              <Route path="/users" element={<UserList />} />
+              <Route path="/create-category" element={<CreateCategory />} />
+              <Route path="/categorylist" element={<CategoryList />} />
+              <Route path="/create-poster" element={<CreatePoster />} />
+              <Route path="/posterlist" element={<PosterList />} />
+              <Route path="/create-logo" element={<CreateLogo />} />
+              <Route path="/logolist" element={<LogoList />} />
+              <Route path="/create-businesscard" element={<CreateBusinessCard />} />
+              <Route path="/create-plan" element={<CreatePlan />} />
+              <Route path="/planlist" element={<PlanList />} />
+              <Route path="/userplanlist" element={<UsersPlansList />} />
+              <Route path="/orderlist" element={<OrdersList />} />
+              <Route path="/create-privacy" element={<PrivacyPolicyForm />} />
+              <Route path="/get-policy" element={<PrivacyPolicyPage />} />
+              <Route path="/aboutus" element={<AboutUsFormPage />} />
+              <Route path="/getaboutus" element={<GetAboutUsPage />} />
+              <Route path="/contactus" element={<ContactUsPage />} />
+              <Route path="/getcontactus" element={<GetContactUsPage />} />
+
+
+
+
+
 
 
 
@@ -178,67 +186,6 @@ function App() {
           </AdminLayout>
         }
       />
-
-      {/* Company Routes */}
-      <Route
-        path="/company/*"
-        element={
-          <CompanyLayout>
-            <Routes>
-              <Route path="companydashboard" element={<CompanyDashboard />} />
-              <Route path="add-benificary" element={<CompanyStaffDetailsForm />} />
-              <Route path="all-benificary" element={<CompanyStaffList />} />
-              <Route path="all-benificary" element={<CompanyStaffList />} />
-              <Route path="/staff-history/:staffId" element={<CompanyStaffHistory />} /> {/* Route for StaffHistory */}
-              <Route path="doctorlist" element={<DoctorList />} />
-              <Route path="appointments" element={<DoctorAppointmentList />} />
-              <Route path="book-appointment" element={<AppointmentBookingForm />} />
-              <Route path="profile" element={<CompanyProfilePage />} />
-              <Route path="alldiagnostic" element={<CompanyAllDiagnostics />} />
-              {/* Add more company routes as needed */}
-            </Routes>
-          </CompanyLayout>
-        }
-      />
-
-
-      {/* Doctor Routes */}
-      <Route
-        path="/doctor/*"
-        element={
-          <DoctorLayout>
-            <Routes>
-              <Route path="doctordashboard" element={<DoctorDashboard />} />  {/* Doctor's Dashboard */}
-              <Route path="doctorprofile" element={<DoctorProfilePage />} />  {/* Doctor's Dashboard */}
-              <Route path="appointments" element={<SingleDoctorAppointmentList />} />  {/* Appointments */}
-              <Route path="book-appointment" element={<AppointmentBookingForm />} />  {/* Book Appointment */}
-              {/* Add more doctor-specific routes */}
-            </Routes>
-          </DoctorLayout>
-        }
-      />
-
-
-      <Route
-        path="/diagnostic/*"
-        element={
-          <DiagnosticLayout>
-            <Routes>
-              <Route path="all-bookings" element={<DiagnostiCreate />} />
-              <Route path="dashboard" element={<DiagnosticDashboard />} />
-              <Route path="mydiagnostic" element={<SingleDiagnosticDetail />} />
-              <Route path="mybookings" element={<SingleDiagnosticBookings />} />
-              {/* Add more diagnostic-specific routes here */}
-            </Routes>
-          </DiagnosticLayout>
-        }
-      />
-
-
-      {/* Standalone Company Login Route */}
-      <Route path="/company-login" element={<CompanyLoginPage />} />
-      <Route path="/doctor-login" element={<DoctorLoginPage />} />
-      <Route path="/diagnostic-login" element={<DiagnosticLoginPage />} />
     </Routes>
   );
 }
