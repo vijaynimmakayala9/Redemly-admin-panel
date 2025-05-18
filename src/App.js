@@ -80,6 +80,13 @@ import AboutUsFormPage from "./Pages/AboutUsFormPage.js";
 import GetAboutUsPage from "./Pages/GetAboutUsPage.js";
 import ContactUsPage from "./Pages/ContactUsPage.js";
 import GetContactUsPage from "./Pages/GetContactUsPage.js";
+import CreateVendor from "./Pages/CreateVendor.js";
+import VendorList from "./Pages/VendorList.js";
+import RedeemedCouponsList from "./Pages/RedeemedCouponsList.js";
+import VendorDocumentList from "./Pages/VendorDocumentList.js";
+import VendorInvoiceList from "./Pages/VendorInvoiceList.js";
+import ReceivedPayments from "./Pages/ReceivedPayments.js";
+import AllPayments from "./Pages/AllPayments.js";
 
 
 
@@ -174,6 +181,13 @@ function App() {
               <Route path="/getaboutus" element={<GetAboutUsPage />} />
               <Route path="/contactus" element={<ContactUsPage />} />
               <Route path="/getcontactus" element={<GetContactUsPage />} />
+              <Route path="/create-vendor" element={<CreateVendor />} />
+              <Route path="/vendorlist" element={<VendorList />} />
+              <Route path="/vendordocumentlist" element={<VendorDocumentList />} />
+              <Route path="/redeemed-coupons" element={<RedeemedCouponsList />} />
+              <Route path="/payment" element={<VendorInvoiceList />} />
+              <Route path="/rcvdpayment" element={< ReceivedPayments/>} />
+              <Route path="/allpayments" element={< AllPayments/>} />
 
 
 

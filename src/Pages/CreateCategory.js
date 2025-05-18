@@ -59,26 +59,6 @@ const CreateCategory = () => {
             placeholder="Enter category name"
           />
         </div>
-
-        <div>
-          <label className="block text-lg font-medium mb-2">Category Image</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            className="w-full p-3 border rounded-lg shadow-sm focus:outline-none"
-          />
-          {previewImage && (
-            <div className="mt-3">
-              <img
-                src={previewImage}
-                alt="Preview"
-                className="w-24 h-24 object-cover rounded-md"
-              />
-            </div>
-          )}
-        </div>
-
         {errorMessage && <p className="text-red-600 text-center">{errorMessage}</p>}
 
         <div className="text-center">

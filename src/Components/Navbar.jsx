@@ -35,8 +35,8 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
   };
 
   return (
-    <nav className="bg-gradient-to-r from-gray-800 to-blue-800 text-white sticky top-0 w-full p-4 flex items-center shadow-lg z-50">
-    <button onClick={() => setIsCollapsed(!isCollapsed)} className="text-xl p-2">
+    <nav className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white sticky top-0 w-full p-4 flex items-center shadow-lg z-50">
+      <button onClick={() => setIsCollapsed(!isCollapsed)} className="text-xl p-2">
         {isCollapsed ? (
           <RiMenu2Line className="text-2xl text-[#AAAAAA]" />
         ) : (
@@ -46,6 +46,7 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
 
       <div className="flex justify-between items-center w-full">
         <div className="flex gap-3 ml-4">
+          {/* Add any other items you want here */}
         </div>
 
         <div className="flex gap-3 items-center">
@@ -57,10 +58,10 @@ const Navbar = ({ setIsCollapsed, isCollapsed }) => {
             {/* Replaced the company logo with the new vendor image */}
             <img
               className="rounded-full w-[3vw]"
-              src="https://mir-s3-cdn-cf.behance.net/projects/original/ec753e129429523.61a1e79332f16.png"
+              src="https://cdn-icons-gif.flaticon.com/12707/12707605.gif"
               alt="Vendor Logo"
             />
-            <h1 className="text-xs text-white">Poster Banavo</h1>
+            <h1 className="text-xs text-white">Redeemly</h1>
           </div>
         </div>
       </div>

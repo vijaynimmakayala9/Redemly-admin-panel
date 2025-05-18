@@ -25,14 +25,32 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
   const elements = [
     {
       icon: <i className="ri-dashboard-fill text-white"></i>,
-      name: "Admin Panel",
+      name: "Dashboard",
       path: "/dashboard",
     },
     {
       icon: <i className="ri-user-fill text-white"></i>,
       name: "Users",
       dropdown: [
-        { name: "User List", path: "/users" },
+        { name: "Get All Users", path: "/users" },
+      ],
+    },
+    {
+      icon: <i className="ri-store-fill text-white"></i>,
+      name: "Vendors",
+      dropdown: [
+        { name: "Create Vendor", path: "/create-vendor" },
+        { name: "Get All Vendors", path: "/vendorlist" },
+        { name: "Get All Vendors Docs", path: "/vendordocumentlist" },
+      ],
+    },
+    {
+      icon: <i className="ri-coupon-fill text-white"></i>,
+      name: "Coupons",
+      dropdown: [
+        { name: "Create Coupon", path: "/create-coupon" },
+        { name: "Get All Coupons", path: "/coupons" },
+        { name: "Redeemed Coupons", path: "/redeemed-coupons" },
       ],
     },
     {
@@ -44,55 +62,20 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
       ],
     },
     {
-      icon: <i className="ri-image-fill text-white"></i>,
-      name: "Posters",
-      dropdown: [
-        { name: "Create Poster", path: "/create-poster" },
-        { name: "Get All Posters", path: "/posterlist" },
-      ],
-    },
-    {
-      icon: <i className="ri-palette-fill text-white"></i>,
-      name: "Logos",
-      dropdown: [
-        { name: "Create Logo", path: "/create-logo" },
-        { name: "Get All Logos", path: "/logolist" },
-      ],
-    },
-    {
-      icon: <i className="ri-file-list-fill text-white"></i>,
-      name: "Business Cards",
-      dropdown: [
-        { name: "Create Business Card", path: "/create-businesscard" },
-        { name: "Get All Business Cards", path: "/business-cards-list" },
-      ],
-    },
-    {
-      icon: <i className="ri-file-list-fill text-white"></i>,
-      name: "Subscription Plans",
-      dropdown: [
-        { name: "Create Plan", path: "/create-plan" },
-        { name: "Get All Plans", path: "/planlist" },
-        { name: "Purchased Plans", path: "/userplanlist" },
-      ],
-    },
-    {
-      icon: <i className="ri-shopping-cart-fill text-white"></i>,
-      name: "Orders",
-      dropdown: [
-        { name: "Get All Orders", path: "/orderlist" },
-      ],
-    },
-    {
       icon: <i className="ri-settings-3-fill text-white"></i>,
       name: "Settings",
       dropdown: [
         { name: "Create Privacy & Policy", path: "/create-privacy" },
-        { name: "Get Privacy & Policy", path: "/get-policy" },
-        { name: "Create AboutUs", path: "/aboutus" },
-        { name: "Get AboutUs", path: "/getaboutus" },
-        { name: "Create ContactUs", path: "/contactus" },
-        { name: "Get ContactUs", path: "/getcontactus" },
+        { name: "View Privacy & Policy", path: "/get-policy" },
+      ],
+    },
+    {
+      icon: <i className="ri-settings-3-fill text-white"></i>,
+      name: "Payment",
+      dropdown: [
+        { name: "All Vendor Payment", path: "/allpayments" },
+        { name: "Vendor Payment Pending", path: "/payment" },
+        { name: "Vendor Rcvd Payment", path: "/rcvdpayment" },
       ],
     },
     {
@@ -104,10 +87,9 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
 
   return (
     <div
-    className={`transition-all duration-300 ${isMobile ? (isCollapsed ? "w-0" : "w-64") : isCollapsed ? "w-16" : "w-64"} h-screen overflow-y-scroll no-scrollbar flex flex-col bg-gradient-to-b from-gray-800 to-blue-800`}
-  >
-  
-      <div className="sticky top-0 p-4 font-bold text-white flex justify-center text-xl bg-[#1F2937] border-b border-gray-700">
+      className={`transition-all duration-300 ${isMobile ? (isCollapsed ? "w-0" : "w-64") : isCollapsed ? "w-16" : "w-64"} h-screen overflow-y-scroll no-scrollbar flex flex-col bg-gradient-to-b from-indigo-500 via-purple-500 to-pink-500`}
+    >
+      <div className="sticky top-0 p-4 font-bold text-white flex justify-center text-xl bg-gradient-to-b from-indigo-500 via-purple-500 to-pink-500 border-b border-transparent">
         <span>Admin Panel</span>
       </div>
 
