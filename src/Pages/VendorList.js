@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import { FaEdit, FaTrash, FaEye } from "react-icons/fa";
 import { utils, writeFile } from "xlsx";
+import { useNavigate } from "react-router-dom";
 
 export default function VendorList() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [downloadLimit, setDownloadLimit] = useState(50); // Default to 50
+  const [downloadLimit, setDownloadLimit] = useState(50);
   const vendorsPerPage = 5;
+  const navigate = useNavigate();
 
   const dummyVendors = [
     {
@@ -49,7 +51,6 @@ export default function VendorList() {
       company: "Company E",
       address: "654 Plaza, District",
     },
-    // Add more vendors here if needed...
   ];
 
   const filteredVendors = dummyVendors.filter((vendor) =>
@@ -58,7 +59,10 @@ export default function VendorList() {
 
   const indexOfLastVendor = currentPage * vendorsPerPage;
   const indexOfFirstVendor = indexOfLastVendor - vendorsPerPage;
-  const currentVendors = filteredVendors.slice(indexOfFirstVendor, indexOfLastVendor);
+  const currentVendors = filteredVendors.slice(
+    indexOfFirstVendor,
+    indexOfLastVendor
+  );
   const totalPages = Math.ceil(filteredVendors.length / vendorsPerPage);
 
   const exportData = (type) => {
@@ -76,6 +80,10 @@ export default function VendorList() {
     const wb = utils.book_new();
     utils.book_append_sheet(wb, ws, "Vendors");
     writeFile(wb, `vendors.${type}`);
+  };
+
+  const viewVendor = (vendor) => {
+    navigate(`/vendor/${vendor.id}`, { state: vendor });
   };
 
   return (
@@ -140,6 +148,12 @@ export default function VendorList() {
                 <td className="p-2 border">{vendor.company}</td>
                 <td className="p-2 border">{vendor.address}</td>
                 <td className="p-2 border flex gap-2">
+                  <button
+                    className="bg-green-500 text-white p-1 rounded"
+                    onClick={() => viewVendor(vendor)}
+                  >
+                    <FaEye />
+                  </button>
                   <button className="bg-blue-500 text-white p-1 rounded">
                     <FaEdit />
                   </button>
@@ -176,9 +190,7 @@ export default function VendorList() {
         ))}
         <button
           onClick={() =>
-            setCurrentPage((prev) =>
-              prev < totalPages ? prev + 1 : prev
-            )
+            setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev))
           }
           disabled={currentPage === totalPages}
           className="bg-gray-300 px-4 py-2 rounded"

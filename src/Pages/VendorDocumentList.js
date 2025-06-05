@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import { FaEdit, FaTrash, FaEye } from "react-icons/fa";
 import { utils, writeFile } from "xlsx";
 
 export default function VendorDocumentList() {
@@ -7,7 +7,9 @@ export default function VendorDocumentList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [downloadLimit, setDownloadLimit] = useState(50);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState(null);
+  const [viewedDoc, setViewedDoc] = useState(null);
   const vendorsPerPage = 5;
 
   const [vendorDocs, setVendorDocs] = useState([
@@ -16,7 +18,6 @@ export default function VendorDocumentList() {
     { id: 3, vendorName: "Vendor Three", document: "document3.pdf", status: "Rejected" },
     { id: 4, vendorName: "Vendor Four", document: "document4.pdf", status: "Pending" },
     { id: 5, vendorName: "Vendor Five", document: "document5.pdf", status: "Approved" },
-    // Add more if needed
   ]);
 
   const filteredDocs = vendorDocs.filter((doc) =>
@@ -43,6 +44,11 @@ export default function VendorDocumentList() {
     );
     setVendorDocs(updated);
     setEditModalOpen(false);
+  };
+
+  const handleViewClick = (doc) => {
+    setViewedDoc(doc);
+    setViewModalOpen(true);
   };
 
   const exportData = (type) => {
@@ -107,7 +113,7 @@ export default function VendorDocumentList() {
               <th className="p-2 border">Vendor Name</th>
               <th className="p-2 border">Document</th>
               <th className="p-2 border">Status</th>
-              <th className="p-2 border">Action</th>
+              <th className="p-2 border">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -118,6 +124,12 @@ export default function VendorDocumentList() {
                 <td className="p-2 border">{doc.document}</td>
                 <td className="p-2 border">{doc.status}</td>
                 <td className="p-2 border flex gap-2">
+                  <button
+                    className="bg-green-500 text-white p-1 rounded"
+                    onClick={() => handleViewClick(doc)}
+                  >
+                    <FaEye />
+                  </button>
                   <button
                     className="bg-blue-500 text-white p-1 rounded"
                     onClick={() => handleEditClick(doc)}
@@ -134,6 +146,7 @@ export default function VendorDocumentList() {
         </table>
       </div>
 
+      {/* Pagination */}
       <div className="flex justify-center mt-4 gap-4">
         <button
           onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
@@ -197,6 +210,27 @@ export default function VendorDocumentList() {
                 onClick={handleSave}
               >
                 Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Modal */}
+      {viewModalOpen && viewedDoc && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white p-6 rounded-lg w-96 shadow-lg">
+            <h3 className="text-lg font-semibold mb-4">Document Details</h3>
+            <p><strong>Vendor Name:</strong> {viewedDoc.vendorName}</p>
+            <p><strong>Status:</strong> {viewedDoc.status}</p>
+            <p className="mt-2"><strong>Document:</strong> {viewedDoc.document}</p>
+            {/* To preview the document: replace this with iframe/pdf viewer if real URLs */}
+            <div className="mt-4 flex justify-end">
+              <button
+                className="bg-blue-600 text-white px-4 py-2 rounded"
+                onClick={() => setViewModalOpen(false)}
+              >
+                Close
               </button>
             </div>
           </div>

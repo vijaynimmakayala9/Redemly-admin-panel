@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import { FaEdit, FaTrash, FaEye } from "react-icons/fa"; // ✅ Added FaEye
+import { Link } from "react-router-dom"; // ✅ Import Link
 import { utils, writeFile } from "xlsx";
 
 export default function UserList() {
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [usersPerPage, setUsersPerPage] = useState(5); // Default to 5
-  const [downloadLimit, setDownloadLimit] = useState(50); // Export limit
+  const [usersPerPage, setUsersPerPage] = useState(5);
+  const [downloadLimit, setDownloadLimit] = useState(50);
 
-  // ✅ Dummy data instead of API
   const users = [
     {
       id: 1,
@@ -18,7 +18,7 @@ export default function UserList() {
       age: 30,
       gender: "Male",
       dob: "1994-01-01",
-      profileImage: "https://via.placeholder.com/40",
+      profileImage: "https://img.freepik.com/premium-photo/girl-happy-portrait-user-profile-by-ai_1119669-10.jpg",
     },
     {
       id: 2,
@@ -28,7 +28,7 @@ export default function UserList() {
       age: 28,
       gender: "Female",
       dob: "1996-05-12",
-      profileImage: "https://via.placeholder.com/40",
+      profileImage: "https://img.freepik.com/premium-photo/girl-happy-portrait-user-profile-by-ai_1119669-10.jpg",
     },
     {
       id: 3,
@@ -38,7 +38,7 @@ export default function UserList() {
       age: 35,
       gender: "Female",
       dob: "1990-08-22",
-      profileImage: "https://via.placeholder.com/40",
+      profileImage: "https://img.freepik.com/premium-photo/girl-happy-portrait-user-profile-by-ai_1119669-10.jpg",
     },
     {
       id: 4,
@@ -48,7 +48,7 @@ export default function UserList() {
       age: 40,
       gender: "Male",
       dob: "1985-11-03",
-      profileImage: "https://via.placeholder.com/40",
+      profileImage: "https://img.freepik.com/premium-photo/girl-happy-portrait-user-profile-by-ai_1119669-10.jpg",
     },
     {
       id: 5,
@@ -58,9 +58,8 @@ export default function UserList() {
       age: 32,
       gender: "Male",
       dob: "1992-03-15",
-      profileImage: "https://via.placeholder.com/40",
+      profileImage: "https://img.freepik.com/premium-photo/girl-happy-portrait-user-profile-by-ai_1119669-10.jpg",
     },
-    // Add more as needed...
   ];
 
   const filteredUsers = users.filter((user) =>
@@ -145,9 +144,7 @@ export default function UserList() {
                     src={user.profileImage}
                     alt="profile"
                     className="w-10 h-10 rounded-full object-cover"
-                    onError={(e) =>
-                      (e.target.src = "/default-profile-image.jpg")
-                    }
+                    onError={(e) => (e.target.src = "/default-profile-image.jpg")}
                   />
                 </td>
                 <td className="p-2 border">{user.name}</td>
@@ -157,10 +154,15 @@ export default function UserList() {
                 <td className="p-2 border">{user.gender}</td>
                 <td className="p-2 border">{user.dob}</td>
                 <td className="p-2 border flex gap-2">
-                  <button className="bg-blue-500 text-white p-1 rounded">
+                  <Link to={`/users/${user.id}`}>
+                    <button className="bg-green-500 text-white p-1 rounded" title="View">
+                      <FaEye />
+                    </button>
+                  </Link>
+                  <button className="bg-blue-500 text-white p-1 rounded" title="Edit">
                     <FaEdit />
                   </button>
-                  <button className="bg-red-500 text-white p-1 rounded">
+                  <button className="bg-red-500 text-white p-1 rounded" title="Delete">
                     <FaTrash />
                   </button>
                 </td>
@@ -183,20 +185,14 @@ export default function UserList() {
             key={index}
             onClick={() => setCurrentPage(index + 1)}
             className={`px-4 py-2 rounded ${
-              currentPage === index + 1
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200"
+              currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
             }`}
           >
             {index + 1}
           </button>
         ))}
         <button
-          onClick={() =>
-            setCurrentPage((prev) =>
-              prev < totalPages ? prev + 1 : prev
-            )
-          }
+          onClick={() => setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev))}
           disabled={currentPage === totalPages}
           className="bg-gray-300 px-4 py-2 rounded"
         >

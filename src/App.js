@@ -87,6 +87,8 @@ import VendorDocumentList from "./Pages/VendorDocumentList.js";
 import VendorInvoiceList from "./Pages/VendorInvoiceList.js";
 import ReceivedPayments from "./Pages/ReceivedPayments.js";
 import AllPayments from "./Pages/AllPayments.js";
+import UserProfile from "./Pages/UserProfile.js";
+import VendorProfile from "./Pages/VendorProfile.js";
 
 
 
@@ -188,6 +190,8 @@ function App() {
               <Route path="/payment" element={<VendorInvoiceList />} />
               <Route path="/rcvdpayment" element={< ReceivedPayments/>} />
               <Route path="/allpayments" element={< AllPayments/>} />
+              <Route path="/users/:id" element={<UserProfile />} />
+              <Route path="/vendor/:id" element={<VendorProfile />} />
 
 
 
