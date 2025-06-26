@@ -89,6 +89,7 @@ import ReceivedPayments from "./Pages/ReceivedPayments.js";
 import AllPayments from "./Pages/AllPayments.js";
 import UserProfile from "./Pages/UserProfile.js";
 import VendorProfile from "./Pages/VendorProfile.js";
+import AllUserCoupons from "./Pages/userCoupons.js";
 
 
 
@@ -164,6 +165,7 @@ function App() {
               <Route path="/create-coupon" element={<CreateCoupon />} />
               <Route path="/upload-docs" element={<UploadDocuments />} />
               <Route path="/docs" element={<DocumentTable />} />
+              <Route path="/user-coupons" element={<AllUserCoupons />} />
 
               <Route path="/users" element={<UserList />} />
               <Route path="/create-category" element={<CreateCategory />} />

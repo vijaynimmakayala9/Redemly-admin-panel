@@ -25,7 +25,7 @@ const LoginPage = () => {
           <div className="p-8 sm:p-10 space-y-6">
             <div className="text-center">
               <h1 className="text-3xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">
-                Redeemly
+                Redemly
               </h1>
               <p className="text-gray-700 text-sm mt-1">Admin Login</p>
             </div>

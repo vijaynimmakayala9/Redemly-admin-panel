@@ -50,6 +50,8 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
       dropdown: [
         { name: "Create Coupon", path: "/create-coupon" },
         { name: "Get All Coupons", path: "/coupons" },
+        { name: "User Coupons", path: "/user-coupons" },
+        { name: "Coupon History", path: "/couponshistory" },
         { name: "Redeemed Coupons", path: "/redeemed-coupons" },
       ],
     },
@@ -86,12 +88,17 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
   ];
 
   return (
-    <div
-      className={`transition-all duration-300 ${isMobile ? (isCollapsed ? "w-0" : "w-64") : isCollapsed ? "w-16" : "w-64"} h-screen overflow-y-scroll no-scrollbar flex flex-col bg-gradient-to-b from-indigo-500 via-purple-500 to-pink-500`}
-    >
-      <div className="sticky top-0 p-4 font-bold text-white flex justify-center text-xl bg-gradient-to-b from-indigo-500 via-purple-500 to-pink-500 border-b border-transparent">
-        <span>Admin Panel</span>
+   <div
+  className={`transition-all duration-300 ${
+    isMobile ? (isCollapsed ? "w-0" : "w-64") : isCollapsed ? "w-16" : "w-64"
+  } h-screen overflow-y-scroll no-scrollbar flex flex-col bg-blue-800`}
+>
+
+
+   <div className="sticky top-0 p-4 font-bold text-white flex justify-center text-xl">
+        <span>Admin Dashboard</span>
       </div>
+      <div className="border-b-4 border-gray-800 my-2"></div>
 
       <nav className={`flex flex-col ${isCollapsed && "items-center"} space-y-4 mt-4`}>
         {elements.map((item, idx) => (
