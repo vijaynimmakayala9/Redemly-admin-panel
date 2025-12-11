@@ -87,9 +87,17 @@ import VendorDocumentList from "./Pages/VendorDocumentList.js";
 import VendorInvoiceList from "./Pages/VendorInvoiceList.js";
 import ReceivedPayments from "./Pages/ReceivedPayments.js";
 import AllPayments from "./Pages/AllPayments.js";
-import UserProfile from "./Pages/UserProfile.js";
-import VendorProfile from "./Pages/VendorProfile.js";
 import AllUserCoupons from "./Pages/userCoupons.js";
+import UserDetail from "./Pages/UserProfile.js";
+import VendorDetail from "./Pages/VendorProfile.js";
+import BulkQuizUploader from "./Pages/BulkQuizUploader.js";
+import AllQuizzesTable from "./Pages/AllQuizzesTable.js";
+import BulkFunFactUploader from "./Pages/BulkFunFactUploader.js";
+import AllFunFactsTable from "./Pages/AllFunFactsTable.js";
+import AdminNotifications from "./Pages/AdminNotifications.js";
+import FunFactsGenerator from "./Pages/FunFactsGenerator.js";
+import NewsFetcher from "./Pages/NewsFetcher.js";
+import SpinCountPage from "./Pages/SpinCountPage.js";
 
 
 
@@ -167,7 +175,6 @@ function App() {
               <Route path="/docs" element={<DocumentTable />} />
               <Route path="/user-coupons" element={<AllUserCoupons />} />
 
-              <Route path="/users" element={<UserList />} />
               <Route path="/create-category" element={<CreateCategory />} />
               <Route path="/categorylist" element={<CategoryList />} />
               <Route path="/create-poster" element={<CreatePoster />} />
@@ -190,12 +197,19 @@ function App() {
               <Route path="/vendordocumentlist" element={<VendorDocumentList />} />
               <Route path="/redeemed-coupons" element={<RedeemedCouponsList />} />
               <Route path="/payment" element={<VendorInvoiceList />} />
-              <Route path="/rcvdpayment" element={< ReceivedPayments/>} />
-              <Route path="/allpayments" element={< AllPayments/>} />
-              <Route path="/users/:id" element={<UserProfile />} />
-              <Route path="/vendor/:id" element={<VendorProfile />} />
-
-
+              <Route path="/rcvdpayment" element={< ReceivedPayments />} />
+              <Route path="/allpayments" element={< AllPayments />} />
+              <Route path="/vendor/:id" element={<VendorDetail />} />
+              <Route path="/users" element={<UserList />} />
+              <Route path="/users/:userId" element={<UserDetail />} />
+              <Route path="/add-bulk-quiz" element={<BulkQuizUploader />} />
+              <Route path="/quizzes" element={<AllQuizzesTable />} />
+              <Route path="/add-bulk-funfacts" element={<BulkFunFactUploader />} />
+              <Route path="/allfanfacts" element={<AllFunFactsTable />} />
+               <Route path="/notifications" element={<AdminNotifications />} />
+              <Route path="/generatefacts" element={<FunFactsGenerator />} />
+              <Route path="/generatenews" element={<NewsFetcher />} />
+              <Route path="/spincount" element={<SpinCountPage />} />
 
 
 

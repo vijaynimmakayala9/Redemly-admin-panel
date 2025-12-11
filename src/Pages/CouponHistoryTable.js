@@ -1,96 +1,48 @@
-import { useState } from "react";
-
-// Function to generate a random alphanumeric 5-character coupon ID
-const generateCouponID = () => {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  for (let i = 0; i < 5; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
-};
+import { useState, useEffect } from "react";
 
 const CouponHistoryTable = () => {
-  const [couponHistory] = useState([
-    // 1. Restaurant
-    {
-      customerId: "C001",
-      couponId: generateCouponID(),
-      discount: 20,
-      couponDownloadDate: "2025-04-01",
-      couponRedeemedDate: "2025-04-10",
-      couponRedeemedTime: "5:45 PM",
-      couponOrderDetails: "Restaurant: Summer Feast, 2 pizzas",
-      orderValue: 35.50,
-      feedback: "N/A",
-      category: "Restaurant",
-    },
-    // 2. Meat Shop
-    {
-      customerId: "C002",
-      couponId: generateCouponID(),
-      discount: 30,
-      couponDownloadDate: "2025-03-20",
-      couponRedeemedDate: "2025-03-25",
-      couponRedeemedTime: "3:00 PM",
-      couponOrderDetails: "Meat Shop: Fresh Lamb Chops",
-      orderValue: 50.99,
-      feedback: "Tender meat, very fresh.",
-      category: "Meat Shop",
-    },
-    // 3. Groceries
-    {
-      customerId: "C003",
-      couponId: generateCouponID(),
-      discount: 25,
-      couponDownloadDate: "2025-02-20",
-      couponRedeemedDate: "2025-03-01",
-      couponRedeemedTime: "2:30 PM",
-      couponOrderDetails: "Groceries: Organic Vegetables, Fruits",
-      orderValue: 85.75,
-      feedback: "Great selection of fresh produce!",
-      category: "Groceries",
-    },
-    // 4. Restaurant
-    {
-      customerId: "C004",
-      couponId: generateCouponID(),
-      discount: 15,
-      couponDownloadDate: "2025-02-15",
-      couponRedeemedDate: "N/A",
-      couponRedeemedTime: "N/A",
-      couponOrderDetails: "N/A",
-      orderValue: 0,
-      feedback: "N/A",
-      category: "Restaurant",
-    },
-    // 5. Meat Shop
-    {
-      customerId: "C005",
-      couponId: generateCouponID(),
-      discount: 10,
-      couponDownloadDate: "2025-04-05",
-      couponRedeemedDate: "2025-04-08",
-      couponRedeemedTime: "4:15 PM",
-      couponOrderDetails: "Meat Shop: Chicken Drumsticks",
-      orderValue: 25.99,
-      feedback: "Delicious chicken, would buy again.",
-      category: "Meat Shop",
-    },
-    // 6. Groceries
-    {
-      customerId: "C006",
-      couponId: generateCouponID(),
-      discount: 20,
-      couponDownloadDate: "2025-04-10",
-      couponRedeemedDate: "2025-04-11",
-      couponRedeemedTime: "6:00 PM",
-      couponOrderDetails: "Groceries: Fresh Dairy Products, Eggs",
-      orderValue: 55.25,
-      feedback: "Great value for money, highly recommend.",
-      category: "Groceries",
-    },
-  ]);
+  const [couponHistory, setCouponHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchCouponHistory = async () => {
+      try {
+        const response = await fetch("http://31.97.206.144:6098/api/admin/userusage-couponhistory");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        if (data.success) {
+          setCouponHistory(data.history);
+        } else {
+          setError("Failed to fetch coupon history");
+        }
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCouponHistory();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="p-6 bg-gradient-to-r from-blue-100 to-green-100 min-h-screen flex items-center justify-center">
+        <div className="text-xl font-semibold text-gray-700">Loading coupon history...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 bg-gradient-to-r from-blue-100 to-green-100 min-h-screen flex items-center justify-center">
+        <div className="text-xl font-semibold text-red-600">Error: {error}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 bg-gradient-to-r from-blue-100 to-green-100 min-h-screen">
@@ -104,28 +56,28 @@ const CouponHistoryTable = () => {
                 <th className="py-2 px-4 border">SI No</th>
                 <th className="py-2 px-4 border">Customer ID</th>
                 <th className="py-2 px-4 border">Coupon ID</th>
-                <th className="py-2 px-4 border">Discount (%)</th>
+                <th className="py-2 px-4 border">Discount</th>
                 <th className="py-2 px-4 border">Coupon Download Date</th>
                 <th className="py-2 px-4 border">Coupon Redeemed Date</th>
                 <th className="py-2 px-4 border">Coupon Redeemed Time</th>
                 <th className="py-2 px-4 border">Coupon Order Details</th>
-                <th className="py-2 px-4 border">Order Value (Amount)</th>
+                <th className="py-2 px-4 border">Order Value</th>
                 <th className="py-2 px-4 border">Feedback</th>
               </tr>
             </thead>
             <tbody>
               {couponHistory.map((coupon, index) => (
-                <tr key={coupon.couponId || index} className="text-center">
-                  <td className="py-2 px-4 border">{index + 1}</td> {/* Serial Number */}
-                  <td className="py-2 px-4 border">{coupon.customerId}</td>
-                  <td className="py-2 px-4 border">{coupon.couponId}</td>
-                  <td className="py-2 px-4 border">{coupon.discount}%</td>
-                  <td className="py-2 px-4 border">{coupon.couponDownloadDate}</td>
-                  <td className="py-2 px-4 border">{coupon.couponRedeemedDate}</td>
-                  <td className="py-2 px-4 border">{coupon.couponRedeemedTime}</td>
-                  <td className="py-2 px-4 border">{coupon.couponOrderDetails}</td>
-                  <td className="py-2 px-4 border">${coupon.orderValue.toFixed(2)}</td>
-                  <td className="py-2 px-4 border">{coupon.feedback}</td>
+                <tr key={coupon.Coupon_ID || index} className="text-center">
+                  <td className="py-2 px-4 border">{coupon.SI_No}</td>
+                  <td className="py-2 px-4 border">{coupon.Customer_ID}</td>
+                  <td className="py-2 px-4 border">{coupon.Coupon_ID}</td>
+                  <td className="py-2 px-4 border">{coupon.Discount}</td>
+                  <td className="py-2 px-4 border">{coupon.Coupon_Download_Date}</td>
+                  <td className="py-2 px-4 border">{coupon.Coupon_Redeemed_Date}</td>
+                  <td className="py-2 px-4 border">{coupon.Coupon_Redeemed_Time}</td>
+                  <td className="py-2 px-4 border">{coupon.Coupon_Order_Details}</td>
+                  <td className="py-2 px-4 border">{coupon.Order_Value}</td>
+                  <td className="py-2 px-4 border">{coupon.Feedback}</td>
                 </tr>
               ))}
               {couponHistory.length === 0 && (

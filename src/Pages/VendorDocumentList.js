@@ -1,238 +1,169 @@
-import { useState } from "react";
-import { FaEdit, FaTrash, FaEye } from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import { FaEye, FaFileExcel } from "react-icons/fa";
 import { utils, writeFile } from "xlsx";
 
 export default function VendorDocumentList() {
+  const [vendorDocs, setVendorDocs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [viewUrl, setViewUrl] = useState(null); // For modal
+
+  // Pagination & search state
   const [search, setSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [downloadLimit, setDownloadLimit] = useState(50);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [viewModalOpen, setViewModalOpen] = useState(false);
-  const [selectedDoc, setSelectedDoc] = useState(null);
-  const [viewedDoc, setViewedDoc] = useState(null);
   const vendorsPerPage = 5;
 
-  const [vendorDocs, setVendorDocs] = useState([
-    { id: 1, vendorName: "Vendor One", document: "document1.pdf", status: "Pending" },
-    { id: 2, vendorName: "Vendor Two", document: "document2.pdf", status: "Approved" },
-    { id: 3, vendorName: "Vendor Three", document: "document3.pdf", status: "Rejected" },
-    { id: 4, vendorName: "Vendor Four", document: "document4.pdf", status: "Pending" },
-    { id: 5, vendorName: "Vendor Five", document: "document5.pdf", status: "Approved" },
-  ]);
+  useEffect(() => {
+    const fetchDocs = async () => {
+      try {
+        const res = await fetch("http://31.97.206.144:6098/api/admin/allvendordocs");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        setVendorDocs(json.data || []);
+      } catch (err) {
+        console.error("Fetch error:", err);
+        setError(err.message || "Error fetching data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDocs();
+  }, []);
 
-  const filteredDocs = vendorDocs.filter((doc) =>
-    doc.vendorName.toLowerCase().includes(search.toLowerCase())
+  const filtered = vendorDocs.filter((v) =>
+    v.name?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const indexOfLast = currentPage * vendorsPerPage;
-  const indexOfFirst = indexOfLast - vendorsPerPage;
-  const currentDocs = filteredDocs.slice(indexOfFirst, indexOfLast);
-  const totalPages = Math.ceil(filteredDocs.length / vendorsPerPage);
+  const totalPages = Math.ceil(filtered.length / vendorsPerPage);
+  const start = (currentPage - 1) * vendorsPerPage;
+  const current = filtered.slice(start, start + vendorsPerPage);
 
-  const handleEditClick = (doc) => {
-    setSelectedDoc(doc);
-    setEditModalOpen(true);
-  };
-
-  const handleStatusChange = (e) => {
-    setSelectedDoc({ ...selectedDoc, status: e.target.value });
-  };
-
-  const handleSave = () => {
-    const updated = vendorDocs.map((doc) =>
-      doc.id === selectedDoc.id ? selectedDoc : doc
+  const exportExcel = () => {
+    const ws = utils.json_to_sheet(
+      filtered.map((v) => ({
+        vendorName: v.name,
+        documents: v.documents.map((d) => `${d.type}: ${d.url}`).join("\n"),
+      }))
     );
-    setVendorDocs(updated);
-    setEditModalOpen(false);
-  };
-
-  const handleViewClick = (doc) => {
-    setViewedDoc(doc);
-    setViewModalOpen(true);
-  };
-
-  const exportData = (type) => {
-    const exportDocs = filteredDocs
-      .slice(0, downloadLimit)
-      .map(({ id, vendorName, document, status }) => ({
-        id,
-        vendorName,
-        document,
-        status,
-      }));
-    const ws = utils.json_to_sheet(exportDocs);
     const wb = utils.book_new();
     utils.book_append_sheet(wb, ws, "Vendor Documents");
-    writeFile(wb, `vendor_documents.${type}`);
+    writeFile(wb, "vendor_documents.xlsx");
   };
 
+  const handleView = (url) => {
+    setViewUrl(url);
+  };
+
+  const closeModal = () => {
+    setViewUrl(null);
+  };
+
+  if (loading) return <div className="p-4">Loading...</div>;
+  if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
+
   return (
-    <div className="p-4 border rounded-lg shadow-lg bg-white">
+    <div className="p-4 bg-white rounded shadow overflow-x-auto">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-blue-900">Vendor Documents</h2>
+        <h2 className="text-lg font-semibold">Vendor Documents</h2>
+        <button
+          onClick={exportExcel}
+          className="flex items-center text-sm bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
+        >
+          <FaFileExcel className="mr-2" />
+          Export to Excel
+        </button>
       </div>
 
-      <div className="flex justify-between mb-4 gap-2">
+      <div className="mb-4 flex gap-2">
         <input
-          className="w-1/3 p-2 border rounded"
-          placeholder="Search by vendor name..."
+          type="text"
+          placeholder="Search by Vendor Name..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          className="border p-2 rounded text-sm"
         />
-        <div className="flex gap-2">
-          <select
-            value={downloadLimit}
-            onChange={(e) => setDownloadLimit(Number(e.target.value))}
-            className="p-2 border rounded"
-          >
-            <option value={10}>10</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-            <option value={200}>200</option>
-          </select>
-          <button
-            className="bg-gray-200 px-4 py-2 rounded"
-            onClick={() => exportData("csv")}
-          >
-            Export CSV
-          </button>
-          <button
-            className="bg-gray-200 px-4 py-2 rounded"
-            onClick={() => exportData("xlsx")}
-          >
-            Export Excel
-          </button>
-        </div>
       </div>
 
-      <div className="overflow-x-auto mb-4">
-        <table className="w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-blue-600 text-white">
-              <th className="p-2 border">Sl</th>
-              <th className="p-2 border">Vendor Name</th>
-              <th className="p-2 border">Document</th>
-              <th className="p-2 border">Status</th>
-              <th className="p-2 border">Actions</th>
+      <table className="min-w-full text-sm border-collapse border">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="p-2 border">#</th>
+            <th className="p-2 border">Vendor Name</th>
+            <th className="p-2 border">Documents</th>
+          </tr>
+        </thead>
+        <tbody>
+          {current.map((vendor, idx) => (
+            <tr key={vendor._id} className="hover:bg-gray-50">
+              <td className="p-2 border">{start + idx + 1}</td>
+              <td className="p-2 border">{vendor.name}</td>
+              <td className="p-2 border">
+                <div className="flex flex-wrap gap-2">
+                  {vendor.documents.map((doc) => (
+                    <button
+                      key={doc._id}
+                      className="flex items-center gap-1 text-blue-600 hover:text-blue-800 bg-blue-100 px-2 py-1 rounded text-xs"
+                      onClick={() => handleView(doc.url)}
+                      title={`View ${doc.type}`}
+                    >
+                      <FaEye />
+                      {doc.type}
+                    </button>
+                  ))}
+                </div>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {currentDocs.map((doc, index) => (
-              <tr key={doc.id}>
-                <td className="p-2 border">{index + 1 + indexOfFirst}</td>
-                <td className="p-2 border">{doc.vendorName}</td>
-                <td className="p-2 border">{doc.document}</td>
-                <td className="p-2 border">{doc.status}</td>
-                <td className="p-2 border flex gap-2">
-                  <button
-                    className="bg-green-500 text-white p-1 rounded"
-                    onClick={() => handleViewClick(doc)}
-                  >
-                    <FaEye />
-                  </button>
-                  <button
-                    className="bg-blue-500 text-white p-1 rounded"
-                    onClick={() => handleEditClick(doc)}
-                  >
-                    <FaEdit />
-                  </button>
-                  <button className="bg-red-500 text-white p-1 rounded">
-                    <FaTrash />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
 
       {/* Pagination */}
-      <div className="flex justify-center mt-4 gap-4">
+      <div className="flex justify-center mt-4 gap-2">
         <button
-          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
           disabled={currentPage === 1}
-          className="bg-gray-300 px-4 py-2 rounded"
+          className="bg-gray-200 px-3 py-1 rounded disabled:opacity-50"
         >
-          Previous
+          Prev
         </button>
-        {[...Array(totalPages)].map((_, index) => (
+        {[...Array(totalPages)].map((_, i) => (
           <button
-            key={index}
-            onClick={() => setCurrentPage(index + 1)}
-            className={`px-4 py-2 rounded ${
-              currentPage === index + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
+            key={i}
+            onClick={() => setCurrentPage(i + 1)}
+            className={`px-3 py-1 rounded ${
+              i + 1 === currentPage
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200"
             }`}
           >
-            {index + 1}
+            {i + 1}
           </button>
         ))}
         <button
-          onClick={() =>
-            setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev))
-          }
+          onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
           disabled={currentPage === totalPages}
-          className="bg-gray-300 px-4 py-2 rounded"
+          className="bg-gray-200 px-3 py-1 rounded disabled:opacity-50"
         >
           Next
         </button>
       </div>
 
-      {/* Edit Modal */}
-      {editModalOpen && selectedDoc && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white p-6 rounded-lg w-96 shadow-lg">
-            <h3 className="text-lg font-semibold mb-4">Edit Status</h3>
-            <div className="mb-4">
-              <label className="block font-medium mb-1">Vendor Name:</label>
-              <p className="border p-2 rounded bg-gray-100">{selectedDoc.vendorName}</p>
-            </div>
-            <div className="mb-4">
-              <label className="block font-medium mb-1">Status</label>
-              <select
-                value={selectedDoc.status}
-                onChange={handleStatusChange}
-                className="w-full border p-2 rounded"
-              >
-                <option value="Pending">Pending</option>
-                <option value="Approved">Approved</option>
-                <option value="Rejected">Rejected</option>
-              </select>
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                className="bg-gray-300 px-4 py-2 rounded"
-                onClick={() => setEditModalOpen(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="bg-blue-600 text-white px-4 py-2 rounded"
-                onClick={handleSave}
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* View Modal */}
-      {viewModalOpen && viewedDoc && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white p-6 rounded-lg w-96 shadow-lg">
-            <h3 className="text-lg font-semibold mb-4">Document Details</h3>
-            <p><strong>Vendor Name:</strong> {viewedDoc.vendorName}</p>
-            <p><strong>Status:</strong> {viewedDoc.status}</p>
-            <p className="mt-2"><strong>Document:</strong> {viewedDoc.document}</p>
-            {/* To preview the document: replace this with iframe/pdf viewer if real URLs */}
-            <div className="mt-4 flex justify-end">
-              <button
-                className="bg-blue-600 text-white px-4 py-2 rounded"
-                onClick={() => setViewModalOpen(false)}
-              >
-                Close
-              </button>
-            </div>
+      {viewUrl && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-[90%] max-w-2xl relative">
+            <h3 className="text-lg font-semibold mb-4">Document Preview</h3>
+            <iframe
+              src={viewUrl}
+              className="w-full h-[500px] border rounded"
+              title="Document Viewer"
+            ></iframe>
+            <button
+              className="absolute top-2 right-2 text-red-600 text-xl"
+              onClick={closeModal}
+            >
+              ✕
+            </button>
           </div>
         </div>
       )}

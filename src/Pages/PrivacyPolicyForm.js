@@ -1,19 +1,46 @@
 import React, { useState } from "react";
+import axios from "axios";
 
 const PrivacyPolicyForm = () => {
   const [policyTitle, setPolicyTitle] = useState("");
   const [policyContent, setPolicyContent] = useState("");
   const [date, setDate] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // You can add the API call logic here to submit the form data to your backend.
-    // Example: axios.post('http://localhost:4000/api/privacy-policy', { title, content, date });
+    try {
+      const payload = {
+        title: policyTitle,
+        content: policyContent,
+        date: formatDate(date), // Optional: format date as dd-mm-yyyy
+      };
 
-    // For now, we're showing a success message after form submission.
-    setSuccessMessage("Privacy policy saved successfully!");
+      const response = await axios.post("http://31.97.206.144:6098/api/admin/createprivacy-policy", payload);
+
+      if (response.data.success) {
+        setSuccessMessage("Privacy policy saved successfully!");
+        setErrorMessage("");
+        setPolicyTitle("");
+        setPolicyContent("");
+        setDate("");
+      } else {
+        setErrorMessage(response.data.message || "Something went wrong.");
+        setSuccessMessage("");
+      }
+    } catch (error) {
+      console.error("Error saving policy:", error);
+      setErrorMessage("An error occurred while saving the privacy policy.");
+      setSuccessMessage("");
+    }
+  };
+
+  // Format date to dd-mm-yyyy
+  const formatDate = (isoDate) => {
+    const [year, month, day] = isoDate.split("-");
+    return `${day}-${month}-${year}`;
   };
 
   return (
@@ -27,10 +54,19 @@ const PrivacyPolicyForm = () => {
         </div>
       )}
 
+      {/* Error Message */}
+      {errorMessage && (
+        <div className="bg-red-100 text-red-700 p-4 rounded mb-4">
+          {errorMessage}
+        </div>
+      )}
+
       {/* Privacy Policy Form */}
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label htmlFor="policyTitle" className="block text-sm font-medium text-gray-700">Policy Title</label>
+          <label htmlFor="policyTitle" className="block text-sm font-medium text-gray-700">
+            Policy Title
+          </label>
           <input
             type="text"
             id="policyTitle"
@@ -43,7 +79,9 @@ const PrivacyPolicyForm = () => {
         </div>
 
         <div className="mb-4">
-          <label htmlFor="policyContent" className="block text-sm font-medium text-gray-700">Policy Content</label>
+          <label htmlFor="policyContent" className="block text-sm font-medium text-gray-700">
+            Policy Content
+          </label>
           <textarea
             id="policyContent"
             value={policyContent}
@@ -56,7 +94,9 @@ const PrivacyPolicyForm = () => {
         </div>
 
         <div className="mb-4">
-          <label htmlFor="date" className="block text-sm font-medium text-gray-700">Date</label>
+          <label htmlFor="date" className="block text-sm font-medium text-gray-700">
+            Date
+          </label>
           <input
             type="date"
             id="date"

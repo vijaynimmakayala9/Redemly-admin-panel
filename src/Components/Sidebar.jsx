@@ -12,7 +12,11 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
 
   const handleLogout = async () => {
     try {
-      await axios.post("https://credenhealth.onrender.com/api/admin/logout", {}, { withCredentials: true });
+      await axios.post(
+        "https://credenhealth.onrender.com/api/admin/logout",
+        {},
+        { withCredentials: true }
+      );
       localStorage.removeItem("authToken");
       alert("Logout successful");
       window.location.href = "/";
@@ -31,9 +35,7 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
     {
       icon: <i className="ri-user-fill text-white"></i>,
       name: "Users",
-      dropdown: [
-        { name: "Get All Users", path: "/users" },
-      ],
+      dropdown: [{ name: "Get All Users", path: "/users" }],
     },
     {
       icon: <i className="ri-store-fill text-white"></i>,
@@ -56,11 +58,29 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
       ],
     },
     {
+      icon: <i className="ri-refresh-fill text-white"></i>, // use a refresh/spin icon
+      name: "Spin Count",
+      dropdown: [
+        { name: "Add Spin", path: "/spincount" },
+      ],
+    },
+
+    {
       icon: <i className="ri-image-fill text-white"></i>,
       name: "Categories",
       dropdown: [
         { name: "Create Category", path: "/create-category" },
         { name: "Get All Categories", path: "/categorylist" },
+      ],
+    },
+    {
+      icon: <i className="ri-booklet-fill text-white"></i>,
+      name: "Bulk",
+      dropdown: [
+        { name: "Add Bulk Quiz", path: "/add-bulk-quiz" },
+        { name: "Get All Quizzes", path: "/quizzes" },
+        { name: "Add Bulk FunFacts", path: "/add-bulk-funfacts" },
+        { name: "Get All Fan Facts", path: "/allfanfacts" },
       ],
     },
     {
@@ -81,6 +101,19 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
       ],
     },
     {
+      icon: <i className="ri-brain-fill text-white"></i>,
+      name: "AI Generated",
+      dropdown: [
+        { name: "Fun Facts", path: "/generatefacts" },
+        { name: "Latest News", path: "/generatenews" },
+      ],
+    },
+    {
+      icon: <i className="ri-notification-3-fill text-white"></i>,
+      name: "Notifications",
+      dropdown: [{ name: "All Notifications", path: "/notifications" }],
+    },
+    {
       icon: <i className="ri-logout-box-fill text-white"></i>,
       name: "Logout",
       action: handleLogout,
@@ -88,14 +121,11 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
   ];
 
   return (
-   <div
-  className={`transition-all duration-300 ${
-    isMobile ? (isCollapsed ? "w-0" : "w-64") : isCollapsed ? "w-16" : "w-64"
-  } h-screen overflow-y-scroll no-scrollbar flex flex-col bg-blue-800`}
->
-
-
-   <div className="sticky top-0 p-4 font-bold text-white flex justify-center text-xl">
+    <div
+      className={`transition-all duration-300 ${isMobile ? (isCollapsed ? "w-0" : "w-64") : isCollapsed ? "w-16" : "w-64"
+        } h-screen overflow-y-scroll no-scrollbar flex flex-col bg-blue-800`}
+    >
+      <div className="sticky top-0 p-4 font-bold text-white flex justify-center text-xl">
         <span>Admin Dashboard</span>
       </div>
       <div className="border-b-4 border-gray-800 my-2"></div>
@@ -114,11 +144,12 @@ const Sidebar = ({ isCollapsed, isMobile }) => {
                     {item.name}
                   </span>
                   <FaChevronDown
-                    className={`ml-auto text-xs transform ${openDropdown === item.name ? "rotate-180" : "rotate-0"}`}
+                    className={`ml-auto text-xs transform ${openDropdown === item.name ? "rotate-180" : "rotate-0"
+                      }`}
                   />
                 </div>
                 {openDropdown === item.name && (
-                  <ul className="ml-10 text-sm text-white">
+                  <ul className="ml-10 text-sm text-white space-y-1">
                     {item.dropdown.map((subItem, subIdx) => (
                       <li key={subIdx}>
                         <Link

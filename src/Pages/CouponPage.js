@@ -1,67 +1,104 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { utils, writeFile } from "xlsx";
-
-// Generate 5-character coupon code
-const generateCouponCode = () => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  return Array.from({ length: 5 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-};
-
-const initialCoupons = [
-  { id: 1, name: "Summer Feast", discount: 20, validTill: "31-07-2025", code: generateCouponCode(), category: "Restaurant", status: "Pending" },
-  { id: 2, name: "Family Dinner", discount: 15, validTill: "31-12-2025", code: generateCouponCode(), category: "Restaurant", status: "Pending" },
-  { id: 3, name: "Pizza Night", discount: 10, validTill: "15-06-2025", code: generateCouponCode(), category: "Restaurant", status: "Pending" },
-  { id: 4, name: "Meat Lovers Special", discount: 25, validTill: "31-08-2025", code: generateCouponCode(), category: "Meat Shop", status: "Pending" },
-  { id: 5, name: "Healthy Groceries", discount: 15, validTill: "30-09-2025", code: generateCouponCode(), category: "Groceries", status: "Pending" },
-  // Add more coupons as needed to test pagination
-];
+import axios from "axios";
 
 const CouponsTable = () => {
-  const [coupons, setCoupons] = useState(initialCoupons);
+  const [coupons, setCoupons] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedStatus, setSelectedStatus] = useState("All");
   const [editingId, setEditingId] = useState(null);
   const [downloadLimit, setDownloadLimit] = useState(50);
   const [currentPage, setCurrentPage] = useState(1);
-  const couponsPerPage = 3;
 
-  const handleStatusChange = (id, newStatus) => {
-    setCoupons((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, status: newStatus } : c))
-    );
-    setEditingId(null);
-  };
+  // Number of coupons per page based on downloadLimit
+  const couponsPerPage = downloadLimit;
 
-  const handleDelete = (id) => {
-    const confirmed = window.confirm("Are you sure you want to delete this coupon?");
-    if (confirmed) {
-      setCoupons((prev) => prev.filter((c) => c.id !== id));
+  // Fetch coupons from API on mount
+  useEffect(() => {
+    const fetchCoupons = async () => {
+      try {
+        const res = await axios.get("http://31.97.206.144:6098/api/admin/getallcoupons");
+        if (res.data && res.data.coupons) {
+          setCoupons(res.data.coupons);
+        }
+      } catch (error) {
+        console.error("Failed to fetch coupons:", error);
+        alert("Failed to fetch coupons from server.");
+      }
+    };
+    fetchCoupons();
+  }, []);
+
+  // Handle status update (call API)
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      // Call PATCH API to update coupon status
+      const res = await axios.put(
+        `http://31.97.206.144:6098/api/admin/updatecouponstatus/${id}`,
+        { status: newStatus }
+      );
+      if (res.data && res.data.coupon) {
+        // Update local state with new status
+        setCoupons((prev) =>
+          prev.map((c) => (c._id === id ? { ...c, status: newStatus } : c))
+        );
+        setEditingId(null);
+        alert("Status updated successfully.");
+      } else {
+        alert("Failed to update status.");
+      }
+    } catch (error) {
+      console.error("Failed to update status:", error);
+      alert("Error updating coupon status.");
     }
   };
 
-  const filteredCoupons =
-    selectedCategory === "All"
-      ? coupons
-      : coupons.filter((c) => c.category === selectedCategory);
+  // Handle delete coupon (call API)
+  const handleDelete = async (id) => {
+    const confirmed = window.confirm("Are you sure you want to delete this coupon?");
+    if (!confirmed) return;
+
+    try {
+      await axios.delete(`http://31.97.206.144:6098/api/admin/deletecoupon/${id}`);
+      // Remove from local state on success
+      setCoupons((prev) => prev.filter((c) => c._id !== id));
+      alert("Coupon deleted successfully.");
+    } catch (error) {
+      console.error("Failed to delete coupon:", error);
+      alert("Error deleting coupon.");
+    }
+  };
+
+  // Filter coupons by category and status
+  const filteredCoupons = coupons.filter((c) => {
+    const categoryMatch = selectedCategory === "All" || c.category === selectedCategory;
+    const statusMatch = selectedStatus === "All" || c.status === selectedStatus;
+    return categoryMatch && statusMatch;
+  });
+
+  const totalPages = Math.ceil(filteredCoupons.length / couponsPerPage);
 
   const indexOfLastCoupon = currentPage * couponsPerPage;
   const indexOfFirstCoupon = indexOfLastCoupon - couponsPerPage;
   const currentCoupons = filteredCoupons.slice(indexOfFirstCoupon, indexOfLastCoupon);
-  const totalPages = Math.ceil(filteredCoupons.length / couponsPerPage);
 
-  const categories = ["All", "Restaurant", "Meat Shop", "Groceries"];
+  const categories = ["All", "Food", "Restaurant", "Meat Shop", "Groceries"];
+  const statuses = ["All", "approved", "rejected", "pending"];
 
   const exportData = (type) => {
     const exportCoupons = filteredCoupons
       .slice(0, downloadLimit)
-      .map(({ id, name, discount, validTill, code, category, status }) => ({
-        ID: id,
+      .map(({ _id, name, discountPercentage, validityDate, couponCode, category, status, vendorId }) => ({
+        ID: _id,
         Name: name,
         Category: category,
-        Discount: discount,
-        ValidTill: validTill,
-        Code: code,
+        Discount: discountPercentage,
+        ValidTill: new Date(validityDate).toLocaleDateString(),
+        Code: couponCode,
         Status: status,
+        VendorName: vendorId?.name || "",
+        VendorBusinessName: vendorId?.businessName || "",
       }));
 
     const ws = utils.json_to_sheet(exportCoupons);
@@ -76,23 +113,43 @@ const CouponsTable = () => {
 
       {/* Filters and Export Controls */}
       <div className="mb-6 flex flex-wrap justify-between items-center gap-4">
-        <select
-          value={selectedCategory}
-          onChange={(e) => {
-            setSelectedCategory(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="border px-4 py-2 rounded bg-gray-100 text-gray-700"
-        >
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>{cat}</option>
-          ))}
-        </select>
+        <div className="flex gap-4">
+          <select
+            value={selectedCategory}
+            onChange={(e) => {
+              setSelectedCategory(e.target.value);
+              setCurrentPage(1); // Reset page on filter change
+            }}
+            className="border px-4 py-2 rounded bg-gray-100 text-gray-700"
+          >
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+          
+          <select
+            value={selectedStatus}
+            onChange={(e) => {
+              setSelectedStatus(e.target.value);
+              setCurrentPage(1); // Reset page on filter change
+            }}
+            className="border px-4 py-2 rounded bg-gray-100 text-gray-700"
+          >
+            {statuses.map((status) => (
+              <option key={status} value={status}>
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <div className="flex gap-2 items-center">
           <select
             value={downloadLimit}
-            onChange={(e) => setDownloadLimit(Number(e.target.value))}
+            onChange={(e) => {
+              setDownloadLimit(Number(e.target.value));
+              setCurrentPage(1); // Reset page on limit change
+            }}
             className="p-2 border rounded text-gray-700"
           >
             <option value={10}>10</option>
@@ -126,6 +183,7 @@ const CouponsTable = () => {
               <th className="p-2 border">Discount (%)</th>
               <th className="p-2 border">Valid Till</th>
               <th className="p-2 border">Code</th>
+              <th className="p-2 border">Vendor</th>
               <th className="p-2 border">Status</th>
               <th className="p-2 border">Action</th>
             </tr>
@@ -133,30 +191,40 @@ const CouponsTable = () => {
           <tbody>
             {currentCoupons.length > 0 ? (
               currentCoupons.map((coupon) => (
-                <tr key={coupon.id} className="text-center border-b">
-                  <td className="p-2 border">{coupon.id}</td>
+                <tr key={coupon._id} className="text-center border-b">
+                  <td className="p-2 border">{coupon._id.slice(-6)}</td>
                   <td className="p-2 border">{coupon.name}</td>
                   <td className="p-2 border">{coupon.category}</td>
-                  <td className="p-2 border">{coupon.discount}</td>
-                  <td className="p-2 border">{coupon.validTill}</td>
-                  <td className="p-2 border font-mono">{coupon.code}</td>
+                  <td className="p-2 border">{coupon.discountPercentage}</td>
+                  <td className="p-2 border">{new Date(coupon.validityDate).toLocaleDateString()}</td>
+                  <td className="p-2 border font-mono">{coupon.couponCode}</td>
                   <td className="p-2 border">
-                    {editingId === coupon.id ? (
+                    <div className="flex flex-col items-center">
+                      <img
+                        src={coupon.vendorId?.businessLogo}
+                        alt={coupon.vendorId?.businessName}
+                        className="w-8 h-8 rounded-full mb-1 object-cover"
+                      />
+                      <div className="text-xs font-semibold">{coupon.vendorId?.businessName}</div>
+                    </div>
+                  </td>
+                  <td className="p-2 border">
+                    {editingId === coupon._id ? (
                       <select
                         value={coupon.status}
-                        onChange={(e) => handleStatusChange(coupon.id, e.target.value)}
+                        onChange={(e) => handleStatusChange(coupon._id, e.target.value)}
                         className="border p-1 rounded"
                       >
-                        <option value="Approved">Approved</option>
-                        <option value="Rejected">Rejected</option>
-                        <option value="Pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="pending">Pending</option>
                       </select>
                     ) : (
                       <span
                         className={`px-2 py-1 rounded-full text-sm ${
-                          coupon.status === "Approved"
+                          coupon.status === "approved"
                             ? "bg-green-200 text-green-800"
-                            : coupon.status === "Rejected"
+                            : coupon.status === "rejected"
                             ? "bg-red-200 text-red-800"
                             : "bg-yellow-200 text-yellow-800"
                         }`}
@@ -166,10 +234,10 @@ const CouponsTable = () => {
                     )}
                   </td>
                   <td className="p-2 border flex justify-center gap-3">
-                    <button onClick={() => setEditingId(coupon.id)} className="text-blue-600">
+                    <button onClick={() => setEditingId(coupon._id)} className="text-blue-600">
                       <FaEdit />
                     </button>
-                    <button onClick={() => handleDelete(coupon.id)} className="text-red-600">
+                    <button onClick={() => handleDelete(coupon._id)} className="text-red-600">
                       <FaTrash />
                     </button>
                   </td>
@@ -177,7 +245,7 @@ const CouponsTable = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="8" className="p-4 text-center text-gray-500">
+                <td colSpan="9" className="p-4 text-center text-gray-500">
                   No coupons found.
                 </td>
               </tr>

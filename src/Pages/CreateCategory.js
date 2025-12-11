@@ -1,44 +1,29 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const CreateCategory = () => {
+const CreateCategory = ({ onCategoryCreated }) => {
   const [categoryName, setCategoryName] = useState('');
-  const [image, setImage] = useState(null);
-  const [previewImage, setPreviewImage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImage(file);
-      setPreviewImage(URL.createObjectURL(file));
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!categoryName || !image) {
-      setErrorMessage('All fields are required');
+    if (!categoryName.trim()) {
+      setErrorMessage('Category name is required');
       return;
     }
 
-    const formData = new FormData();
-    formData.append('categoryName', categoryName);
-    formData.append('image', image);
-
     try {
-      const res = await axios.post('https://posterbnaobackend.onrender.com/api/category/create-cateogry', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const res = await axios.post(
+        'http://31.97.206.144:6098/api/admin/create-categories',
+        { categoryName }
+      );
 
       alert('Category created successfully!');
       setCategoryName('');
-      setImage(null);
-      setPreviewImage('');
       setErrorMessage('');
+
+      if (onCategoryCreated) onCategoryCreated();
     } catch (err) {
       console.error('Error creating category:', err);
       setErrorMessage('Error creating category. Please try again.');
@@ -46,29 +31,27 @@ const CreateCategory = () => {
   };
 
   return (
-    <div className="container p-6 max-w-xl mx-auto bg-white shadow-lg rounded-lg">
-      <h2 className="text-xl font-semibold mb-6 text-center text-blue-900">Create New Category</h2>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-lg font-medium mb-2">Category Name</label>
-          <input
-            type="text"
-            className="w-full p-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={categoryName}
-            onChange={(e) => setCategoryName(e.target.value)}
-            placeholder="Enter category name"
-          />
-        </div>
+    <div className="max-w-md mx-auto p-4 bg-white rounded shadow-sm">
+      <h2 className="text-lg font-semibold mb-4 text-center text-blue-900">
+        Create New Category
+      </h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <input
+          type="text"
+          placeholder="Enter category name"
+          value={categoryName}
+          onChange={(e) => setCategoryName(e.target.value)}
+          className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+
         {errorMessage && <p className="text-red-600 text-center">{errorMessage}</p>}
 
-        <div className="text-center">
-          <button
-            type="submit"
-            className="bg-blue-900 text-white p-3 rounded-lg shadow-md hover:bg-blue-800 transition duration-300"
-          >
-            Create Category
-          </button>
-        </div>
+        <button
+          type="submit"
+          className="w-full bg-blue-900 text-white py-2 rounded hover:bg-blue-800 transition duration-300"
+        >
+          Create
+        </button>
       </form>
     </div>
   );

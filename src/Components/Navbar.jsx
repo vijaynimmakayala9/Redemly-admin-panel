@@ -1,71 +1,55 @@
-import { useState, useEffect } from "react";
-import { MdShoppingCart } from "react-icons/md"; // Vendor related icon (could be for products/orders)
-import { RiMenu2Line, RiMenu3Line, RiFullscreenLine } from "react-icons/ri";
+import { MdNotificationsNone } from "react-icons/md";
+import { RiMenu2Line, RiMenu3Line } from "react-icons/ri";
 import { useNavigate } from "react-router-dom";
-import axios from "axios"; // Make sure axios is installed (npm install axios)
 
 const Navbar = ({ setIsCollapsed, isCollapsed }) => {
   const navigate = useNavigate();
 
-  // State to store counts
-  const [productRequests, setProductRequests] = useState(0);
-  const [orderRequests, setOrderRequests] = useState(0);
+  const totalNotifications = 5; // Dummy count
 
-  // Fetch counts from API on component mount
-  useEffect(() => {
-    const fetchCounts = async () => {
-      try {
-        const response = await axios.get("https://your-api-endpoint.com/api/vendor/getcount");
-        setProductRequests(response.data.totalProductRequests || 0);
-        setOrderRequests(response.data.totalOrderRequests || 0);
-      } catch (error) {
-        console.error("Error fetching counts:", error);
-      }
-    };
-
-    fetchCounts();
-  }, []);
-
-  const handleProductClick = () => {
-    navigate("/vendor/productlist");
-  };
-
-  const handleOrderClick = () => {
-    navigate("/vendor/orderlist");
+  const handleNotificationsClick = () => {
+    navigate("/notifications");
   };
 
   return (
-<nav className="bg-blue-800 text-white sticky top-0 w-full h-28 px-4 flex items-center shadow-lg z-50">
-  <button onClick={() => setIsCollapsed(!isCollapsed)} className="text-xl p-2">
-    {isCollapsed ? (
-      <RiMenu2Line className="text-2xl text-[#AAAAAA]" />
-    ) : (
-      <RiMenu3Line className="text-2xl text-[#AAAAAA]" />
-    )}
-  </button>
-
-  <div className="flex justify-between items-center w-full">
-    <div className="flex gap-3 ml-4">
-      {/* Add any other items you want here */}
-    </div>
-
-    <div className="flex gap-3 items-center">
-      <button className="px-2 py-1 rounded-full bg-[#F8FAF8] cursor-pointer hover:bg-[#D9F3EA] hover:text-[#00B074] duration-300">
-        <RiFullscreenLine />
+    <nav className="bg-blue-800 text-white sticky top-0 w-full h-16 px-4 flex items-center shadow-lg z-50">
+      {/* Sidebar toggle button */}
+      <button onClick={() => setIsCollapsed(!isCollapsed)} className="text-xl p-2">
+        {isCollapsed ? (
+          <RiMenu2Line className="text-2xl text-[#AAAAAA]" />
+        ) : (
+          <RiMenu3Line className="text-2xl text-[#AAAAAA]" />
+        )}
       </button>
 
-      <div className="flex flex-col justify-center items-center">
-        <img
-              className="rounded-full w-[3vw] border-2 border-white"
-              src="/logo.jpeg"
-              alt="Vendor Logo"
-            />
-        <h1 className="text-xs text-white">Redemly</h1>
-      </div>
-    </div>
-  </div>
-</nav>
+      {/* Notifications */}
+      <button
+        onClick={handleNotificationsClick}
+        className="relative flex items-center gap-1 ml-4 px-3 py-2 rounded hover:bg-blue-700 cursor-pointer select-none"
+        title="Notifications"
+      >
+        <MdNotificationsNone className="text-2xl" />
+        {totalNotifications > 0 && (
+          <span className="absolute top-1 left-6 flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-red-600 rounded-full min-w-[18px] min-h-[18px]">
+            {totalNotifications}
+          </span>
+        )}
+        {!isCollapsed && <span className="text-sm font-medium">Notifications</span>}
+      </button>
 
+      {/* Spacer to push logo to right */}
+      <div className="flex-grow"></div>
+
+      {/* Logo + Redemly title on the right side */}
+      <div className="flex items-center gap-2 pr-4">
+        <img
+          src="/discount logo.png"
+          alt="Vendor Logo"
+          className="w-[40px] h-auto" // No border or circle
+        />
+        <span className="text-white-400 font-bold text-lg">Redemly</span>
+      </div>
+    </nav>
   );
 };
 

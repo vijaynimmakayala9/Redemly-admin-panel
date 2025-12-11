@@ -1,97 +1,175 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const PrivacyPolicyPage = () => {
-  const [privacyPolicy, setPrivacyPolicy] = useState(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editedPolicy, setEditedPolicy] = useState({ title: "", content: "", date: "" });
+  const [policy, setPolicy] = useState(null);
+  const [editModal, setEditModal] = useState(false);
+  const [edited, setEdited] = useState({ title: "", content: "", date: "", _id: "" });
+  const [error, setError] = useState("");
 
-  const dummyData = {
-    title: "Privacy Policy",
-    content: `This Privacy Policy outlines how we collect, use, disclose, and safeguard your information when you use our services. We value your privacy and are committed to protecting your personal data. Our policy includes details about the information we collect, how we use it, and your rights regarding your information.
-
-1. **Information Collection**: We collect personal data such as name, email address, phone number, etc.
-2. **Use of Information**: We use your information to provide and improve our services.
-3. **Sharing Information**: We may share your information with third-party partners to enhance our services.
-4. **Security**: We take necessary measures to ensure your data is protected from unauthorized access or disclosure.
-
-By using our services, you agree to the collection and use of your information in accordance with this policy.`,
-    date: "2025-05-05",
-  };
-
+  // ✅ Fetch the existing privacy policy (single object)
   useEffect(() => {
-    setPrivacyPolicy(dummyData);
+    axios
+      .get("http://31.97.206.144:6098/api/admin/privacy-policy")
+      .then((res) => {
+        if (res.data.success && res.data.data) {
+          setPolicy(res.data.data);
+        } else {
+          setPolicy(null);
+        }
+      })
+      .catch(() => setError("Failed to fetch privacy policy."));
   }, []);
 
-  const handleEditClick = () => {
-    setEditedPolicy(privacyPolicy);
-    setIsEditModalOpen(true);
+  // ✅ Open modal for editing
+  const handleEdit = () => {
+    if (!policy) return;
+    setEdited({ ...policy });
+    setEditModal(true);
   };
 
-  const handleSave = () => {
-    setPrivacyPolicy(editedPolicy);
-    setIsEditModalOpen(false);
+  // ✅ Open modal for creating
+  const handleCreate = () => {
+    setEdited({ title: "", content: "", date: "" });
+    setEditModal(true);
   };
 
-  if (!privacyPolicy) {
-    return <div>Loading...</div>;
-  }
+  // ✅ Save (create or update based on _id)
+  const handleSave = async () => {
+    try {
+      if (edited._id) {
+        // Update
+        const res = await axios.put(
+          `http://31.97.206.144:6098/api/admin/privacy-policy/${edited._id}`,
+          {
+            title: edited.title,
+            content: edited.content,
+            date: edited.date,
+          }
+        );
+        if (res.data.success) {
+          setPolicy(res.data.data);
+          setEditModal(false);
+        } else {
+          alert(res.data.message || "Update failed.");
+        }
+      } else {
+        // Create
+        const res = await axios.post("http://31.97.206.144:6098/api/admin/privacy-policy", {
+          title: edited.title,
+          content: edited.content,
+          date: edited.date,
+        });
+        if (res.data.success) {
+          setPolicy(res.data.data);
+          setEditModal(false);
+        } else {
+          alert(res.data.message || "Creation failed.");
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Request failed.");
+    }
+  };
+
+  // ✅ Delete
+  const handleDelete = async () => {
+    if (!policy || !window.confirm("Are you sure you want to delete this policy?")) return;
+    try {
+      const res = await axios.delete(
+        `http://31.97.206.144:6098/api/admin/privacy-policy/${policy._id}`
+      );
+      if (res.data.success) {
+        setPolicy(null);
+        alert("Privacy policy deleted.");
+      } else {
+        alert(res.data.message || "Delete failed.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Delete failed.");
+    }
+  };
+
+  // ✅ Render
+  if (error) return <div className="p-6 text-red-600">{error}</div>;
 
   return (
-    <div className="p-6 max-w-4xl mx-auto bg-white shadow-lg rounded-lg">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-3xl font-semibold text-blue-900">{privacyPolicy.title}</h2>
-        <button
-          onClick={handleEditClick}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Edit
-        </button>
-      </div>
-      <p className="text-sm text-gray-500 mb-4">Effective Date: {privacyPolicy.date}</p>
-      <div className="text-gray-700 leading-relaxed whitespace-pre-line text-lg">
-        {privacyPolicy.content}
-      </div>
+    <div className="p-6 max-w-4xl mx-auto bg-white shadow-md rounded-lg">
+      {!policy ? (
+        <div>
+          <p>No privacy policy available.</p>
+          <button
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
+            onClick={handleCreate}
+          >
+            Create One
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-3xl font-semibold">{policy.title}</h2>
+            <div className="space-x-2">
+              <button
+                onClick={handleEdit}
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+              >
+                Edit
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+          <p className="text-sm text-gray-500 mb-4">Effective Date: {policy.date}</p>
+          <div className="whitespace-pre-line text-gray-800 leading-relaxed">
+            {policy.content}
+          </div>
+        </>
+      )}
 
-      {/* Edit Modal */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+      {/* ✅ Modal for Create / Edit */}
+      {editModal && (
+        <div className="fixed inset-0 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl">
-            <h3 className="text-xl font-semibold mb-4 text-blue-800">Edit Privacy Policy</h3>
-
-            <label className="block text-gray-700 mb-1">Title</label>
+            <h3 className="text-xl font-semibold mb-4">
+              {edited._id ? "Edit" : "Create"} Privacy Policy
+            </h3>
+            <label className="block mb-1">Title</label>
             <input
-              type="text"
-              className="w-full p-2 border rounded mb-4"
-              value={editedPolicy.title}
-              onChange={(e) => setEditedPolicy({ ...editedPolicy, title: e.target.value })}
+              className="w-full p-2 border rounded mb-3"
+              value={edited.title}
+              onChange={(e) => setEdited({ ...edited, title: e.target.value })}
             />
-
-            <label className="block text-gray-700 mb-1">Effective Date</label>
+            <label className="block mb-1">Effective Date</label>
             <input
               type="date"
-              className="w-full p-2 border rounded mb-4"
-              value={editedPolicy.date}
-              onChange={(e) => setEditedPolicy({ ...editedPolicy, date: e.target.value })}
+              className="w-full p-2 border rounded mb-3"
+              value={edited.date}
+              onChange={(e) => setEdited({ ...edited, date: e.target.value })}
             />
-
-            <label className="block text-gray-700 mb-1">Content</label>
+            <label className="block mb-1">Content</label>
             <textarea
-              rows={10}
+              rows={8}
               className="w-full p-2 border rounded mb-4"
-              value={editedPolicy.content}
-              onChange={(e) => setEditedPolicy({ ...editedPolicy, content: e.target.value })}
-            ></textarea>
-
-            <div className="flex justify-end gap-2">
+              value={edited.content}
+              onChange={(e) => setEdited({ ...edited, content: e.target.value })}
+            />
+            <div className="flex justify-end space-x-2">
               <button
-                onClick={() => setIsEditModalOpen(false)}
-                className="bg-gray-300 px-4 py-2 rounded"
+                onClick={() => setEditModal(false)}
+                className="px-3 py-2 bg-gray-300 rounded"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                className="px-3 py-2 bg-green-600 text-white rounded"
               >
                 Save
               </button>
