@@ -21,7 +21,7 @@ export default function UserList() {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("adminToken");
-      const res = await fetch("http://31.97.206.144:6098/api/admin/getallusers", {
+      const res = await fetch("https://api.redemly.com/api/admin/getallusers", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -53,7 +53,7 @@ export default function UserList() {
     try {
       const token = localStorage.getItem("adminToken");
       const res = await fetch(
-        `http://31.97.206.144:6098/api/admin/updateusers/${editedUser.id}`,
+        `https://api.redemly.com/api/admin/updateusers/${editedUser.id}`,
         {
           method: "PUT",
           headers: {
@@ -96,7 +96,7 @@ export default function UserList() {
     setLoading(true);
     try {
       const token = localStorage.getItem("adminToken");
-      const res = await fetch(`http://31.97.206.144:6098/api/admin/deleteusers/${userId}`, {
+      const res = await fetch(`https://api.redemly.com/api/admin/deleteusers/${userId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

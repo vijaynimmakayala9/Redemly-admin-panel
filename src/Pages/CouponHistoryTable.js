@@ -8,7 +8,7 @@ const CouponHistoryTable = () => {
   useEffect(() => {
     const fetchCouponHistory = async () => {
       try {
-        const response = await fetch("http://31.97.206.144:6098/api/admin/userusage-couponhistory");
+        const response = await fetch("https://api.redemly.com/api/admin/userusage-couponhistory");
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

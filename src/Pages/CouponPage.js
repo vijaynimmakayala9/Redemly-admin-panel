@@ -10,6 +10,15 @@ const CouponsTable = () => {
   const [editingId, setEditingId] = useState(null);
   const [downloadLimit, setDownloadLimit] = useState(50);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState(null);
+  const [editForm, setEditForm] = useState({
+    status: "",
+    requiredCoins: "",
+    limitForSameUser: "",
+    maxUsage: ""
+  });
+  const [editLoading, setEditLoading] = useState(false);
 
   // Number of coupons per page based on downloadLimit
   const couponsPerPage = downloadLimit;
@@ -18,7 +27,7 @@ const CouponsTable = () => {
   useEffect(() => {
     const fetchCoupons = async () => {
       try {
-        const res = await axios.get("http://31.97.206.144:6098/api/admin/getallcoupons");
+        const res = await axios.get("https://api.redemly.com/api/admin/getallcoupons");
         if (res.data && res.data.coupons) {
           setCoupons(res.data.coupons);
         }
@@ -30,27 +39,75 @@ const CouponsTable = () => {
     fetchCoupons();
   }, []);
 
-  // Handle status update (call API)
-  const handleStatusChange = async (id, newStatus) => {
+  // Open edit modal with coupon data
+  const openEditModal = (coupon) => {
+    setEditingCoupon(coupon);
+    setEditForm({
+      status: coupon.status || "pending",
+      requiredCoins: coupon.requiredCoins || "",
+      limitForSameUser: coupon.limitForSameUser || "",
+      maxUsage: coupon.maxUsage || ""
+    });
+    setIsEditModalOpen(true);
+  };
+
+  // Handle edit form changes
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Handle update coupon API call
+  const handleUpdateCoupon = async () => {
+    if (!editingCoupon?._id) return;
+
+    // Basic validation
+    if (!editForm.requiredCoins || !editForm.limitForSameUser || !editForm.maxUsage) {
+      alert("Please fill all required fields");
+      return;
+    }
+
+    setEditLoading(true);
     try {
-      // Call PATCH API to update coupon status
       const res = await axios.put(
-        `http://31.97.206.144:6098/api/admin/updatecouponstatus/${id}`,
-        { status: newStatus }
+        `https://api.redemly.com/api/admin/updatecouponstatus/${editingCoupon._id}`,
+        {
+          status: editForm.status,
+          requiredCoins: Number(editForm.requiredCoins),
+          limitForSameUser: Number(editForm.limitForSameUser),
+          maxUsage: Number(editForm.maxUsage)
+        }
       );
+
       if (res.data && res.data.coupon) {
-        // Update local state with new status
+        // Update local state with new data
         setCoupons((prev) =>
-          prev.map((c) => (c._id === id ? { ...c, status: newStatus } : c))
+          prev.map((c) => 
+            c._id === editingCoupon._id 
+              ? { 
+                  ...c, 
+                  status: editForm.status,
+                  requiredCoins: Number(editForm.requiredCoins),
+                  limitForSameUser: Number(editForm.limitForSameUser),
+                  maxUsage: Number(editForm.maxUsage)
+                } 
+              : c
+          )
         );
-        setEditingId(null);
-        alert("Status updated successfully.");
+        setIsEditModalOpen(false);
+        setEditingCoupon(null);
+        alert("Coupon updated successfully!");
       } else {
-        alert("Failed to update status.");
+        alert("Failed to update coupon.");
       }
     } catch (error) {
-      console.error("Failed to update status:", error);
-      alert("Error updating coupon status.");
+      console.error("Failed to update coupon:", error);
+      alert(error.response?.data?.message || "Error updating coupon.");
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -60,7 +117,7 @@ const CouponsTable = () => {
     if (!confirmed) return;
 
     try {
-      await axios.delete(`http://31.97.206.144:6098/api/admin/deletecoupon/${id}`);
+      await axios.delete(`https://api.redemly.com/api/admin/deletecoupon/${id}`);
       // Remove from local state on success
       setCoupons((prev) => prev.filter((c) => c._id !== id));
       alert("Coupon deleted successfully.");
@@ -89,11 +146,14 @@ const CouponsTable = () => {
   const exportData = (type) => {
     const exportCoupons = filteredCoupons
       .slice(0, downloadLimit)
-      .map(({ _id, name, discountPercentage, validityDate, couponCode, category, status, vendorId }) => ({
+      .map(({ _id, name, discountPercentage, validityDate, couponCode, category, status, vendorId, requiredCoins, limitForSameUser, maxUsage }) => ({
         ID: _id,
         Name: name,
         Category: category,
         Discount: discountPercentage,
+        RequiredCoins: requiredCoins,
+        LimitPerUser: limitForSameUser,
+        MaxUsage: maxUsage,
         ValidTill: new Date(validityDate).toLocaleDateString(),
         Code: couponCode,
         Status: status,
@@ -107,6 +167,19 @@ const CouponsTable = () => {
     writeFile(wb, `coupons.${type}`);
   };
 
+  const statusBadge = (status) => {
+    const colors = {
+      approved: "bg-green-200 text-green-800",
+      rejected: "bg-red-200 text-red-800",
+      pending: "bg-yellow-200 text-yellow-800"
+    };
+    return (
+      <span className={`px-2 py-1 rounded-full text-sm ${colors[status] || "bg-gray-200"}`}>
+        {status}
+      </span>
+    );
+  };
+
   return (
     <div className="p-6 bg-white shadow rounded">
       <h1 className="text-2xl font-semibold text-center mb-6 text-gray-700">Coupons List</h1>
@@ -118,7 +191,7 @@ const CouponsTable = () => {
             value={selectedCategory}
             onChange={(e) => {
               setSelectedCategory(e.target.value);
-              setCurrentPage(1); // Reset page on filter change
+              setCurrentPage(1);
             }}
             className="border px-4 py-2 rounded bg-gray-100 text-gray-700"
           >
@@ -131,7 +204,7 @@ const CouponsTable = () => {
             value={selectedStatus}
             onChange={(e) => {
               setSelectedStatus(e.target.value);
-              setCurrentPage(1); // Reset page on filter change
+              setCurrentPage(1);
             }}
             className="border px-4 py-2 rounded bg-gray-100 text-gray-700"
           >
@@ -148,7 +221,7 @@ const CouponsTable = () => {
             value={downloadLimit}
             onChange={(e) => {
               setDownloadLimit(Number(e.target.value));
-              setCurrentPage(1); // Reset page on limit change
+              setCurrentPage(1);
             }}
             className="p-2 border rounded text-gray-700"
           >
@@ -158,13 +231,13 @@ const CouponsTable = () => {
             <option value={200}>200</option>
           </select>
           <button
-            className="bg-gray-200 px-4 py-2 rounded text-sm"
+            className="bg-gray-200 px-4 py-2 rounded text-sm hover:bg-gray-300"
             onClick={() => exportData("csv")}
           >
             Export CSV
           </button>
           <button
-            className="bg-gray-200 px-4 py-2 rounded text-sm"
+            className="bg-gray-200 px-4 py-2 rounded text-sm hover:bg-gray-300"
             onClick={() => exportData("xlsx")}
           >
             Export Excel
@@ -180,7 +253,10 @@ const CouponsTable = () => {
               <th className="p-2 border">ID</th>
               <th className="p-2 border">Name</th>
               <th className="p-2 border">Category</th>
-              <th className="p-2 border">Discount (%)</th>
+              <th className="p-2 border">Discount</th>
+              <th className="p-2 border">Coins</th>
+              <th className="p-2 border">Limit/User</th>
+              <th className="p-2 border">Max Usage</th>
               <th className="p-2 border">Valid Till</th>
               <th className="p-2 border">Code</th>
               <th className="p-2 border">Vendor</th>
@@ -191,61 +267,55 @@ const CouponsTable = () => {
           <tbody>
             {currentCoupons.length > 0 ? (
               currentCoupons.map((coupon) => (
-                <tr key={coupon._id} className="text-center border-b">
+                <tr key={coupon._id} className="text-center border-b hover:bg-gray-50">
                   <td className="p-2 border">{coupon._id.slice(-6)}</td>
                   <td className="p-2 border">{coupon.name}</td>
                   <td className="p-2 border">{coupon.category}</td>
-                  <td className="p-2 border">{coupon.discountPercentage}</td>
+                  <td className="p-2 border font-bold">{coupon.discountPercentage}%</td>
+                  <td className="p-2 border">{coupon.requiredCoins}</td>
+                  <td className="p-2 border">{coupon.limitForSameUser}</td>
+                  <td className="p-2 border">{coupon.maxUsage}</td>
                   <td className="p-2 border">{new Date(coupon.validityDate).toLocaleDateString()}</td>
-                  <td className="p-2 border font-mono">{coupon.couponCode}</td>
+                  <td className="p-2 border font-mono bg-gray-100">{coupon.couponCode}</td>
                   <td className="p-2 border">
                     <div className="flex flex-col items-center">
                       <img
-                        src={coupon.vendorId?.businessLogo}
+                        src={coupon.vendorId?.businessLogo || ""}
                         alt={coupon.vendorId?.businessName}
-                        className="w-8 h-8 rounded-full mb-1 object-cover"
+                        className="w-8 h-8 rounded-full mb-1 object-cover border"
+                        onError={(e) => {
+                          e.target.src = "";
+                        }}
                       />
                       <div className="text-xs font-semibold">{coupon.vendorId?.businessName}</div>
                     </div>
                   </td>
                   <td className="p-2 border">
-                    {editingId === coupon._id ? (
-                      <select
-                        value={coupon.status}
-                        onChange={(e) => handleStatusChange(coupon._id, e.target.value)}
-                        className="border p-1 rounded"
-                      >
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                        <option value="pending">Pending</option>
-                      </select>
-                    ) : (
-                      <span
-                        className={`px-2 py-1 rounded-full text-sm ${
-                          coupon.status === "approved"
-                            ? "bg-green-200 text-green-800"
-                            : coupon.status === "rejected"
-                            ? "bg-red-200 text-red-800"
-                            : "bg-yellow-200 text-yellow-800"
-                        }`}
-                      >
-                        {coupon.status}
-                      </span>
-                    )}
+                    {statusBadge(coupon.status)}
                   </td>
-                  <td className="p-2 border flex justify-center gap-3">
-                    <button onClick={() => setEditingId(coupon._id)} className="text-blue-600">
-                      <FaEdit />
-                    </button>
-                    <button onClick={() => handleDelete(coupon._id)} className="text-red-600">
-                      <FaTrash />
-                    </button>
+                  <td className="p-2 border">
+                    <div className="flex justify-center gap-3">
+                      <button 
+                        onClick={() => openEditModal(coupon)} 
+                        className="text-blue-600 hover:text-blue-800"
+                        title="Edit Coupon"
+                      >
+                        <FaEdit />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(coupon._id)} 
+                        className="text-red-600 hover:text-red-800"
+                        title="Delete Coupon"
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="9" className="p-4 text-center text-gray-500">
+                <td colSpan="12" className="p-4 text-center text-gray-500">
                   No coupons found.
                 </td>
               </tr>
@@ -259,7 +329,7 @@ const CouponsTable = () => {
         <button
           onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
           disabled={currentPage === 1}
-          className="bg-gray-200 px-4 py-2 rounded disabled:opacity-50"
+          className="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300 disabled:opacity-50"
         >
           Previous
         </button>
@@ -268,7 +338,7 @@ const CouponsTable = () => {
             key={idx}
             onClick={() => setCurrentPage(idx + 1)}
             className={`px-4 py-2 rounded ${
-              currentPage === idx + 1 ? "bg-blue-500 text-white" : "bg-gray-100"
+              currentPage === idx + 1 ? "bg-blue-500 text-white" : "bg-gray-100 hover:bg-gray-200"
             }`}
           >
             {idx + 1}
@@ -277,11 +347,123 @@ const CouponsTable = () => {
         <button
           onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
           disabled={currentPage === totalPages}
-          className="bg-gray-200 px-4 py-2 rounded disabled:opacity-50"
+          className="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300 disabled:opacity-50"
         >
           Next
         </button>
       </div>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && editingCoupon && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-800">Edit Coupon</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Update coupon details for: <span className="font-semibold">{editingCoupon.name}</span>
+              </p>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4">
+              {/* Status */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <select
+                  name="status"
+                  value={editForm.status}
+                  onChange={handleEditChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="approved">Approved</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+              </div>
+
+              {/* Required Coins */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Required Coins
+                </label>
+                <input
+                  type="number"
+                  name="requiredCoins"
+                  value={editForm.requiredCoins}
+                  onChange={handleEditChange}
+                  min="0"
+                  className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  placeholder="Enter required coins"
+                />
+              </div>
+
+              {/* Limit Per User */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Limit Per User
+                </label>
+                <input
+                  type="number"
+                  name="limitForSameUser"
+                  value={editForm.limitForSameUser}
+                  onChange={handleEditChange}
+                  min="1"
+                  className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  placeholder="Enter limit per user"
+                />
+              </div>
+
+              {/* Max Usage */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Max Usage
+                </label>
+                <input
+                  type="number"
+                  name="maxUsage"
+                  value={editForm.maxUsage}
+                  onChange={handleEditChange}
+                  min="1"
+                  className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                  placeholder="Enter max usage count"
+                />
+              </div>
+
+              {/* Current Info */}
+              <div className="p-3 bg-blue-50 rounded border border-blue-200">
+                <p className="text-sm text-blue-700">
+                  <span className="font-semibold">Current:</span> {editingCoupon.discountPercentage}% off • 
+                  Category: {editingCoupon.category} • 
+                  Code: {editingCoupon.couponCode}
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setIsEditModalOpen(false);
+                  setEditingCoupon(null);
+                }}
+                className="px-5 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateCoupon}
+                disabled={editLoading}
+                className="px-5 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+              >
+                {editLoading ? "Updating..." : "Update Coupon"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

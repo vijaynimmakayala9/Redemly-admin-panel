@@ -31,7 +31,7 @@ const NewsFetcher = () => {
     const fetchNews = async () => {
       setStoredLoading(true);
       try {
-        const res = await axios.get("http://31.97.206.144:6098/api/users/latestnews", {
+        const res = await axios.get("https://api.redemly.com/api/users/latestnews", {
           params: storedCategory ? { category: storedCategory } : {},
         });
 
@@ -82,7 +82,7 @@ const NewsFetcher = () => {
     setErrorMsg("");
 
     try {
-      const res = await axios.get("http://31.97.206.144:6098/api/users/generate-news", {
+      const res = await axios.get("https://api.redemly.com/api/users/generate-news", {
         params: { category },
       });
 
@@ -105,7 +105,7 @@ const NewsFetcher = () => {
   const handleRefreshStoredNews = async () => {
     setStoredLoading(true);
     try {
-      const res = await axios.get("http://31.97.206.144:6098/api/users/latestnews", {
+      const res = await axios.get("https://api.redemly.com/api/users/latestnews", {
         params: storedCategory ? { category: storedCategory } : {},
       });
 

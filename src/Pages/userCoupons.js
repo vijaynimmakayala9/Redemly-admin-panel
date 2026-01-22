@@ -19,7 +19,7 @@ const AllUserCoupons = () => {
   useEffect(() => {
     const fetchUserCoupons = async () => {
       try {
-        const response = await axios.get('http://31.97.206.144:6098/api/admin/getalluserscoupons');
+        const response = await axios.get('https://api.redemly.com/api/admin/getalluserscoupons');
         setUsers(response.data.users);
         setLoading(false);
       } catch (err) {

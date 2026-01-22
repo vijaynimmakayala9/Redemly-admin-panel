@@ -3,7 +3,7 @@ import { utils, writeFile } from 'xlsx';
 import axios from 'axios';
 import { FaTrash } from 'react-icons/fa';
 
-const API = 'http://31.97.206.144:6098/api/admin';
+const API = 'https://api.redemly.com/api/admin';
 
 const AllFunFactsTable = () => {
   const [facts, setFacts] = useState([]);

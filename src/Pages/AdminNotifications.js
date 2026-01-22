@@ -22,7 +22,7 @@ const AdminNotifications = () => {
         setLoading(true);
         setError(null);
 
-        const res = await fetch("http://31.97.206.144:6098/api/admin/notifications"); // Update with your actual endpoint
+        const res = await fetch("https://api.redemly.com/api/admin/notifications"); // Update with your actual endpoint
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
         const data = await res.json();
@@ -41,7 +41,7 @@ const AdminNotifications = () => {
   // Handle notification delete with API call
   const handleDelete = async (id) => {
     try {
-      const res = await fetch(`http://31.97.206.144:6098/api/admin/notifications/${id}`, {
+      const res = await fetch(`https://api.redemly.com/api/admin/notifications/${id}`, {
         method: "DELETE",
       });
 

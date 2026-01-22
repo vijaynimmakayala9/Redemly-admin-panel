@@ -23,7 +23,7 @@ const SpinCountPage = () => {
   const fetchSpinConfigs = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://31.97.206.144:6098/api/admin/getallspin");
+      const res = await axios.get("https://api.redemly.com/api/admin/getallspin");
       console.log("API Response:", res.data); // Debug log
       
       if (res.data && res.data.success) {
@@ -47,7 +47,7 @@ const SpinCountPage = () => {
     }
 
     try {
-      const res = await axios.post("http://31.97.206.144:6098/api/admin/spin-limit", {
+      const res = await axios.post("https://api.redemly.com/api/admin/spin-limit", {
         dailySpinLimit: parseInt(formData.dailySpinLimit)
       });
 
@@ -70,7 +70,7 @@ const SpinCountPage = () => {
     }
 
     try {
-      const res = await axios.put(`http://31.97.206.144:6098/api/admin/spin-limit/${id}`, {
+      const res = await axios.put(`https://api.redemly.com/api/admin/spin-limit/${id}`, {
         dailySpinLimit: parseInt(editFormData.dailySpinLimit)
       });
 
@@ -92,7 +92,7 @@ const SpinCountPage = () => {
     if (!confirmed) return;
 
     try {
-      const res = await axios.delete(`http://31.97.206.144:6098/api/admin/spin-limit/${id}`);
+      const res = await axios.delete(`https://api.redemly.com/api/admin/spin-limit/${id}`);
       
       if (res.data && res.data.success) {
         alert("Spin configuration deleted successfully!");

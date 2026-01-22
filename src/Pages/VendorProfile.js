@@ -1,12 +1,35 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { 
+  FaStar, 
+  FaEnvelope, 
+  FaPhone, 
+  FaMapMarkerAlt, 
+  FaCalendarAlt,
+  FaEdit,
+  FaToggleOn,
+  FaToggleOff,
+  FaChartLine,
+  FaMoneyBillWave,
+  FaReceipt,
+  FaShoppingCart,
+  FaUserCheck,
+  FaUserTimes,
+  FaDownload,
+  FaExclamationTriangle,
+  FaCheckCircle,
+  FaClock,
+  FaBusinessTime,
+  FaEye
+} from "react-icons/fa";
 
 export default function VendorDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [vendor, setVendor] = useState(null);
   const [coupons, setCoupons] = useState([]);
   const [feedbacks, setFeedbacks] = useState([]);
-  const [payments, setPayments] = useState([]); // New state for payments
+  const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("profile");
@@ -17,6 +40,7 @@ export default function VendorDetail() {
     daily: 0
   });
   const [graphFilter, setGraphFilter] = useState("overall");
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -31,7 +55,8 @@ export default function VendorDetail() {
         setError("");
         const token = localStorage.getItem("adminToken");
 
-        const res = await fetch(`http://31.97.206.144:6098/api/admin/getvendor/${id}`, {
+        // Fetch vendor details
+        const res = await fetch(`https://api.redemly.com/api/admin/getvendor/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -40,20 +65,40 @@ export default function VendorDetail() {
         }
 
         const data = await res.json();
-        setVendor(data.vendor || generateDummyVendor(id));
+        
+        // If vendor data exists in response, use it
+        if (data.vendor) {
+          setVendor(data.vendor);
+          
+          // Check if vendor is approved
+          if (!data.vendor.isApproved) {
+            setError("This vendor account is not yet approved");
+          }
+        } else {
+          // If no vendor in response, create from what we have
+          const vendorData = {
+            _id: id,
+            ...data,
+            // Ensure isApproved field exists
+            isApproved: data.isApproved || false
+          };
+          setVendor(vendorData);
+        }
+        
+        // Set other data
         setCoupons(data.coupons || generateDummyCoupons());
         setFeedbacks(data.feedbacks || generateDummyFeedbacks());
-        setPayments(data.payments || generateDummyPayments()); // Set payments data
+        setPayments(data.payments || generateDummyPayments());
         
-        // Calculate coupon redemption stats
+        // Calculate stats
         calculateCouponStats(data.coupons || generateDummyCoupons());
       } catch (err) {
         setError(err.message || "Error fetching vendor");
-        // Set dummy data on error for demonstration
+        // Set demo data for testing
         setVendor(generateDummyVendor(id));
         setCoupons(generateDummyCoupons());
         setFeedbacks(generateDummyFeedbacks());
-        setPayments(generateDummyPayments()); // Set dummy payments on error
+        setPayments(generateDummyPayments());
         calculateCouponStats(generateDummyCoupons());
       } finally {
         setLoading(false);
@@ -63,22 +108,38 @@ export default function VendorDetail() {
     fetchVendor();
   }, [id]);
 
-  // Generate dummy vendor data
-  const generateDummyVendor = (id) => {
+  // Generate complete dummy vendor data matching your API response
+  const generateDummyVendor = (vendorId) => {
     return {
-      _id: id,
-      businessName: "Sample Business",
-      name: "John Doe",
-      email: "john@example.com",
-      phone: "+1234567890",
-      city: "New York",
-      zipcode: "10001",
       location: {
+        type: "Point",
         coordinates: [40.7128, -74.0060]
       },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      businessLogo: null
+      _id: vendorId,
+      firstName: "Shiva",
+      lastName: "kotturi",
+      name: "Shiva kotturi",
+      email: "shivak1811@gmail.com",
+      phone: "2015391234",
+      tillNumber: "1223",
+      businessName: "redemly",
+      businessLogo: "https://res.cloudinary.com/dokfnv3vy/image/upload/v1766166986/vendorLogos/tttfgcansgjugeba43zl.svg",
+      note: "",
+      addresses: [
+        {
+          street: "1900 East Parmer Lane",
+          city: "Austin",
+          zipcode: "78754",
+          _id: "694591cc81f29abb326f6d76"
+        }
+      ],
+      isApproved: true, // This is the field we need to show
+      MyFeedback: [],
+      documents: [],
+      createdAt: "2025-12-19T17:56:28.603Z",
+      updatedAt: "2025-12-30T11:50:55.412Z",
+      __v: 0,
+      acceptTerms: false
     };
   };
 
@@ -142,7 +203,7 @@ export default function VendorDetail() {
     ];
   };
 
-  // Generate dummy payments data
+  // Generate dummy payments
   const generateDummyPayments = () => {
     return [
       {
@@ -162,39 +223,56 @@ export default function VendorDetail() {
         month: "December 2022",
         transactionId: "TXN0012346",
         paymentMethod: "Bank Transfer"
-      },
-      {
-        _id: "3",
-        amount: 1800,
-        status: "pending",
-        paymentDate: null,
-        month: "February 2023",
-        transactionId: null,
-        paymentMethod: "Bank Transfer"
-      },
-      {
-        _id: "4",
-        amount: 2200,
-        status: "overdue",
-        paymentDate: null,
-        month: "March 2023",
-        transactionId: null,
-        paymentMethod: "Bank Transfer",
-        dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString()
       }
     ];
   };
 
   const calculateCouponStats = (coupons) => {
-    // Calculate stats based on actual coupon data
     const overall = coupons.reduce((total, coupon) => total + (coupon.downloadedCount || 0), 0);
-    
-    // For demo purposes, create some variance in the stats
     const monthly = Math.round(overall * 0.7);
     const weekly = Math.round(overall * 0.3);
     const daily = Math.round(overall * 0.1);
     
     setStats({ overall, monthly, weekly, daily });
+  };
+
+  // Toggle vendor approval status
+  const toggleApproval = async () => {
+    if (!window.confirm(`Are you sure you want to ${vendor.isApproved ? "disapprove" : "approve"} this vendor?`)) return;
+    
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem("adminToken");
+      
+      // API call to toggle approval
+      const res = await fetch(`https://api.redemly.com/api/admin/toggle-vendor-approval/${vendor._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isApproved: !vendor.isApproved }),
+      });
+
+      if (res.ok) {
+        // Update local state
+        setVendor(prev => ({
+          ...prev,
+          isApproved: !prev.isApproved
+        }));
+      } else {
+        throw new Error("Failed to update approval status");
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Edit vendor function
+  const handleEditVendor = () => {
+    navigate(`/vendor/edit/${vendor._id}`, { state: { vendor } });
   };
 
   const formatDate = (dateString) => {
@@ -222,601 +300,918 @@ export default function VendorDetail() {
     }).format(amount);
   };
 
-  // Filter data for graph based on selected filter
-  const getFilteredGraphData = () => {
-    const data = [
+  // Get primary address
+  const getPrimaryAddress = () => {
+    if (vendor?.addresses && vendor.addresses.length > 0) {
+      return vendor.addresses[0];
+    }
+    return { street: "", city: "", zipcode: "" };
+  };
+
+  // Get status badge
+  const getStatusBadge = () => {
+    if (vendor?.isApproved) {
+      return {
+        text: "Approved",
+        color: "bg-green-100 text-green-800 border-green-200",
+        icon: <FaUserCheck className="mr-1" />
+      };
+    } else {
+      return {
+        text: "Pending Approval",
+        color: "bg-yellow-100 text-yellow-800 border-yellow-200",
+        icon: <FaUserTimes className="mr-1" />
+      };
+    }
+  };
+
+  const renderProfileSection = () => {
+    if (!vendor) return null;
+    
+    const address = getPrimaryAddress();
+    const statusBadge = getStatusBadge();
+
+    return (
+      <div className="space-y-6">
+        {/* Header with Approval Status */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex items-center space-x-3">
+            {vendor.businessLogo ? (
+              <img
+                src={vendor.businessLogo}
+                alt={vendor.businessName}
+                className="w-16 h-16 rounded-lg border-2 border-white shadow-md"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xl font-bold">
+                {vendor.businessName?.charAt(0) || vendor.name?.charAt(0) || 'V'}
+              </div>
+            )}
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">{vendor.businessName}</h2>
+              <div className="flex items-center mt-1">
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${statusBadge.color}`}>
+                  {statusBadge.icon}
+                  {statusBadge.text}
+                </span>
+                <button
+                  onClick={toggleApproval}
+                  disabled={actionLoading}
+                  className="ml-3 inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  {vendor.isApproved ? <FaToggleOn className="mr-1" /> : <FaToggleOff className="mr-1" />}
+                  {actionLoading ? "Processing..." : (vendor.isApproved ? "Disapprove" : "Approve")}
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex space-x-3">
+            <button
+              onClick={handleEditVendor}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <FaEdit className="mr-2" />
+              Edit Vendor
+            </button>
+            <button
+              onClick={() => navigate('/vendorlist')}
+              className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              Back to List
+            </button>
+          </div>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl border border-blue-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <FaShoppingCart className="text-blue-600" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-blue-700">Total Coupons</p>
+                <p className="text-2xl font-bold text-blue-900">{coupons.length}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl border border-green-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <FaDownload className="text-green-600" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-green-700">Total Downloads</p>
+                <p className="text-2xl font-bold text-green-900">{stats.overall}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-xl border border-purple-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <FaStar className="text-purple-600" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-purple-700">Avg Rating</p>
+                <p className="text-2xl font-bold text-purple-900">
+                  {feedbacks.length > 0 
+                    ? (feedbacks.reduce((sum, f) => sum + f.stars, 0) / feedbacks.length).toFixed(1)
+                    : "N/A"
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 rounded-xl border border-yellow-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <FaBusinessTime className="text-yellow-600" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">Member Since</p>
+                <p className="text-lg font-bold text-yellow-900">{formatDate(vendor.createdAt)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Detailed Information Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Personal Information */}
+          <div className="bg-white border border-gray-200 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <FaUserCheck className="mr-2 text-blue-600" />
+              Personal Information
+            </h3>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                <span className="text-gray-600">Full Name</span>
+                <span className="font-medium">{vendor.name}</span>
+              </div>
+              <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                <span className="text-gray-600">First Name</span>
+                <span className="font-medium">{vendor.firstName || "N/A"}</span>
+              </div>
+              <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                <span className="text-gray-600">Last Name</span>
+                <span className="font-medium">{vendor.lastName || "N/A"}</span>
+              </div>
+              <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                <span className="text-gray-600 flex items-center">
+                  <FaEnvelope className="mr-2" />
+                  Email
+                </span>
+                <a href={`mailto:${vendor.email}`} className="font-medium text-blue-600 hover:text-blue-800">
+                  {vendor.email}
+                </a>
+              </div>
+              <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                <span className="text-gray-600 flex items-center">
+                  <FaPhone className="mr-2" />
+                  Phone
+                </span>
+                <a href={`tel:${vendor.phone}`} className="font-medium">
+                  {vendor.phone || "N/A"}
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Business Information */}
+          <div className="bg-white border border-gray-200 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <FaShoppingCart className="mr-2 text-green-600" />
+              Business Information
+            </h3>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                <span className="text-gray-600">Business Name</span>
+                <span className="font-medium">{vendor.businessName}</span>
+              </div>
+              <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                <span className="text-gray-600">Till Number</span>
+                <span className="font-medium">{vendor.tillNumber || "N/A"}</span>
+              </div>
+              <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                <span className="text-gray-600 flex items-center">
+                  <FaMapMarkerAlt className="mr-2" />
+                  Address
+                </span>
+                <div className="text-right">
+                  <div className="font-medium">{address.street || "N/A"}</div>
+                  <div className="text-sm text-gray-500">
+                    {address.city || ""} {address.zipcode ? `, ${address.zipcode}` : ""}
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                <span className="text-gray-600">Coordinates</span>
+                <span className="font-mono text-sm">
+                  {vendor.location?.coordinates 
+                    ? `${vendor.location.coordinates[0].toFixed(4)}, ${vendor.location.coordinates[1].toFixed(4)}`
+                    : "N/A"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                <span className="text-gray-600 flex items-center">
+                  <FaCalendarAlt className="mr-2" />
+                  Account Created
+                </span>
+                <span className="font-medium">{formatDateTime(vendor.createdAt)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Notes */}
+        {vendor.note && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-yellow-900 mb-2 flex items-center">
+              <FaExclamationTriangle className="mr-2" />
+              Admin Notes
+            </h3>
+            <p className="text-yellow-800">{vendor.note}</p>
+          </div>
+        )}
+
+        {/* Terms Acceptance */}
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Terms & Conditions</h3>
+          <div className="flex items-center">
+            <div className={`p-2 rounded-lg mr-3 ${vendor.acceptTerms ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+              {vendor.acceptTerms ? <FaCheckCircle /> : <FaClock />}
+            </div>
+            <div>
+              <p className="font-medium">{vendor.acceptTerms ? "Terms Accepted" : "Terms Not Accepted"}</p>
+              <p className="text-sm text-gray-600">
+                {vendor.acceptTerms 
+                  ? "Vendor has accepted all terms and conditions" 
+                  : "Vendor has not accepted the terms and conditions yet"}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderFeedbackSection = () => {
+    const averageRating = feedbacks.length > 0 
+      ? (feedbacks.reduce((sum, f) => sum + f.stars, 0) / feedbacks.length).toFixed(1)
+      : 0;
+
+    return (
+      <div className="space-y-6">
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Customer Feedback</h2>
+              <p className="text-gray-600 mt-1">What customers are saying about this vendor</p>
+            </div>
+            <div className="flex items-center space-x-4 mt-4 md:mt-0">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-gray-900">{averageRating}</div>
+                <div className="flex items-center justify-center mt-1">
+                  {[...Array(5)].map((_, i) => (
+                    <FaStar key={i} className={`w-5 h-5 ${i < Math.floor(averageRating) ? 'text-yellow-400' : 'text-gray-300'}`} />
+                  ))}
+                </div>
+                <p className="text-sm text-gray-600 mt-1">Average Rating</p>
+              </div>
+              <div className="h-12 w-px bg-gray-300"></div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-gray-900">{feedbacks.length}</div>
+                <p className="text-sm text-gray-600 mt-1">Total Reviews</p>
+              </div>
+            </div>
+          </div>
+
+          {feedbacks.length > 0 ? (
+            <div className="space-y-4">
+              {feedbacks.map((feedback) => (
+                <div key={feedback._id} className="border border-gray-200 rounded-lg p-6 hover:border-blue-300 transition-colors">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center">
+                      {feedback.userId?.profileImage ? (
+                        <img
+                          src={feedback.userId.profileImage}
+                          alt={feedback.userId.name}
+                          className="w-12 h-12 rounded-full border-2 border-white shadow"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                          {feedback.userId?.name?.charAt(0) || 'U'}
+                        </div>
+                      )}
+                      <div className="ml-4">
+                        <h4 className="font-semibold text-gray-900">{feedback.userId?.name || 'Anonymous User'}</h4>
+                        <div className="flex items-center mt-1">
+                          <div className="flex">
+                            {[...Array(5)].map((_, i) => (
+                              <FaStar key={i} className={`w-4 h-4 ${i < feedback.stars ? 'text-yellow-400' : 'text-gray-300'}`} />
+                            ))}
+                          </div>
+                          <span className="ml-2 text-sm text-gray-600">{feedback.stars}.0</span>
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-sm text-gray-500">{formatDateTime(feedback.createdAt)}</span>
+                  </div>
+                  <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">
+                    "{feedback.tellUsAboutExperience || 'No comment provided'}"
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FaStar className="w-12 h-12 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Reviews Yet</h3>
+              <p className="text-gray-600">This vendor hasn't received any customer feedback yet.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderCouponsSection = () => {
+    const graphData = [
       { label: "Overall", value: stats.overall, color: "bg-blue-500", hoverColor: "bg-blue-600" },
       { label: "Monthly", value: stats.monthly, color: "bg-green-500", hoverColor: "bg-green-600" },
       { label: "Weekly", value: stats.weekly, color: "bg-yellow-500", hoverColor: "bg-yellow-600" },
       { label: "Daily", value: stats.daily, color: "bg-purple-500", hoverColor: "bg-purple-600" }
     ];
     
-    if (graphFilter === "all") {
-      return data;
-    }
+    const filteredData = graphFilter === "all" 
+      ? graphData 
+      : graphData.filter(item => item.label.toLowerCase() === graphFilter);
     
-    return data.filter(item => item.label.toLowerCase() === graphFilter);
-  };
+    const maxValue = Math.max(...filteredData.map(item => item.value), 1);
 
-  const renderProfileSection = () => (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row gap-8 items-start">
-        {/* Vendor Logo */}
-        <div className="flex-shrink-0">
-          <div className="relative group">
-            {vendor.businessLogo ? (
-              <img
-                src={vendor.businessLogo}
-                alt={`${vendor.businessName} Logo`}
-                className="w-40 h-40 rounded-lg object-cover border-2 border-gray-200 shadow-sm transition-transform duration-300 group-hover:scale-105"
-              />
-            ) : (
-              <div className="w-40 h-40 rounded-lg bg-gray-100 flex items-center justify-center border-2 border-dashed border-gray-300">
-                <span className="text-gray-400">No Logo</span>
+    return (
+      <div className="space-y-6">
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {graphData.map((stat, index) => (
+            <div key={index} className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">{stat.label} Downloads</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
+                </div>
+                <div className={`p-3 rounded-lg ${stat.color.replace('bg-', 'bg-').replace('-500', '-100')}`}>
+                  <FaDownload className={`w-6 h-6 ${stat.color.replace('bg-', 'text-')}`} />
+                </div>
+              </div>
+              <div className="mt-4">
+                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className={`h-full ${stat.color} transition-all duration-500`}
+                    style={{ width: `${(stat.value / (stats.overall || 1)) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Chart Visualization */}
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Download Trends</h3>
+              <p className="text-gray-600 text-sm">Visual representation of coupon downloads</p>
+            </div>
+            <div className="flex space-x-2 mt-4 md:mt-0">
+              {["all", "overall", "monthly", "weekly", "daily"].map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setGraphFilter(filter)}
+                  className={`px-3 py-1 rounded-full text-sm font-medium capitalize transition-colors ${
+                    graphFilter === filter
+                      ? "bg-blue-100 text-blue-800"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <div className="flex items-end h-48 gap-6 mt-8">
+            {filteredData.map((item, index) => (
+              <div key={index} className="flex flex-col items-center flex-1 group">
+                <div className="w-full">
+                  <div
+                    className={`${item.color} rounded-t-lg transition-all duration-300 cursor-pointer group-hover:opacity-90`}
+                    style={{ height: `${(item.value / maxValue) * 100}%`, minHeight: "20px" }}
+                    title={`${item.label}: ${item.value} downloads`}
+                  ></div>
+                </div>
+                <div className="mt-4 text-center">
+                  <div className="font-semibold text-gray-900">{item.value}</div>
+                  <div className="text-sm text-gray-600 mt-1">{item.label}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Coupons List */}
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Active Coupons</h3>
+                <p className="text-gray-600 text-sm">Manage and view all vendor coupons</p>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-gray-900">{coupons.length}</div>
+                  <div className="text-sm text-gray-600">Total Coupons</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Coupon</th>
+                  <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                  <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Validity</th>
+                  <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Performance</th>
+                  <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {coupons.map((coupon) => (
+                  <tr key={coupon._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="py-4 px-6">
+                      <div className="flex items-center">
+                        {coupon.couponImage ? (
+                          <img
+                            src={coupon.couponImage}
+                            alt={coupon.name}
+                            className="w-16 h-16 rounded-lg object-cover border border-gray-200"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 rounded-lg bg-gradient-to-r from-blue-100 to-blue-50 border border-blue-200 flex items-center justify-center">
+                            <FaShoppingCart className="w-8 h-8 text-blue-400" />
+                          </div>
+                        )}
+                        <div className="ml-4">
+                          <div className="font-medium text-gray-900">{coupon.name}</div>
+                          <div className="text-sm text-gray-500 capitalize">{coupon.category}</div>
+                          <div className="text-xs text-gray-400 mt-1">{coupon._id}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="space-y-2">
+                        <div>
+                          <div className="text-sm text-gray-600">Code</div>
+                          <div className="font-mono font-medium bg-gray-100 px-2 py-1 rounded inline-block">
+                            {coupon.couponCode}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-600">Discount</div>
+                          <div className="font-semibold text-green-600">{coupon.discountPercentage}% OFF</div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-600">Cost</div>
+                          <div className="flex items-center">
+                            <span className="font-medium">{coupon.requiredCoins}</span>
+                            <FaStar className="w-4 h-4 text-yellow-500 ml-1" />
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="space-y-2">
+                        <div>
+                          <div className="text-sm text-gray-600">Valid Until</div>
+                          <div className="font-medium">{formatDate(coupon.validityDate)}</div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-600">User Limit</div>
+                          <div className="font-medium">{coupon.limitForSameUser || 'Unlimited'}</div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-600">Created</div>
+                          <div className="font-medium">{formatDate(coupon.createdAt)}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="space-y-2">
+                        <div>
+                          <div className="text-sm text-gray-600">Downloads</div>
+                          <div className="flex items-center">
+                            <FaDownload className="w-4 h-4 text-gray-400 mr-2" />
+                            <span className="font-medium">{coupon.downloadedCount || 0}</span>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-600">Redemption Rate</div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className="bg-green-600 h-2 rounded-full"
+                              style={{ width: `${Math.min((coupon.downloadedCount || 0) * 10, 100)}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                        coupon.status === 'approved' 
+                          ? 'bg-green-100 text-green-800' 
+                          : coupon.status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {coupon.status === 'approved' && <FaCheckCircle className="mr-1" />}
+                        {coupon.status.charAt(0).toUpperCase() + coupon.status.slice(1)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            
+            {coupons.length === 0 && (
+              <div className="text-center py-12">
+                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FaShoppingCart className="w-12 h-12 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Coupons Created</h3>
+                <p className="text-gray-600">This vendor hasn't created any coupons yet.</p>
               </div>
             )}
           </div>
-        </div>
-
-        {/* Basic Info Table */}
-        <div className="flex-grow">
-          <table className="min-w-full bg-white border border-gray-200">
-            <tbody>
-              <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50 w-1/4">Business Name</td>
-                <td className="py-3 px-4">{vendor.businessName}</td>
-              </tr>
-              <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50">Contact Person</td>
-                <td className="py-3 px-4">{vendor.name}</td>
-              </tr>
-              <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50">Email</td>
-                <td className="py-3 px-4 break-all">{vendor.email}</td>
-              </tr>
-              <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50">Phone</td>
-                <td className="py-3 px-4">{vendor.phone || 'N/A'}</td>
-              </tr>
-              <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50">Location</td>
-                <td className="py-3 px-4">{vendor.city || 'N/A'}, {vendor.zipcode || 'N/A'}</td>
-              </tr>
-              <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50">Coordinates</td>
-                <td className="py-3 px-4">
-                  {vendor.location?.coordinates
-                    ? `${vendor.location.coordinates[0]}, ${vendor.location.coordinates[1]}`
-                    : "N/A"}
-                </td>
-              </tr>
-              <tr className="border-b border-gray-200">
-                <td className="py-3 px-4 font-semibold bg-gray-50">Account Created</td>
-                <td className="py-3 px-4">{formatDateTime(vendor.createdAt)}</td>
-              </tr>
-              <tr>
-                <td className="py-3 px-4 font-semibold bg-gray-50">Last Updated</td>
-                <td className="py-3 px-4">{formatDateTime(vendor.updatedAt)}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderFeedbackSection = () => (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-800">Customer Feedback</h2>
-        <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
-          {feedbacks.length} {feedbacks.length === 1 ? 'Review' : 'Reviews'}
-        </span>
-      </div>
-      
-      {feedbacks.length ? (
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border border-gray-200">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="py-3 px-4 border border-gray-200">User</th>
-                <th className="py-3 px-4 border border-gray-200">Rating</th>
-                <th className="py-3 px-4 border border-gray-200">Feedback</th>
-                <th className="py-3 px-4 border border-gray-200">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {feedbacks.map((feedback, index) => (
-                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <td className="py-3 px-4 border border-gray-200">
-                    <div className="flex items-center">
-                      {feedback.userId?.profileImage ? (
-                        <img 
-                          src={feedback.userId.profileImage} 
-                          alt={feedback.userId.name} 
-                          className="w-10 h-10 rounded-full mr-3 border-2 border-white shadow"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center mr-3">
-                          <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                      )}
-                      <div>
-                        <div className="font-semibold text-gray-800">{feedback.userId?.name || 'Anonymous'}</div>
-                        <div className="text-xs text-gray-500">Customer</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 border border-gray-200">
-                    <div className="flex items-center">
-                      <div className="flex mr-2">
-                        {[...Array(5)].map((_, i) => (
-                          <svg
-                            key={i}
-                            className={`w-5 h-5 ${i < feedback.stars ? 'text-yellow-400' : 'text-gray-300'}`}
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
-                      </div>
-                      <span className="text-sm font-medium text-gray-600">
-                        {feedback.stars}.0
-                      </span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 border border-gray-200">
-                    {feedback.tellUsAboutExperience || 'No comment provided'}
-                  </td>
-                  <td className="py-3 px-4 border border-gray-200">
-                    {formatDateTime(feedback.createdAt)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="bg-gray-50 rounded-xl p-10 text-center border-2 border-dashed border-gray-200">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-          </svg>
-          <h3 className="mt-2 text-lg font-medium text-gray-700">No feedback received</h3>
-          <p className="mt-1 text-gray-500">This vendor hasn't received any feedback yet.</p>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderCouponsSection = () => {
-    const graphData = getFilteredGraphData();
-    const maxValue = Math.max(...graphData.map(item => item.value), 1); // Avoid division by zero
-    
-    return (
-      <div className="space-y-8">
-        {/* Coupon Redemption Stats */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-800">Coupon Redemption Statistics</h2>
-            
-            {/* Graph Filter Controls */}
-            <div className="flex space-x-2 mt-4 md:mt-0">
-              <button
-                onClick={() => setGraphFilter("all")}
-                className={`px-3 py-1 text-sm font-medium rounded-full ${
-                  graphFilter === "all" 
-                    ? "bg-blue-100 text-blue-800" 
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setGraphFilter("overall")}
-                className={`px-3 py-1 text-sm font-medium rounded-full ${
-                  graphFilter === "overall" 
-                    ? "bg-blue-100 text-blue-800" 
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                Overall
-              </button>
-              <button
-                onClick={() => setGraphFilter("monthly")}
-                className={`px-3 py-1 text-sm font-medium rounded-full ${
-                  graphFilter === "monthly" 
-                    ? "bg-green-100 text-green-800" 
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                Monthly
-              </button>
-              <button
-                onClick={() => setGraphFilter("weekly")}
-                className={`px-3 py-1 text-sm font-medium rounded-full ${
-                  graphFilter === "weekly" 
-                    ? "bg-yellow-100 text-yellow-800" 
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                Weekly
-              </button>
-              <button
-                onClick={() => setGraphFilter("daily")}
-                className={`px-3 py-1 text-sm font-medium rounded-full ${
-                  graphFilter === "daily" 
-                    ? "bg-purple-100 text-purple-800" 
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                Daily
-              </button>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-              <h3 className="text-sm font-medium text-blue-800 mb-1">Overall Redeemed</h3>
-              <p className="text-2xl font-bold text-blue-900">{stats.overall}</p>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg border border-green-100">
-              <h3 className="text-sm font-medium text-green-800 mb-1">Monthly Redeemed</h3>
-              <p className="text-2xl font-bold text-green-900">{stats.monthly}</p>
-            </div>
-            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
-              <h3 className="text-sm font-medium text-yellow-800 mb-1">Weekly Redeemed</h3>
-              <p className="text-2xl font-bold text-yellow-900">{stats.weekly}</p>
-            </div>
-            <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
-              <h3 className="text-sm font-medium text-purple-800 mb-1">Daily Redeemed</h3>
-              <p className="text-2xl font-bold text-purple-900">{stats.daily}</p>
-            </div>
-          </div>
-          
-          {/* Enhanced Bar Chart with Filtering */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">
-              Redemption Trend {graphFilter !== "all" ? `(${graphFilter.charAt(0).toUpperCase() + graphFilter.slice(1)})` : ""}
-            </h3>
-            <div className="flex items-end h-32 gap-4">
-              {graphData.map((item, index) => (
-                <div key={index} className="flex flex-col items-center flex-1">
-                  <div 
-                    className={`w-full ${item.color} rounded-t hover:${item.hoverColor} transition-all duration-300 cursor-pointer`}
-                    style={{ height: `${(item.value / maxValue) * 100}%` }}
-                    title={`${item.label}: ${item.value}`}
-                  ></div>
-                  <span className="text-xs mt-1">{item.label}</span>
-                  <span className="text-xs font-semibold mt-1">{item.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Coupons Table */}
-        <div>
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-800">Coupons</h2>
-            <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
-              {coupons.length} {coupons.length === 1 ? 'Coupon' : 'Coupons'}
-            </span>
-          </div>
-          
-          {coupons.length ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border border-gray-200">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="py-3 px-4 border border-gray-200">Image</th>
-                    <th className="py-3 px-4 border border-gray-200">Name</th>
-                    <th className="py-3 px-4 border border-gray-200">Category</th>
-                    <th className="py-3 px-4 border border-gray-200">Discount</th>
-                    <th className="py-3 px-4 border border-gray-200">Code</th>
-                    <th className="py-3 px-4 border border-gray-200">Cost</th>
-                    <th className="py-3 px-4 border border-gray-200">Valid Until</th>
-                    <th className="py-3 px-4 border border-gray-200">User Limit</th>
-                    <th className="py-3 px-4 border border-gray-200">Downloads</th>
-                    <th className="py-3 px-4 border border-gray-200">Status</th>
-                    <th className="py-3 px-4 border border-gray-200">Created</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {coupons.map((coupon, index) => (
-                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="py-3 px-4 border border-gray-200">
-                        {coupon.couponImage ? (
-                          <img 
-                            src={coupon.couponImage} 
-                            alt={coupon.name} 
-                            className="w-16 h-16 object-cover rounded"
-                          />
-                        ) : (
-                          <div className="w-16 h-16 flex items-center justify-center bg-gray-100 rounded">
-                            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                            </svg>
-                          </div>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 border border-gray-200 font-semibold">{coupon.name}</td>
-                      <td className="py-3 px-4 border border-gray-200 capitalize">{coupon.category}</td>
-                      <td className="py-3 px-4 border border-gray-200">
-                        {coupon.discountPercentage}% {coupon.couponCodeType === '%' ? 'off' : ''}
-                      </td>
-                      <td className="py-3 px-4 border border-gray-200 font-mono">{coupon.couponCode}</td>
-                      <td className="py-3 px-4 border border-gray-200">
-                        {coupon.requiredCoins}
-                        <svg className="w-4 h-4 ml-1 text-yellow-500 inline" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      </td>
-                      <td className="py-3 px-4 border border-gray-200">{formatDate(coupon.validityDate)}</td>
-                      <td className="py-3 px-4 border border-gray-200">{coupon.limitForSameUser || 'Unlimited'}</td>
-                      <td className="py-3 px-4 border border-gray-200">{coupon.downloadedCount || 0}</td>
-                      <td className="py-3 px-4 border border-gray-200">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          coupon.status === 'approved' ? 'bg-green-100 text-green-800' :
-                          coupon.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {coupon.status.charAt(0).toUpperCase() + coupon.status.slice(1)}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 border border-gray-200">{formatDate(coupon.createdAt)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="bg-gray-50 rounded-xl p-10 text-center border-2 border-dashed border-gray-200">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-              </svg>
-              <h3 className="mt-2 text-lg font-medium text-gray-700">No coupons created</h3>
-              <p className="mt-1 text-gray-500">This vendor hasn't created any coupons yet.</p>
-            </div>
-          )}
         </div>
       </div>
     );
   };
 
-  // New function to render payments section
   const renderPaymentsSection = () => {
-    // Calculate payment statistics
     const totalPaid = payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0);
     const pendingAmount = payments.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0);
     const overdueAmount = payments.filter(p => p.status === 'overdue').reduce((sum, p) => sum + p.amount, 0);
-    
+
     return (
-      <div className="space-y-8">
-        {/* Payment Statistics */}
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
-          <h2 className="text-xl font-bold text-gray-800 mb-6">Payment Overview</h2>
+      <div className="space-y-6">
+        {/* Payment Overview Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-xl p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-green-700">Total Paid</p>
+                <p className="text-2xl font-bold text-green-900 mt-1">{formatCurrency(totalPaid)}</p>
+                <p className="text-xs text-green-600 mt-2">
+                  {payments.filter(p => p.status === 'completed').length} completed payments
+                </p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-lg">
+                <FaMoneyBillWave className="w-8 h-8 text-green-600" />
+              </div>
+            </div>
+          </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-green-50 p-4 rounded-lg border border-green-100">
-              <h3 className="text-sm font-medium text-green-800 mb-1">Total Paid</h3>
-              <p className="text-2xl font-bold text-green-900">{formatCurrency(totalPaid)}</p>
-              <p className="text-xs text-green-600 mt-1">
-                {payments.filter(p => p.status === 'completed').length} completed payments
-              </p>
+          <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 border border-yellow-200 rounded-xl p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-yellow-700">Pending Payments</p>
+                <p className="text-2xl font-bold text-yellow-900 mt-1">{formatCurrency(pendingAmount)}</p>
+                <p className="text-xs text-yellow-600 mt-2">
+                  {payments.filter(p => p.status === 'pending').length} pending
+                </p>
+              </div>
+              <div className="p-3 bg-yellow-100 rounded-lg">
+                <FaClock className="w-8 h-8 text-yellow-600" />
+              </div>
             </div>
-            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
-              <h3 className="text-sm font-medium text-yellow-800 mb-1">Pending Payments</h3>
-              <p className="text-2xl font-bold text-yellow-900">{formatCurrency(pendingAmount)}</p>
-              <p className="text-xs text-yellow-600 mt-1">
-                {payments.filter(p => p.status === 'pending').length} pending payments
-              </p>
-            </div>
-            <div className="bg-red-50 p-4 rounded-lg border border-red-100">
-              <h3 className="text-sm font-medium text-red-800 mb-1">Overdue Payments</h3>
-              <p className="text-2xl font-bold text-red-900">{formatCurrency(overdueAmount)}</p>
-              <p className="text-xs text-red-600 mt-1">
-                {payments.filter(p => p.status === 'overdue').length} overdue payments
-              </p>
+          </div>
+          
+          <div className="bg-gradient-to-r from-red-50 to-red-100 border border-red-200 rounded-xl p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-red-700">Overdue Payments</p>
+                <p className="text-2xl font-bold text-red-900 mt-1">{formatCurrency(overdueAmount)}</p>
+                <p className="text-xs text-red-600 mt-2">
+                  {payments.filter(p => p.status === 'overdue').length} overdue
+                </p>
+              </div>
+              <div className="p-3 bg-red-100 rounded-lg">
+                <FaExclamationTriangle className="w-8 h-8 text-red-600" />
+              </div>
             </div>
           </div>
         </div>
 
         {/* Payments Table */}
-        <div>
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-800">Payment History</h2>
-            <div className="flex space-x-2">
-              <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                Send Reminder
-              </button>
-              <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                Record Payment
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Payment History</h3>
+                <p className="text-gray-600 text-sm">All payment records for this vendor</p>
+              </div>
+              <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                <FaReceipt className="mr-2" />
+                Record New Payment
               </button>
             </div>
           </div>
-          
-          {payments.length ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full bg-white border border-gray-200">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="py-3 px-4 border border-gray-200">Month</th>
-                    <th className="py-3 px-4 border border-gray-200">Amount</th>
-                    <th className="py-3 px-4 border border-gray-200">Status</th>
-                    <th className="py-3 px-4 border border-gray-200">Payment Date</th>
-                    <th className="py-3 px-4 border border-gray-200">Due Date</th>
-                    <th className="py-3 px-4 border border-gray-200">Transaction ID</th>
-                    <th className="py-3 px-4 border border-gray-200">Payment Method</th>
-                    <th className="py-3 px-4 border border-gray-200">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payments.map((payment, index) => (
-                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="py-3 px-4 border border-gray-200 font-semibold">{payment.month}</td>
-                      <td className="py-3 px-4 border border-gray-200 font-medium">{formatCurrency(payment.amount)}</td>
-                      <td className="py-3 px-4 border border-gray-200">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          payment.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 border border-gray-200">
-                        {payment.paymentDate ? formatDate(payment.paymentDate) : 'Not Paid'}
-                      </td>
-                      <td className="py-3 px-4 border border-gray-200">
-                        {payment.dueDate ? formatDate(payment.dueDate) : 'N/A'}
-                      </td>
-                      <td className="py-3 px-4 border border-gray-200 font-mono">
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month</th>
+                  <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                  <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Date</th>
+                  <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transaction ID</th>
+                  <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Method</th>
+                  <th className="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {payments.map((payment) => (
+                  <tr key={payment._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="py-4 px-6">
+                      <div className="font-medium text-gray-900">{payment.month}</div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="font-bold text-gray-900">{formatCurrency(payment.amount)}</div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                        payment.status === 'completed' 
+                          ? 'bg-green-100 text-green-800' 
+                          : payment.status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {payment.status === 'completed' && <FaCheckCircle className="mr-1" />}
+                        {payment.status === 'pending' && <FaClock className="mr-1" />}
+                        {payment.status === 'overdue' && <FaExclamationTriangle className="mr-1" />}
+                        {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="text-gray-900">{formatDate(payment.paymentDate)}</div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="font-mono text-sm bg-gray-100 px-2 py-1 rounded inline-block">
                         {payment.transactionId || 'N/A'}
-                      </td>
-                      <td className="py-3 px-4 border border-gray-200">
-                        {payment.paymentMethod}
-                      </td>
-                      <td className="py-3 px-4 border border-gray-200">
-                        <div className="flex space-x-2">
-                          {payment.status !== 'completed' && (
-                            <button className="text-green-600 hover:text-green-800" title="Mark as Paid">
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                              </svg>
-                            </button>
-                          )}
-                          <button className="text-blue-600 hover:text-blue-800" title="Send Reminder">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                            </svg>
-                          </button>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center">
+                        <div className="p-2 bg-gray-100 rounded-lg mr-3">
+                          <FaMoneyBillWave className="text-gray-600" />
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="bg-gray-50 rounded-xl p-10 text-center border-2 border-dashed border-gray-200">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <h3 className="mt-2 text-lg font-medium text-gray-700">No payment records</h3>
-              <p className="mt-1 text-gray-500">This vendor doesn't have any payment records yet.</p>
-            </div>
-          )}
+                        <span className="font-medium">{payment.paymentMethod}</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex space-x-2">
+                        {payment.status !== 'completed' && (
+                          <button className="text-green-600 hover:text-green-800 p-2 hover:bg-green-50 rounded-lg transition-colors" title="Mark as Paid">
+                            <FaCheckCircle className="w-5 h-5" />
+                          </button>
+                        )}
+                        <button className="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded-lg transition-colors" title="Send Reminder">
+                          <FaEnvelope className="w-5 h-5" />
+                        </button>
+                        <button className="text-gray-600 hover:text-gray-800 p-2 hover:bg-gray-50 rounded-lg transition-colors" title="View Details">
+                          <FaEye className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            
+            {payments.length === 0 && (
+              <div className="text-center py-12">
+                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FaMoneyBillWave className="w-12 h-12 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Payment Records</h3>
+                <p className="text-gray-600">This vendor doesn't have any payment records yet.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
   };
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-        <p className="text-gray-600">Loading vendor details...</p>
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600 mx-auto mb-6"></div>
+          <p className="text-lg font-medium text-gray-700">Loading vendor details...</p>
+          <p className="text-gray-500 mt-2">Please wait while we fetch the information</p>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
-  if (error && !vendor) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="max-w-md text-center p-6 bg-red-50 rounded-lg">
-        <svg className="w-12 h-12 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-        </svg>
-        <h3 className="text-lg font-medium text-red-800 mb-2">Error Loading Vendor</h3>
-        <p className="text-red-600">{error}</p>
-        <Link to="/vendorlist" className="mt-4 inline-flex items-center text-blue-600 hover:text-blue-800">
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Back to Vendors List
-        </Link>
+  if (error && !vendor) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-8">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <FaExclamationTriangle className="w-8 h-8 text-red-600" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 text-center mb-2">Error Loading Vendor</h3>
+          <p className="text-gray-600 text-center mb-6">{error}</p>
+          <div className="flex flex-col space-y-3">
+            <button
+              onClick={() => navigate('/vendorlist')}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              Back to Vendors List
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <Link to="/vendorlist" className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors">
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Back to Vendors List
-        </Link>
-        <h1 className="text-3xl font-bold text-gray-900 mt-4">Vendor Management</h1>
-        <div className="flex items-center mt-2">
-          <h2 className="text-xl font-semibold text-gray-700">{vendor.businessName}</h2>
-          <span className="ml-2 bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
-            ID: {id}
-          </span>
-          {error && (
-            <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
-              Using Demo Data
-            </span>
-          )}
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <nav className="flex" aria-label="Breadcrumb">
+                <ol className="flex items-center space-x-2">
+                  <li>
+                    <Link to="/dashboard" className="text-gray-400 hover:text-gray-600 transition-colors">
+                      Dashboard
+                    </Link>
+                  </li>
+                  <li>
+                    <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </li>
+                  <li>
+                    <Link to="/vendorlist" className="text-gray-400 hover:text-gray-600 transition-colors">
+                      Vendors
+                    </Link>
+                  </li>
+                  <li>
+                    <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                  </li>
+                  <li>
+                    <span className="text-gray-900 font-medium">{vendor.businessName}</span>
+                  </li>
+                </ol>
+              </nav>
+              <h1 className="text-3xl font-bold text-gray-900 mt-2">{vendor.businessName}</h1>
+              <div className="flex items-center mt-2 space-x-3">
+                <div className="flex items-center text-sm text-gray-600">
+                  <FaEnvelope className="w-4 h-4 mr-1" />
+                  {vendor.email}
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <FaPhone className="w-4 h-4 mr-1" />
+                  {vendor.phone || "N/A"}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <div className={`px-4 py-2 rounded-full text-sm font-medium border ${getStatusBadge().color}`}>
+                {getStatusBadge().icon}
+                {getStatusBadge().text}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="border-b border-gray-200 mb-8">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => setActiveTab('profile')}
-            className={`py-4 px-1 font-medium text-sm ${activeTab === 'profile' 
-              ? 'border-blue-500 text-blue-600 border-b-2' 
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
-          >
-            Profile
-          </button>
-          <button
-            onClick={() => setActiveTab('feedback')}
-            className={`py-4 px-1 font-medium text-sm ${activeTab === 'feedback' 
-              ? 'border-blue-500 text-blue-600 border-b-2' 
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
-          >
-            Feedback
-            <span className="ml-2 bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded-full">
-              {feedbacks.length}
-            </span>
-          </button>
-          <button
-            onClick={() => setActiveTab('coupons')}
-            className={`py-4 px-1 font-medium text-sm ${activeTab === 'coupons' 
-              ? 'border-blue-500 text-blue-600 border-b-2' 
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
-          >
-            Coupons
-            <span className="ml-2 bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded-full">
-              {coupons.length}
-            </span>
-          </button>
-          <button
-            onClick={() => setActiveTab('payments')}
-            className={`py-4 px-1 font-medium text-sm ${activeTab === 'payments' 
-              ? 'border-blue-500 text-blue-600 border-b-2' 
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
-          >
-            Payments
-            <span className="ml-2 bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded-full">
-              {payments.length}
-            </span>
-          </button>
-        </nav>
-      </div>
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Tabs */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
+          <div className="border-b border-gray-200">
+            <nav className="flex overflow-x-auto">
+              <button
+                onClick={() => setActiveTab('profile')}
+                className={`flex items-center px-6 py-4 text-sm font-medium whitespace-nowrap transition-colors ${
+                  activeTab === 'profile'
+                    ? 'border-b-2 border-blue-500 text-blue-600'
+                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <FaUserCheck className="mr-2" />
+                Profile
+              </button>
+              <button
+                onClick={() => setActiveTab('feedback')}
+                className={`flex items-center px-6 py-4 text-sm font-medium whitespace-nowrap transition-colors ${
+                  activeTab === 'feedback'
+                    ? 'border-b-2 border-blue-500 text-blue-600'
+                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <FaStar className="mr-2" />
+                Feedback
+                {feedbacks.length > 0 && (
+                  <span className="ml-2 bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                    {feedbacks.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab('coupons')}
+                className={`flex items-center px-6 py-4 text-sm font-medium whitespace-nowrap transition-colors ${
+                  activeTab === 'coupons'
+                    ? 'border-b-2 border-blue-500 text-blue-600'
+                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <FaShoppingCart className="mr-2" />
+                Coupons
+                {coupons.length > 0 && (
+                  <span className="ml-2 bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                    {coupons.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab('payments')}
+                className={`flex items-center px-6 py-4 text-sm font-medium whitespace-nowrap transition-colors ${
+                  activeTab === 'payments'
+                    ? 'border-b-2 border-blue-500 text-blue-600'
+                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <FaMoneyBillWave className="mr-2" />
+                Payments
+                {payments.length > 0 && (
+                  <span className="ml-2 bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded-full">
+                    {payments.length}
+                  </span>
+                )}
+              </button>
+            </nav>
+          </div>
 
-      {/* Tab Content */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        {activeTab === 'profile' && renderProfileSection()}
-        {activeTab === 'feedback' && renderFeedbackSection()}
-        {activeTab === 'coupons' && renderCouponsSection()}
-        {activeTab === 'payments' && renderPaymentsSection()}
+          {/* Tab Content */}
+          <div className="p-6">
+            {activeTab === 'profile' && renderProfileSection()}
+            {activeTab === 'feedback' && renderFeedbackSection()}
+            {activeTab === 'coupons' && renderCouponsSection()}
+            {activeTab === 'payments' && renderPaymentsSection()}
+          </div>
+        </div>
+
+        {/* Error Alert */}
+        {error && (
+          <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <FaExclamationTriangle className="h-5 w-5 text-yellow-400" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">Note</h3>
+                <div className="mt-2 text-sm text-yellow-700">
+                  <p>{error}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

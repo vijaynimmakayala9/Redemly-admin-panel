@@ -16,7 +16,7 @@ export default function VendorDocumentList() {
   useEffect(() => {
     const fetchDocs = async () => {
       try {
-        const res = await fetch("http://31.97.206.144:6098/api/admin/allvendordocs");
+        const res = await fetch("https://api.redemly.com/api/admin/allvendordocs");
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
         setVendorDocs(json.data || []);

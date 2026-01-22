@@ -70,7 +70,7 @@ const CreateVendor = () => {
 
       const token = localStorage.getItem("adminToken");
 
-      await axios.post("http://31.97.206.144:6098/api/vendor/vendor-register", data, {
+      await axios.post("https://api.redemly.com/api/vendor/vendor-register", data, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,

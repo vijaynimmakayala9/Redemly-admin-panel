@@ -3,7 +3,7 @@ import { FaEdit, FaTrash } from 'react-icons/fa';
 import { utils, writeFile } from 'xlsx';
 import axios from 'axios';
 
-const API_BASE = 'http://31.97.206.144:6098/api/admin';
+const API_BASE = 'https://api.redemly.com/api/admin';
 
 export default function CategoryList() {
   const [categories, setCategories] = useState([]);

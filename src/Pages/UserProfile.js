@@ -18,7 +18,7 @@ function UserDetail() {
     const fetchUser = async () => {
       try {
         const token = localStorage.getItem("adminToken");
-        const res = await fetch(`http://31.97.206.144:6098/api/admin/getsingleuser/${userId}`, {
+        const res = await fetch(`https://api.redemly.com/api/admin/getsingleuser/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -69,47 +69,6 @@ function UserDetail() {
     } else {
       return `${secs}s`;
     }
-  };
-
-  // Generate dummy data for time spent and coins earned by category
-  const generateCategoryStats = () => {
-    return [
-      {
-        category: 'Quiz',
-        timeSpent: 12540, // in seconds
-        coinsEarned: 150,
-        sessions: 8,
-        lastActivity: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        category: 'News',
-        timeSpent: 8560,
-        coinsEarned: 85,
-        sessions: 12,
-        lastActivity: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        category: 'Fun Facts',
-        timeSpent: 6320,
-        coinsEarned: 75,
-        sessions: 5,
-        lastActivity: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        category: 'Challenges',
-        timeSpent: 4580,
-        coinsEarned: 120,
-        sessions: 6,
-        lastActivity: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        category: 'Games',
-        timeSpent: 10230,
-        coinsEarned: 95,
-        sessions: 7,
-        lastActivity: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
-      }
-    ];
   };
 
   const renderProfileSection = () => (
@@ -493,103 +452,25 @@ function UserDetail() {
     </div>
   );
 
-  // New function to render category time spent section
   const renderCategoryTimeSpentSection = () => {
-    const categoryStats = generateCategoryStats();
-    const totalTimeSpent = categoryStats.reduce((sum, cat) => sum + cat.timeSpent, 0);
-    const totalCoinsEarned = categoryStats.reduce((sum, cat) => sum + cat.coinsEarned, 0);
-    const totalSessions = categoryStats.reduce((sum, cat) => sum + cat.sessions, 0);
+    // Check if user has category data
+    const hasCategoryData = user.categoryTimeSpent || user.categoryCoins || user.categorySessions;
+
+    if (!hasCategoryData) {
+      return (
+        <div className="text-center py-8">
+          <h2 className="text-xl font-bold mb-4">Category Time Spent</h2>
+          <p className="text-gray-500">No category activity data available</p>
+        </div>
+      );
+    }
 
     return (
-      <div className="space-y-6">
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-            <h3 className="text-sm font-medium text-blue-800 mb-1">Total Time Spent</h3>
-            <p className="text-2xl font-bold text-blue-900">{formatTimeSpent(totalTimeSpent)}</p>
-          </div>
-          <div className="bg-green-50 p-4 rounded-lg border border-green-100">
-            <h3 className="text-sm font-medium text-green-800 mb-1">Total Coins Earned</h3>
-            <p className="text-2xl font-bold text-green-900">{totalCoinsEarned} coins</p>
-          </div>
-          <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
-            <h3 className="text-sm font-medium text-purple-800 mb-1">Total Sessions</h3>
-            <p className="text-2xl font-bold text-purple-900">{totalSessions}</p>
-          </div>
-        </div>
-
-        {/* Category Table */}
-        <h2 className="text-xl font-bold mb-4">Time Spent by Category</h2>
-        {categoryStats.length ? (
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-white border border-gray-200">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="py-2 px-4 border border-gray-200">Category</th>
-                  <th className="py-2 px-4 border border-gray-200">Time Spent</th>
-                  <th className="py-2 px-4 border border-gray-200">Coins Earned</th>
-                  <th className="py-2 px-4 border border-gray-200">Sessions</th>
-                  <th className="py-2 px-4 border border-gray-200">Last Activity</th>
-                  <th className="py-2 px-4 border border-gray-200">Avg. Time/Session</th>
-                  <th className="py-2 px-4 border border-gray-200">Coins/Hour</th>
-                </tr>
-              </thead>
-              <tbody>
-                {categoryStats.map((category, index) => {
-                  const avgTimePerSession = Math.round(category.timeSpent / category.sessions);
-                  const coinsPerHour = Math.round((category.coinsEarned / category.timeSpent) * 3600);
-                  
-                  return (
-                    <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="py-2 px-4 border border-gray-200 font-semibold capitalize">{category.category}</td>
-                      <td className="py-2 px-4 border border-gray-200">{formatTimeSpent(category.timeSpent)}</td>
-                      <td className="py-2 px-4 border border-gray-200">
-                        <span className="font-medium text-green-600">{category.coinsEarned} coins</span>
-                      </td>
-                      <td className="py-2 px-4 border border-gray-200">{category.sessions}</td>
-                      <td className="py-2 px-4 border border-gray-200">{formatDate(category.lastActivity)}</td>
-                      <td className="py-2 px-4 border border-gray-200">{formatTimeSpent(avgTimePerSession)}</td>
-                      <td className="py-2 px-4 border border-gray-200">
-                        <span className="font-medium text-blue-600">{coinsPerHour} coins/h</span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p className="text-center py-4">No category data available</p>
-        )}
-
-        {/* Time Distribution Chart (Visual Representation) */}
-        <div className="mt-8">
-          <h3 className="text-lg font-semibold mb-4">Time Distribution by Category</h3>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            {categoryStats.map((category, index) => {
-              const percentage = Math.round((category.timeSpent / totalTimeSpent) * 100);
-              return (
-                <div key={index} className="mb-2">
-                  <div className="flex justify-between mb-1">
-                    <span className="text-sm font-medium capitalize">{category.category}</span>
-                    <span className="text-sm text-gray-600">{percentage}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div 
-                      className={`h-2.5 rounded-full ${
-                        index % 5 === 0 ? 'bg-blue-500' :
-                        index % 5 === 1 ? 'bg-green-500' :
-                        index % 5 === 2 ? 'bg-yellow-500' :
-                        index % 5 === 3 ? 'bg-purple-500' : 'bg-red-500'
-                      }`}
-                      style={{ width: `${percentage}%` }}
-                    ></div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+      <div>
+        <h2 className="text-xl font-bold mb-4">Category Time Spent</h2>
+        <p className="text-gray-500 text-center py-8">
+          Category time spent data will be displayed here when available from the API
+        </p>
       </div>
     );
   };

@@ -18,7 +18,7 @@ const PrivacyPolicyForm = () => {
         date: formatDate(date), // Optional: format date as dd-mm-yyyy
       };
 
-      const response = await axios.post("http://31.97.206.144:6098/api/admin/createprivacy-policy", payload);
+      const response = await axios.post("https://api.redemly.com/api/admin/createprivacy-policy", payload);
 
       if (response.data.success) {
         setSuccessMessage("Privacy policy saved successfully!");

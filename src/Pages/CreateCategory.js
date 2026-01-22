@@ -15,7 +15,7 @@ const CreateCategory = ({ onCategoryCreated }) => {
 
     try {
       const res = await axios.post(
-        'http://31.97.206.144:6098/api/admin/create-categories',
+        'https://api.redemly.com/api/admin/create-categories',
         { categoryName }
       );
 

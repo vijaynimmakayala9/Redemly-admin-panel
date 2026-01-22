@@ -19,7 +19,7 @@ const BulkFunFactUploader = () => {
         return;
       }
 
-      const res = await fetch("http://31.97.206.144:6098/api/admin/add-bulkfunfacts", {
+      const res = await fetch("https://api.redemly.com/api/admin/add-bulkfunfacts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(jsonData),
