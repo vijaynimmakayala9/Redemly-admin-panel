@@ -72,10 +72,10 @@ const CouponHistoryTable = () => {
                   <td className="py-2 px-4 border">{coupon.Customer_ID}</td>
                   <td className="py-2 px-4 border">{coupon.Coupon_ID}</td>
                   <td className="py-2 px-4 border">{coupon.Discount}</td>
-                  <td className="py-2 px-4 border">{coupon.Coupon_Download_Date}</td>
-                  <td className="py-2 px-4 border">{coupon.Coupon_Redeemed_Date}</td>
-                  <td className="py-2 px-4 border">{coupon.Coupon_Redeemed_Time}</td>
-                  <td className="py-2 px-4 border">{coupon.Coupon_Order_Details}</td>
+                  <td className="py-2 px-4 border">{coupon.Download_Date}</td>
+                  <td className="py-2 px-4 border">{coupon.Redeemed_Date}</td>
+                  <td className="py-2 px-4 border">{coupon.Redeemed_Time}</td>
+                  <td className="py-2 px-4 border">{coupon.Order_Details}</td>
                   <td className="py-2 px-4 border">{coupon.Order_Value}</td>
                   <td className="py-2 px-4 border">{coupon.Feedback}</td>
                 </tr>

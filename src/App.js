@@ -98,6 +98,8 @@ import AdminNotifications from "./Pages/AdminNotifications.js";
 import FunFactsGenerator from "./Pages/FunFactsGenerator.js";
 import NewsFetcher from "./Pages/NewsFetcher.js";
 import SpinCountPage from "./Pages/SpinCountPage.js";
+import CreateBanner from "./Pages/CreateBanner.js";
+import AdminAllBanners from "./Pages/AdminAllBanners.js";
 
 
 
@@ -210,6 +212,8 @@ function App() {
               <Route path="/generatefacts" element={<FunFactsGenerator />} />
               <Route path="/generatenews" element={<NewsFetcher />} />
               <Route path="/spincount" element={<SpinCountPage />} />
+              <Route path="/create-banner" element={<CreateBanner />} />
+              <Route path="/banners" element={<AdminAllBanners />} />
 
 
 

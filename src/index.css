@@ -13,3 +13,105 @@
         scrollbar-width: none;  /* Firefox */
   }
 }
+
+/* Responsive breakpoints */
+@media (max-width: 480px) {
+  .xs\:inline {
+    display: inline;
+  }
+}
+
+/* Mobile touch-friendly targets */
+@media (max-width: 768px) {
+  .navbar-toggle-button,
+  .sidebar-item > *,
+  .sidebar-item a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Prevent text selection on mobile */
+  .sidebar {
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  
+  /* No scrollbar for sidebar on mobile */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Tablet and desktop */
+@media (min-width: 769px) {
+  .sidebar {
+    height: calc(100vh - 4rem);
+  }
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Smooth transitions */
+* {
+  transition: background-color 0.3s ease, 
+              color 0.3s ease, 
+              transform 0.3s ease,
+              opacity 0.3s ease,
+              max-height 0.3s ease;
+}
+
+/* Fix for mobile overlay */
+.bg-black.bg-opacity-50 {
+  backdrop-filter: blur(2px);
+}
+
+/* Ensure proper z-index stacking */
+.navbar-toggle-button {
+  z-index: 100 !important;
+  position: relative;
+}
+
+.sidebar {
+  z-index: 9999 !important;
+}
+
+/* Responsive font sizes */
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 640px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 1024px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+/* Prevent body scroll when sidebar is open on mobile */
+body.sidebar-open {
+  overflow: hidden;
+}
