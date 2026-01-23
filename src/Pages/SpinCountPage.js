@@ -6,384 +6,284 @@ const SpinCountPage = () => {
   const [spinConfigs, setSpinConfigs] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [downloadLimit, setDownloadLimit] = useState(50);
-  const [formData, setFormData] = useState({
-    dailySpinLimit: ""
-  });
-  const [editFormData, setEditFormData] = useState({
-    dailySpinLimit: ""
-  });
+  const [downloadLimit, setDownloadLimit] = useState(10);
   const [loading, setLoading] = useState(false);
 
-  // Fetch spin configurations on mount
+  const [formData, setFormData] = useState({
+    dailySpinLimit: "",
+  });
+
+  const [editFormData, setEditFormData] = useState({
+    dailySpinLimit: "",
+  });
+
   useEffect(() => {
     fetchSpinConfigs();
   }, []);
 
+  /* ================= FETCH ================= */
   const fetchSpinConfigs = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("https://api.redemly.com/api/admin/getallspin");
-      console.log("API Response:", res.data); // Debug log
-      
-      if (res.data && res.data.success) {
-        // Handle the response structure: { success: true, data: [...] }
-        setSpinConfigs(res.data.data || []);
+      const res = await axios.get(
+        "http://31.97.206.144:6091/api/admin/getallspin"
+      );
+
+      if (res.data?.success) {
+        // API returns a SINGLE object → convert to array
+        const normalizedData = [
+          {
+            id: "spin-config-1", // synthetic ID
+            dailySpinLimit: res.data.dailySpinLimit,
+            createdAt: res.data.createdAt,
+            updatedAt: res.data.updatedAt,
+          },
+        ];
+
+        setSpinConfigs(normalizedData);
       }
-    } catch (error) {
-      console.error("Failed to fetch spin configs:", error);
-      alert("Failed to fetch spin configurations from server.");
+    } catch (err) {
+      console.error(err);
+      alert("Failed to fetch spin configuration");
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle add new spin limit
+  /* ================= ADD ================= */
   const handleAddSpinLimit = async (e) => {
     e.preventDefault();
+
     if (!formData.dailySpinLimit || formData.dailySpinLimit < 1) {
-      alert("Please enter a valid spin limit (minimum 1)");
-      return;
+      return alert("Enter a valid spin limit");
     }
 
     try {
-      const res = await axios.post("https://api.redemly.com/api/admin/spin-limit", {
-        dailySpinLimit: parseInt(formData.dailySpinLimit)
-      });
+      const res = await axios.post(
+        "https://api.redemly.com/api/admin/spin-limit",
+        {
+          dailySpinLimit: Number(formData.dailySpinLimit),
+        }
+      );
 
-      if (res.data && res.data.success) {
-        alert("Spin limit added successfully!");
+      if (res.data?.success) {
+        alert("Spin limit added");
         setFormData({ dailySpinLimit: "" });
-        fetchSpinConfigs(); // Refresh the list
+        fetchSpinConfigs();
       }
-    } catch (error) {
-      console.error("Failed to add spin limit:", error);
-      alert("Error adding spin limit: " + (error.response?.data?.message || error.message));
+    } catch (err) {
+      alert(err.response?.data?.message || "Add failed");
     }
   };
 
-  // Handle edit spin limit
-  const handleEditSpinLimit = async (id) => {
+  /* ================= EDIT ================= */
+  const handleEditSpinLimit = async () => {
     if (!editFormData.dailySpinLimit || editFormData.dailySpinLimit < 1) {
-      alert("Please enter a valid spin limit (minimum 1)");
-      return;
+      return alert("Enter valid spin limit");
     }
 
     try {
-      const res = await axios.put(`https://api.redemly.com/api/admin/spin-limit/${id}`, {
-        dailySpinLimit: parseInt(editFormData.dailySpinLimit)
-      });
+      const res = await axios.post(
+        "https://api.redemly.com/api/admin/spin-limit",
+        {
+          dailySpinLimit: Number(editFormData.dailySpinLimit),
+        }
+      );
 
-      if (res.data && res.data.success) {
-        alert("Spin limit updated successfully!");
+      if (res.data?.success) {
+        alert("Spin limit updated");
         setEditingId(null);
         setEditFormData({ dailySpinLimit: "" });
-        fetchSpinConfigs(); // Refresh the list
+        fetchSpinConfigs();
       }
-    } catch (error) {
-      console.error("Failed to update spin limit:", error);
-      alert("Error updating spin limit: " + (error.response?.data?.message || error.message));
+    } catch (err) {
+      alert(err.response?.data?.message || "Update failed");
     }
   };
 
-  // Handle delete spin limit
-  const handleDelete = async (id) => {
-    const confirmed = window.confirm("Are you sure you want to delete this spin configuration?");
-    if (!confirmed) return;
+  /* ================= DELETE ================= */
+  const handleDelete = async () => {
+    if (!window.confirm("Delete spin configuration?")) return;
 
     try {
-      const res = await axios.delete(`https://api.redemly.com/api/admin/spin-limit/${id}`);
-      
-      if (res.data && res.data.success) {
-        alert("Spin configuration deleted successfully!");
-        fetchSpinConfigs(); // Refresh the list
+      const res = await axios.delete(
+        "https://api.redemly.com/api/admin/spin-limit"
+      );
+
+      if (res.data?.success) {
+        alert("Deleted");
+        fetchSpinConfigs();
       }
-    } catch (error) {
-      console.error("Failed to delete spin config:", error);
-      alert("Error deleting spin configuration: " + (error.response?.data?.message || error.message));
+    } catch (err) {
+      alert(err.response?.data?.message || "Delete failed");
     }
   };
 
-  // Start editing
+  /* ================= EDIT STATE ================= */
   const startEditing = (config) => {
     setEditingId(config.id);
     setEditFormData({
-      dailySpinLimit: config.dailySpinLimit.toString()
+      dailySpinLimit: String(config.dailySpinLimit),
     });
   };
 
-  // Cancel editing
   const cancelEditing = () => {
     setEditingId(null);
     setEditFormData({ dailySpinLimit: "" });
   };
 
-  // Pagination
-  const spinConfigsPerPage = downloadLimit;
-  const totalPages = Math.ceil(spinConfigs.length / spinConfigsPerPage);
-  const indexOfLastConfig = currentPage * spinConfigsPerPage;
-  const indexOfFirstConfig = indexOfLastConfig - spinConfigsPerPage;
-  const currentConfigs = spinConfigs.slice(indexOfFirstConfig, indexOfLastConfig);
+  /* ================= PAGINATION ================= */
+  const totalPages = Math.ceil(spinConfigs.length / downloadLimit);
+  const indexOfLast = currentPage * downloadLimit;
+  const indexOfFirst = indexOfLast - downloadLimit;
+  const currentConfigs = spinConfigs.slice(indexOfFirst, indexOfLast);
 
+  /* ================= UI ================= */
   return (
     <div className="p-6 bg-white min-h-screen">
-      <h1 className="text-2xl font-semibold text-center mb-6 text-gray-700">Spin Count Management</h1>
+      <h1 className="text-2xl font-semibold text-center mb-6">
+        Spin Count Management
+      </h1>
 
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Left Side - Add Form */}
-        <div className="lg:w-1/3 bg-gray-50 p-6 rounded-lg shadow border">
-          <h2 className="text-xl font-semibold mb-4 text-gray-700">Add New Spin Limit</h2>
-          <form onSubmit={handleAddSpinLimit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Daily Spin Limit *
-              </label>
-              <input
-                type="number"
-                min="1"
-                required
-                value={formData.dailySpinLimit}
-                onChange={(e) => setFormData({ dailySpinLimit: e.target.value })}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter daily spin limit"
-              />
-            </div>
-            
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition duration-200 font-medium"
-            >
-              Add Spin Limit
-            </button>
-          </form>
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* ADD FORM */}
+        <form
+          onSubmit={handleAddSpinLimit}
+          className="bg-gray-50 p-6 rounded shadow space-y-4"
+        >
+          <h2 className="text-lg font-semibold">Add Spin Limit</h2>
 
-          {/* Additional Info */}
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <h3 className="font-semibold text-blue-800 mb-2">Note:</h3>
-            <p className="text-sm text-blue-700">
-              Setting a new spin limit will update the daily spin count for all users immediately.
-              Each user will receive the new limit as their daily spin count.
-            </p>
-          </div>
-        </div>
+          <input
+            type="number"
+            min="1"
+            value={formData.dailySpinLimit}
+            onChange={(e) =>
+              setFormData({ dailySpinLimit: e.target.value })
+            }
+            className="w-full p-3 border rounded"
+            placeholder="Daily spin limit"
+          />
 
-        {/* Right Side - Table */}
-        <div className="lg:w-2/3">
-          {/* Controls */}
-          <div className="mb-6 flex justify-between items-center">
-            <div className="flex items-center gap-4">
-              <span className="text-gray-700 font-medium">Show:</span>
-              <select
-                value={downloadLimit}
-                onChange={(e) => {
-                  setDownloadLimit(Number(e.target.value));
-                  setCurrentPage(1);
-                }}
-                className="p-2 border border-gray-300 rounded text-gray-700 focus:ring-2 focus:ring-blue-500"
+          <button className="w-full bg-blue-600 text-white py-2 rounded">
+            Add
+          </button>
+        </form>
+
+        {/* TABLE */}
+<div className="lg:col-span-2">
+  {loading ? (
+    <div className="py-10 text-center text-gray-500">Loading...</div>
+  ) : (
+    <div className="overflow-x-auto rounded-xl shadow border bg-white">
+      <table className="w-full text-sm">
+        <thead className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+          <tr>
+            <th className="p-3 text-left w-16">S.No</th>
+            <th className="p-3 text-left">Daily Spin Limit</th>
+            <th className="p-3 text-left">Created</th>
+            <th className="p-3 text-left">Updated</th>
+            <th className="p-3 text-center">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {currentConfigs.length > 0 ? (
+            currentConfigs.map((config, index) => (
+              <tr
+                key={config.id}
+                className="border-t hover:bg-gray-50 transition"
               >
-                <option value={10}>10</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-                <option value={200}>200</option>
-              </select>
-              <span className="text-gray-600 bg-gray-100 px-3 py-1 rounded">
-                Total: {spinConfigs.length} configuration(s)
-              </span>
-            </div>
-          </div>
+                {/* S NO */}
+                <td className="p-3 font-medium text-gray-600">
+                  {(currentPage - 1) * downloadLimit + index + 1}
+                </td>
 
-          {/* Loading State */}
-          {loading && (
-            <div className="text-center py-4">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <p className="text-gray-600 mt-2">Loading spin configurations...</p>
-            </div>
-          )}
-
-          {/* Spin Configs Table */}
-          {!loading && (
-            <div className="overflow-x-auto bg-white rounded-lg shadow border">
-              <table className="w-full border border-gray-300">
-                <thead className="bg-blue-600 text-white">
-                  <tr>
-                    <th className="p-3 border text-left">ID</th>
-                    <th className="p-3 border text-left">Daily Spin Limit</th>
-                    <th className="p-3 border text-left">Created At</th>
-                    <th className="p-3 border text-left">Updated At</th>
-                    <th className="p-3 border text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentConfigs.length > 0 ? (
-                    currentConfigs.map((config) => (
-                      <tr key={config.id} className="border-b hover:bg-gray-50 transition duration-150">
-                        <td className="p-3 border text-gray-600 font-mono text-sm">
-                          {config.id?.slice(-8) || 'N/A'}
-                        </td>
-                        
-                        <td className="p-3 border">
-                          {editingId === config.id ? (
-                            <input
-                              type="number"
-                              min="1"
-                              value={editFormData.dailySpinLimit}
-                              onChange={(e) => setEditFormData({ dailySpinLimit: e.target.value })}
-                              className="w-24 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
-                              autoFocus
-                            />
-                          ) : (
-                            <span className="font-semibold text-green-600 text-lg">
-                              {config.dailySpinLimit}
-                            </span>
-                          )}
-                        </td>
-                        
-                        <td className="p-3 border text-gray-600">
-                          {config.createdAt ? new Date(config.createdAt).toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric'
-                          }) : 'N/A'}
-                        </td>
-                        
-                        <td className="p-3 border text-gray-600">
-                          {config.updatedAt ? new Date(config.updatedAt).toLocaleDateString('en-IN', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric'
-                          }) : 'N/A'}
-                        </td>
-                        
-                        <td className="p-3 border">
-                          <div className="flex justify-center gap-3">
-                            {editingId === config.id ? (
-                              <>
-                                <button
-                                  onClick={() => handleEditSpinLimit(config.id)}
-                                  className="bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700 transition duration-200 flex items-center gap-2"
-                                >
-                                  <FaEdit /> Save
-                                </button>
-                                <button
-                                  onClick={cancelEditing}
-                                  className="bg-gray-600 text-white px-3 py-2 rounded hover:bg-gray-700 transition duration-200"
-                                >
-                                  Cancel
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <button 
-                                  onClick={() => startEditing(config)}
-                                  className="text-blue-600 hover:text-blue-800 transition duration-200 p-2 hover:bg-blue-50 rounded"
-                                  title="Edit"
-                                >
-                                  <FaEdit size={18} />
-                                </button>
-                                <button 
-                                  onClick={() => handleDelete(config.id)}
-                                  className="text-red-600 hover:text-red-800 transition duration-200 p-2 hover:bg-red-50 rounded"
-                                  title="Delete"
-                                >
-                                  <FaTrash size={18} />
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                {/* LIMIT */}
+                <td className="p-3">
+                  {editingId === config.id ? (
+                    <input
+                      type="number"
+                      min="1"
+                      value={editFormData.dailySpinLimit}
+                      onChange={(e) =>
+                        setEditFormData({
+                          dailySpinLimit: e.target.value,
+                        })
+                      }
+                      className="w-24 px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500"
+                      autoFocus
+                    />
                   ) : (
-                    <tr>
-                      <td colSpan="5" className="p-8 text-center text-gray-500">
-                        <div className="flex flex-col items-center">
-                          <svg className="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          <p className="text-lg">No spin configurations found.</p>
-                          <p className="text-sm mt-1">Add a new spin limit using the form on the left.</p>
-                        </div>
-                      </td>
-                    </tr>
+                    <span className="inline-block px-3 py-1 text-green-700 bg-green-100 rounded-full font-semibold">
+                      {config.dailySpinLimit}
+                    </span>
                   )}
-                </tbody>
-              </table>
-            </div>
-          )}
+                </td>
 
-          {/* Pagination */}
-          {!loading && totalPages > 1 && (
-            <div className="flex justify-center mt-6 gap-2">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="bg-gray-200 px-4 py-2 rounded disabled:opacity-50 hover:bg-gray-300 transition duration-200 font-medium"
-              >
-                Previous
-              </button>
-              {[...Array(totalPages)].map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentPage(idx + 1)}
-                  className={`px-4 py-2 rounded transition duration-200 font-medium ${
-                    currentPage === idx + 1 
-                      ? "bg-blue-500 text-white" 
-                      : "bg-gray-100 hover:bg-gray-200"
-                  }`}
-                >
-                  {idx + 1}
-                </button>
-              ))}
-              <button
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-                className="bg-gray-200 px-4 py-2 rounded disabled:opacity-50 hover:bg-gray-300 transition duration-200 font-medium"
-              >
-                Next
-              </button>
-            </div>
+                {/* CREATED */}
+                <td className="p-3 text-gray-600">
+                  {new Date(config.createdAt).toLocaleDateString("en-IN")}
+                </td>
+
+                {/* UPDATED */}
+                <td className="p-3 text-gray-600">
+                  {new Date(config.updatedAt).toLocaleDateString("en-IN")}
+                </td>
+
+                {/* ACTIONS */}
+                <td className="p-3">
+                  <div className="flex justify-center gap-2">
+                    {editingId === config.id ? (
+                      <>
+                        <button
+                          onClick={handleEditSpinLimit}
+                          className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={cancelEditing}
+                          className="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 transition"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => startEditing(config)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded transition"
+                          title="Edit"
+                        >
+                          <FaEdit />
+                        </button>
+                        <button
+                          onClick={handleDelete}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded transition"
+                          title="Delete"
+                        >
+                          <FaTrash />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="5" className="p-8 text-center text-gray-500">
+                No spin configuration found
+              </td>
+            </tr>
           )}
-        </div>
+        </tbody>
+      </table>
+    </div>
+  )}
+</div>
+
       </div>
-
-      {/* Edit Popup Modal */}
-      {editingId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
-            <h3 className="text-xl font-semibold mb-4 text-gray-800">Edit Spin Limit</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Daily Spin Limit *
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={editFormData.dailySpinLimit}
-                  onChange={(e) => setEditFormData({ dailySpinLimit: e.target.value })}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter daily spin limit"
-                  autoFocus
-                />
-              </div>
-              <div className="flex gap-3 justify-end pt-4">
-                <button
-                  onClick={cancelEditing}
-                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition duration-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => handleEditSpinLimit(editingId)}
-                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition duration-200 font-medium"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

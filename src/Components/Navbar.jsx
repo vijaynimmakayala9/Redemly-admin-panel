@@ -23,10 +23,8 @@ const Navbar = ({ setIsCollapsed, isCollapsed, isMobile, toggleSidebar }) => {
         `https://api.redemly.com/api/admin/notifications`
       );
       const json = await res.json();
-      console.log("Unread notifications response:", json);
 
       const unread = json?.data?.stats?.unread ?? 0;
-      console.log("Unread notifications:", unread);
       setTotalNotifications(unread);
     } catch (err) {
       console.error("Unread notification fetch failed", err);
