@@ -100,6 +100,7 @@ import NewsFetcher from "./Pages/NewsFetcher.js";
 import SpinCountPage from "./Pages/SpinCountPage.js";
 import CreateBanner from "./Pages/CreateBanner.js";
 import AdminAllBanners from "./Pages/AdminAllBanners.js";
+import VendorPrice from "./Pages/VendorPrice.js";
 
 
 
@@ -214,6 +215,7 @@ function App() {
               <Route path="/spincount" element={<SpinCountPage />} />
               <Route path="/create-banner" element={<CreateBanner />} />
               <Route path="/banners" element={<AdminAllBanners />} />
+              <Route path="/vendorprice" element={<VendorPrice/>}/>
 
 
 

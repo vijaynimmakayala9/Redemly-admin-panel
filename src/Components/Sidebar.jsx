@@ -129,6 +129,7 @@ const Sidebar = ({ isCollapsed, isMobile, setIsCollapsed }) => {
       icon: <i className="ri-settings-3-fill"></i>,
       name: "Payment",
       dropdown: [
+        { name: "Vendor Price", path: "/vendorprice"},
         { name: "All Vendor Payment", path: "/allpayments" },
         { name: "Vendor Payment Pending", path: "/payment" },
         { name: "Vendor Rcvd Payment", path: "/rcvdpayment" },
