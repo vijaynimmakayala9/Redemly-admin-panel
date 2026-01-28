@@ -132,7 +132,7 @@ const Sidebar = ({ isCollapsed, isMobile, setIsCollapsed }) => {
         { name: "Vendor Price", path: "/vendorprice"},
         { name: "All Vendor Payment", path: "/allpayments" },
         { name: "Vendor Payment Pending", path: "/payment" },
-        { name: "Vendor Rcvd Payment", path: "/rcvdpayment" },
+        { name: "Vendor Paid Payment", path: "/rcvdpayment" },
       ],
     },
     {
