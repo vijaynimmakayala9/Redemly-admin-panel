@@ -412,9 +412,9 @@ export default function ReceivedPayments() {
                   <th className="p-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="p-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  {/* <th className="p-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Actions
-                  </th>
+                  </th> */}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -520,7 +520,7 @@ export default function ReceivedPayments() {
                       <td className="p-4">
                         <StatusBadge status={payment.paymentStatus} />
                       </td>
-                      <td className="p-4">
+                      {/* <td className="p-4">
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleDownloadInvoice(payment._id)}
@@ -535,7 +535,7 @@ export default function ReceivedPayments() {
                             <FaMoneyCheckAlt /> Details
                           </button>
                         </div>
-                      </td>
+                      </td> */}
                     </tr>
                   ))
                 )}

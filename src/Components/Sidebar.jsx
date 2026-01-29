@@ -136,6 +136,11 @@ const Sidebar = ({ isCollapsed, isMobile, setIsCollapsed }) => {
       ],
     },
     {
+      icon: <i className="ri-money-dollar-circle-line"></i>,
+      name: "Revenue",
+      dropdown: [{ name: "Revenue", path: "/revenue" }],
+    },
+    {
       icon: <i className="ri-brain-fill"></i>,
       name: "AI Generated",
       dropdown: [
