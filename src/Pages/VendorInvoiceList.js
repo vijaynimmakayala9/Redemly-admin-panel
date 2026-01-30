@@ -6,7 +6,7 @@ import { MdOutlinePayment, MdPendingActions, MdOutlineLocationCity, MdAttachMone
 import { HiBuildingOffice2 } from "react-icons/hi2";
 import { RiRefund2Line } from "react-icons/ri";
 
-const API_BASE = "http://31.97.206.144:6091/api";
+const API_BASE = "https://api.redemly.com/api";
 
 export default function VendorInvoiceList() {
   const [search, setSearch] = useState("");

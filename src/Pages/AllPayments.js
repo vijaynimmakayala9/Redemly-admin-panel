@@ -21,7 +21,7 @@ import { RiRefund2Line, RiFileExcelLine } from "react-icons/ri";
 import { FiDownload, FiTrendingUp } from "react-icons/fi";
 import { HiOutlineDocumentReport } from "react-icons/hi";
 
-const API_BASE = "http://31.97.206.144:6091/api";
+const API_BASE = "https://api.redemly.com/api";
 const PAGE_SIZE = 10;
 
 export default function AllPayments() {

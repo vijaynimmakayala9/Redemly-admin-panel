@@ -26,7 +26,7 @@ const SpinCountPage = () => {
     setLoading(true);
     try {
       const res = await axios.get(
-        "http://31.97.206.144:6091/api/admin/getallspin"
+        "https://api.redemly.com/api/admin/getallspin"
       );
 
       if (res.data?.success) {

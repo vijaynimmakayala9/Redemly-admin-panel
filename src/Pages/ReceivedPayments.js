@@ -6,7 +6,7 @@ import { MdOutlinePayment, MdPendingActions, MdOutlineAttachMoney, MdCheckCircle
 import { RiRefundLine, RiFileExcelLine } from "react-icons/ri";
 import { FiTrendingUp } from "react-icons/fi";
 
-const API_BASE = "http://31.97.206.144:6091/api";
+const API_BASE = "https://api.redemly.com/api";
 
 export default function ReceivedPayments() {
   const [searchTerm, setSearchTerm] = useState("");

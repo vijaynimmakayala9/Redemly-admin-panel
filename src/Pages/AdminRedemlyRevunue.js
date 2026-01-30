@@ -11,7 +11,7 @@ import {
 } from "react-icons/fa";
 import { MdPayments } from "react-icons/md";
 
-const API_BASE = "http://31.97.206.144:6091/api";
+const API_BASE = "https://api.redemly.com/api";
 
 export default function AdminRedemlyRevenue() {
   const [data, setData] = useState(null);

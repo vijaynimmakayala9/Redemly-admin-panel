@@ -19,7 +19,7 @@ const VendorPrice = () => {
     try {
       setLoading(true);
       const res = await axios.get(
-        "http://31.97.206.144:6091/api/admin/price"
+        "https://api.redemly.com/api/admin/price"
       );
 
       if (res.data.success) {
@@ -46,7 +46,7 @@ const VendorPrice = () => {
     try {
       setSaving(true);
       const res = await axios.post(
-        "http://31.97.206.144:6091/api/admin/price",
+        "https://api.redemly.com/api/admin/price",
         {
           pricePerCoupon: Number(pricePerCoupon),
           note,

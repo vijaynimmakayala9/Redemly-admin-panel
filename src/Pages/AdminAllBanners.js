@@ -22,7 +22,7 @@ const AdminAllBanners = () => {
   const fetchBanners = async () => {
     try {
       const res = await axios.get(
-        "http://31.97.206.144:6091/api/admin/banners"
+        "https://api.redemly.com/api/admin/banners"
       );
       setBanners(res.data.data || []);
     } catch {
@@ -38,7 +38,7 @@ const AdminAllBanners = () => {
   const handleView = async (id) => {
     try {
       const res = await axios.get(
-        `http://31.97.206.144:6091/api/admin/get/${id}`
+        `https://api.redemly.com/api/admin/get/${id}`
       );
       setViewBanner(res.data.data);
       setViewOpen(true);
@@ -53,7 +53,7 @@ const AdminAllBanners = () => {
 
     try {
       await axios.delete(
-        `http://31.97.206.144:6091/api/admin/banner/${id}`
+        `https://api.redemly.com/api/admin/banner/${id}`
       );
       fetchBanners();
     } catch {
@@ -71,7 +71,7 @@ const AdminAllBanners = () => {
       newImages.forEach((img) => formData.append("images", img));
 
       await axios.put(
-        `http://31.97.206.144:6091/api/admin/update/${id}`,
+        `https://api.redemly.com/api/admin/update/${id}`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );

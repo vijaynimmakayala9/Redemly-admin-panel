@@ -23,7 +23,7 @@ const CreateBanner = () => {
       images.forEach((img) => formData.append("images", img));
 
       await axios.post(
-        "http://31.97.206.144:6091/api/admin/banner",
+        "https://api.redemly.com/api/admin/banner",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
