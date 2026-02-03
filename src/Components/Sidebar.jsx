@@ -32,19 +32,7 @@ const Sidebar = ({ isCollapsed, isMobile, setIsCollapsed }) => {
   };
 
   const handleLogout = async () => {
-    try {
-      await axios.post(
-        "https://credenhealth.onrender.com/api/admin/logout",
-        {},
-        { withCredentials: true }
-      );
-      localStorage.removeItem("authToken");
-      alert("Logout successful");
-      window.location.href = "/";
-    } catch (error) {
-      console.error("Logout error:", error);
-      alert("Logout failed. Please try again.");
-    }
+        window.location.href = "/";
   };
 
   // Close sidebar when clicking a link on mobile

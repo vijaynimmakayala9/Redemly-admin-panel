@@ -103,6 +103,10 @@ export default function VendorList() {
     navigate(`/vendor/${vendor._id}`, { state: { vendor } });
   };
 
+  const EditVendor = (vendor) => {
+    navigate(`/update-vendor/${vendor._id}`, { state: { vendor } });
+  };
+
   // Edit modal input change handler
   const handleEditChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -494,8 +498,7 @@ export default function VendorList() {
                           
                           <button
                             onClick={() => {
-                              setEditedVendor(vendor);
-                              setEditModal(true);
+                              EditVendor(vendor);
                             }}
                             disabled={actionLoading}
                             className="text-green-600 hover:text-green-900 p-1 rounded hover:bg-green-50"

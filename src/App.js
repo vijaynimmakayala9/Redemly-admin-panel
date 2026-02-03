@@ -197,6 +197,7 @@ function App() {
               <Route path="/contactus" element={<ContactUsPage />} />
               <Route path="/getcontactus" element={<GetContactUsPage />} />
               <Route path="/create-vendor" element={<CreateVendor />} />
+              <Route path="/update-vendor/:vendorId" element={<CreateVendor />} />
               <Route path="/vendorlist" element={<VendorList />} />
               <Route path="/vendordocumentlist" element={<VendorDocumentList />} />
               <Route path="/redeemed-coupons" element={<RedeemedCouponsList />} />

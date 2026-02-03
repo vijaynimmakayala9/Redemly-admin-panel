@@ -86,20 +86,20 @@ export default function VendorDetail() {
         }
         
         // Set other data
-        setCoupons(data.coupons || generateDummyCoupons());
-        setFeedbacks(data.feedbacks || generateDummyFeedbacks());
-        setPayments(data.payments || generateDummyPayments());
+        setCoupons(data.coupons || []);
+        setFeedbacks(data.feedbacks || []);
+        setPayments(data.payments || []);
         
         // Calculate stats
-        calculateCouponStats(data.coupons || generateDummyCoupons());
+        calculateCouponStats(data.coupons || []);
       } catch (err) {
         setError(err.message || "Error fetching vendor");
         // Set demo data for testing
-        setVendor(generateDummyVendor(id));
-        setCoupons(generateDummyCoupons());
-        setFeedbacks(generateDummyFeedbacks());
-        setPayments(generateDummyPayments());
-        calculateCouponStats(generateDummyCoupons());
+        setVendor([]);
+        setCoupons([]);
+        setFeedbacks([]);
+        setPayments([]);
+        calculateCouponStats([]);
       } finally {
         setLoading(false);
       }
@@ -272,7 +272,7 @@ export default function VendorDetail() {
 
   // Edit vendor function
   const handleEditVendor = () => {
-    navigate(`/vendor/edit/${vendor._id}`, { state: { vendor } });
+    navigate(`/update-vendor/${vendor._id}`, { state: { vendor } });
   };
 
   const formatDate = (dateString) => {
