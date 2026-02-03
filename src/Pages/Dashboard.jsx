@@ -26,7 +26,10 @@ import {
   YAxis, 
   Tooltip,
   Cell,
-  CartesianGrid
+  CartesianGrid,
+  LineChart,
+  Line,
+  ComposedChart
 } from "recharts";
 import { useNavigate } from "react-router-dom";
 
@@ -60,6 +63,7 @@ const Dashboard = () => {
         const data = await response.json();
         
         if (data.success) {
+          console.log("Dashboard API Response:", data.data);
           setDashboardData(data.data);
         } else {
           throw new Error("API returned unsuccessful response");
@@ -75,12 +79,12 @@ const Dashboard = () => {
     fetchDashboardData();
   }, []);
 
-  // API से मिले डेटा को चार्ट के लिए फॉर्मेट करें
+  // Format earnings data from backend
   const formatEarningsData = (data) => {
-    if (!data) return [];
+    if (!data || !Array.isArray(data)) return [];
     
     const formatted = data.map(item => ({
-      name: item.day || item.week,
+      name: item.day || item.week || "N/A",
       revenue: item.revenue || 0
     }));
     
@@ -88,10 +92,10 @@ const Dashboard = () => {
   };
 
   const formatRedemptionData = (data) => {
-    if (!data) return [];
+    if (!data || !Array.isArray(data)) return [];
     
     const formatted = data.map(item => ({
-      name: item.day || item.week,
+      name: item.day || item.week || "N/A",
       redeemed: item.redeemed || 0
     }));
     
@@ -121,7 +125,39 @@ const Dashboard = () => {
     }));
   };
 
-  // Stat cards navigation configuration
+  // Get table data from backend response
+  const getUserInsightsData = () => {
+    if (!dashboardData?.tables?.userInsightsData) return [];
+    
+    return dashboardData.tables.userInsightsData.map((user, index) => ({
+      id: user._id || index,
+      user: user.user || "Unknown User",
+      lastLogin: user.lastLogin || "N/A",
+      accountCreated: user.accountCreated || "N/A",
+      offerRedeemed: user.offerRedeemed || 0,
+      activities: user.activities || {
+        steps: 0,
+        quiz: 0,
+        news: 0,
+        facts: 0
+      }
+    }));
+  };
+
+  const getRestaurantInsightsData = () => {
+    if (!dashboardData?.tables?.restaurantInsightsData) return [];
+    
+    return dashboardData.tables.restaurantInsightsData.map((rest, index) => ({
+      id: rest._id || index,
+      restaurant: rest.restaurant || "Unknown Restaurant",
+      redemption: rest.redemption || 0,
+      avgRating: rest.avgRating || 0,
+      activeOffer: rest.activeOffer || 0,
+      joinedDate: rest.joinedDate || "N/A"
+    }));
+  };
+
+  // Stat cards navigation configuration - Updated with backend data
   const statCardsConfig = [
     {
       icon: FiUsers,
@@ -188,8 +224,8 @@ const Dashboard = () => {
     },
     {
       icon: FiDollarSign,
-      label: "Revenue from Coupons",
-      value: `₹${dashboardData?.todayStats?.revenueToday || 0}`,
+      label: "Revenue Today",
+      value: `$${dashboardData?.todayStats?.revenueToday || 0}`,
       color: "emerald",
       path: "/dashboard",
       gradient: "from-emerald-500 to-teal-600",
@@ -273,25 +309,49 @@ const Dashboard = () => {
     );
   }
 
+  // Get formatted data for tables
+  const userInsightsData = getUserInsightsData();
+  const restaurantInsightsData = getRestaurantInsightsData();
+
   // Pagination logic for users
-  const userInsightsData = dashboardData.tables?.userInsightsData || [];
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = userInsightsData.slice(indexOfFirstUser, indexOfLastUser);
   const totalPages = Math.ceil(userInsightsData.length / usersPerPage);
 
   // Pagination logic for restaurants
-  const restaurantInsightsData = dashboardData.tables?.restaurantInsightsData || [];
   const indexOfLastRest = currentRestPage * restaurantsPerPage;
   const indexOfFirstRest = indexOfLastRest - restaurantsPerPage;
   const currentRestaurants = restaurantInsightsData.slice(indexOfFirstRest, indexOfLastRest);
   const totalRestPages = Math.ceil(restaurantInsightsData.length / restaurantsPerPage);
 
-  // Chart data preparation
+  // Chart data preparation from backend
   const earningsChartData = formatEarningsData(dashboardData.charts?.earningsData?.[revenueFilter] || []);
   const redemptionChartData = formatRedemptionData(dashboardData.charts?.redemptionData?.[redemptionFilter] || []);
-  const restaurantChartData = formatRestaurantData(dashboardData.charts?.restaurantRedemptionData?.[restaurantFilter] || []);
-  const topRestaurantsChartData = formatTopRestaurantsData(dashboardData.charts?.topRestaurantsData?.[topRestaurantsFilter] || []);
+  
+  // Get restaurant data from backend - Fixed to use correct data structure
+  const getRestaurantChartData = () => {
+    if (restaurantFilter === "today") {
+      return formatRestaurantData(dashboardData.charts?.topRestaurantsData?.today || []);
+    } else if (restaurantFilter === "weekly") {
+      return formatRestaurantData(dashboardData.charts?.topRestaurantsData?.weekly || []);
+    } else {
+      return formatRestaurantData(dashboardData.charts?.topRestaurantsData?.monthly || []);
+    }
+  };
+
+  const getTopRestaurantsChartData = () => {
+    if (topRestaurantsFilter === "today") {
+      return formatTopRestaurantsData(dashboardData.charts?.topRestaurantsData?.today || []);
+    } else if (topRestaurantsFilter === "weekly") {
+      return formatTopRestaurantsData(dashboardData.charts?.topRestaurantsData?.weekly || []);
+    } else {
+      return formatTopRestaurantsData(dashboardData.charts?.topRestaurantsData?.monthly || []);
+    }
+  };
+
+  const restaurantChartData = getRestaurantChartData();
+  const topRestaurantsChartData = getTopRestaurantsChartData();
 
   return (
     <div className="bg-gradient-to-br from-gray-50 via-white to-gray-100 min-h-screen p-4 md:p-6">
@@ -385,7 +445,7 @@ const Dashboard = () => {
                     border: 'none',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                   }}
-                  formatter={(value) => [`₹${value}`, 'Revenue']}
+                  formatter={(value) => [`$${value}`, 'Revenue']}
                 />
                 <Area
                   type="monotone"
@@ -461,8 +521,8 @@ const Dashboard = () => {
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 md:p-6 transition-transform hover:shadow-xl">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h3 className="text-xl font-bold text-gray-800">Restaurant Performance</h3>
-              <p className="text-gray-500 text-sm">Redemption across venues</p>
+              <h3 className="text-xl font-bold text-gray-800">Restaurant Redemptions</h3>
+              <p className="text-gray-500 text-sm">Coupons redeemed across venues</p>
             </div>
             <select
               className="border border-gray-300 rounded-xl px-4 py-2 text-sm bg-white focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -475,7 +535,7 @@ const Dashboard = () => {
             </select>
           </div>
           <div className="h-80">
-            {restaurantChartData.length > 0 ? (
+            {restaurantChartData.length > 0 && restaurantChartData[0].name !== "No Data" ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={restaurantChartData}
@@ -496,25 +556,23 @@ const Dashboard = () => {
                       border: 'none',
                       boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                     }}
+                    formatter={(value, name) => {
+                      if (name === 'Coupons Redeemed') return [value, name];
+                      return [value, name];
+                    }}
                   />
                   <Bar
                     dataKey="redeemed"
                     name="Coupons Redeemed"
                     radius={[8, 8, 0, 0]}
-                  >
-                    {restaurantChartData.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={index % 2 === 0 ? '#8884d8' : '#a78bfa'}
-                      />
-                    ))}
-                  </Bar>
+                    fill="#8884d8"
+                  />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-gray-400">
                 <FiShoppingBag className="text-4xl mb-2" />
-                <p>No restaurant data available</p>
+                <p>No restaurant redemption data available</p>
               </div>
             )}
           </div>
@@ -538,9 +596,9 @@ const Dashboard = () => {
             </select>
           </div>
           <div className="h-80">
-            {topRestaurantsChartData.length > 0 ? (
+            {topRestaurantsChartData.length > 0 && topRestaurantsChartData[0].name !== "No Data" ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart
+                <ComposedChart
                   data={topRestaurantsChartData}
                   margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
                 >
@@ -561,7 +619,8 @@ const Dashboard = () => {
                       boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                     }}
                     formatter={(value, name) => {
-                      if (name === 'Revenue') return [`₹${value}`, name];
+                      if (name === 'revenue' || name === 'Revenue') return [`$${value}`, 'Revenue'];
+                      if (name === 'coupons' || name === 'Coupons') return [value, 'Coupons Redeemed'];
                       return [value, name];
                     }}
                   />
@@ -572,14 +631,17 @@ const Dashboard = () => {
                     radius={[8, 8, 0, 0]}
                     fill="#8884d8"
                   />
-                  <Bar
+                  <Line
                     yAxisId="right"
+                    type="monotone"
                     dataKey="coupons"
                     name="Coupons Redeemed"
-                    radius={[8, 8, 0, 0]}
-                    fill="#82ca9d"
+                    stroke="#82ca9d"
+                    strokeWidth={3}
+                    dot={{ stroke: '#82ca9d', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6 }}
                   />
-                </BarChart>
+                </ComposedChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-full flex flex-col items-center justify-center text-gray-400">
@@ -618,7 +680,7 @@ const Dashboard = () => {
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">User</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Last Login</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Account Created</th>
-                    <th className="px-6 py-4 text-left font-semibold text-gray-700">Offer Redeemed</th>
+                    <th className="px-6 py-4 text-left font-semibold text-gray-700">Offers Redeemed</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Activities</th>
                   </tr>
                 </thead>
@@ -718,7 +780,7 @@ const Dashboard = () => {
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Restaurant</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Redemption</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Avg Rating</th>
-                    <th className="px-6 py-4 text-left font-semibold text-gray-700">Active Offer</th>
+                    <th className="px-6 py-4 text-left font-semibold text-gray-700">Active Offers</th>
                     <th className="px-6 py-4 text-left font-semibold text-gray-700">Joined Date</th>
                   </tr>
                 </thead>
@@ -737,17 +799,19 @@ const Dashboard = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center">
-                          <FiStar className="text-yellow-500 mr-1" />
-                          {rest.avgRating || 0}
+                          <FiStar className={`mr-1 ${rest.avgRating > 0 ? 'text-yellow-500' : 'text-gray-300'}`} />
+                          <span className={rest.avgRating > 0 ? 'text-gray-800' : 'text-gray-400'}>
+                            {rest.avgRating > 0 ? rest.avgRating.toFixed(1) : 'N/A'}
+                          </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                          rest.activeOffer === 1 
+                          rest.activeOffer > 0 
                             ? 'bg-green-100 text-green-800' 
                             : 'bg-red-100 text-red-800'
                         }`}>
-                          {rest.activeOffer === 1 ? 'Yes' : 'No'}
+                          {rest.activeOffer > 0 ? rest.activeOffer : 'None'}
                         </span>
                       </td>
                       <td className="px-6 py-4">{rest.joinedDate}</td>
