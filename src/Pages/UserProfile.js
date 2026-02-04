@@ -541,7 +541,7 @@ function UserDetail() {
         {activeTab === 'coupons' && renderCouponsSection()}
         {activeTab === 'coins' && renderCoinHistorySection()}
         {activeTab === 'notifications' && renderNotificationsSection()}
-        {activeTab === 'chat' && renderChatMembersSection()}
+        {activeTab === 'chat' && renderCategoryTimeSpentSection()}
         {activeTab === 'category' && renderCategoryTimeSpentSection()}
       </div>
     </div>

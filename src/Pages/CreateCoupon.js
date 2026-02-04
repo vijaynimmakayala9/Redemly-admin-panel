@@ -1,5 +1,33 @@
 import { useState, useEffect } from "react";
-import { FaPlus, FaCopy, FaUpload } from "react-icons/fa";
+import { FaPlus, FaCopy, FaUpload, FaSpinner, FaImage, FaCalendarAlt, FaTag, FaPercent, FaCoins, FaUserCheck, FaStore, FaLayerGroup } from "react-icons/fa";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+// FIXED: Moved InputField outside main component to prevent remounts on keystrokes
+const InputField = ({ icon: Icon, label, children, className = "" }) => (
+  <div className={`flex flex-col ${className}`}>
+    <label className="mb-2 text-sm font-semibold text-gray-700 flex items-center gap-2">
+      <Icon className="w-4 h-4 text-purple-600" />
+      {label}
+    </label>
+    {children}
+  </div>
+);
+
+// FIXED: Moved StatCard outside main component to prevent remounts
+const StatCard = ({ icon: Icon, label, value, color = "purple" }) => (
+  <div className={`bg-gradient-to-br from-${color}-50 to-white p-4 rounded-xl border border-${color}-100 shadow-sm`}>
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm text-gray-600">{label}</p>
+        <p className="text-2xl font-bold text-gray-800 mt-1">{value}</p>
+      </div>
+      <div className={`p-3 rounded-full bg-${color}-100`}>
+        <Icon className={`w-6 h-6 text-${color}-600`} />
+      </div>
+    </div>
+  </div>
+);
 
 const CreateCoupon = () => {
   const [vendors, setVendors] = useState([]);
@@ -9,9 +37,8 @@ const CreateCoupon = () => {
   const [errorVendors, setErrorVendors] = useState(null);
   const [errorCategories, setErrorCategories] = useState(null);
   const [creationMode, setCreationMode] = useState("single");
-  const [couponImage, setCouponImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [previewCoupons, setPreviewCoupons] = useState([]);
 
   const [formData, setFormData] = useState({
     vendorId: "",
@@ -21,11 +48,12 @@ const CreateCoupon = () => {
     validityDate: "",
     category: "",
     couponCodeType: "%",
-    limitForSameUser: 1,
+    limitForSameUser: "",
+    maxUsage: ""
   });
 
   const [bulkFormData, setBulkFormData] = useState({
-    count: 1,
+    count: "",
     namePrefix: "",
     nameSuffix: "COUPON",
   });
@@ -34,7 +62,7 @@ const CreateCoupon = () => {
   useEffect(() => {
     const fetchVendors = async () => {
       try {
-        const res = await fetch("https://api.redemly.com/api/admin/getvendors");
+        const res = await fetch("https://api.redemly.com/api/admin/getvendors  ");
         const data = await res.json();
         if (res.ok) {
           setVendors(data.vendors);
@@ -43,9 +71,11 @@ const CreateCoupon = () => {
           }
         } else {
           setErrorVendors(data.message || "Failed to fetch vendors");
+          toast.error(data.message || "Failed to fetch vendors");
         }
       } catch (error) {
         setErrorVendors(error.message);
+        toast.error("Network error while fetching vendors");
       } finally {
         setLoadingVendors(false);
       }
@@ -53,7 +83,7 @@ const CreateCoupon = () => {
 
     const fetchCategories = async () => {
       try {
-        const res = await fetch("https://api.redemly.com/api/admin/categories");
+        const res = await fetch("https://api.redemly.com/api/admin/categories  ");
         const data = await res.json();
         if (res.ok && data.categories.length > 0) {
           setCategories(data.categories);
@@ -72,92 +102,179 @@ const CreateCoupon = () => {
     fetchCategories();
   }, []);
 
+  // Generate preview coupons for bulk creation
+  useEffect(() => {
+    if (creationMode === "bulk" && bulkFormData.count > 0 && bulkFormData.count <= 5) {
+      const previews = [];
+      for (let i = 1; i <= Math.min(bulkFormData.count, 5); i++) {
+        previews.push(generateCouponName(i));
+      }
+      setPreviewCoupons(previews);
+    } else {
+      setPreviewCoupons([]);
+    }
+  }, [creationMode, bulkFormData.count, bulkFormData.namePrefix, bulkFormData.nameSuffix]);
+
   const handleFormChange = (e) => {
     const { name, value } = e.target;
-    const val = ["discountPercentage", "requiredCoins", "limitForSameUser"].includes(name)
-      ? Number(value)
-      : value;
-
-    setFormData((prev) => ({ ...prev, [name]: val }));
+    
+    // For numeric fields, allow empty string, then convert to number when needed
+    if (["discountPercentage", "requiredCoins", "limitForSameUser", "maxUsage"].includes(name)) {
+      // Allow empty string or valid numbers
+      if (value === "" || /^\d*$/.test(value)) {
+        setFormData((prev) => ({ ...prev, [name]: value }));
+      }
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleBulkFormChange = (e) => {
     const { name, value } = e.target;
-    const val = name === "count" ? Number(value) : value;
     
-    setBulkFormData((prev) => ({ ...prev, [name]: val }));
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setCouponImage(file);
-      
-      // Create preview
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+    if (name === "count") {
+      // Allow empty string or valid numbers
+      if (value === "" || /^\d*$/.test(value)) {
+        setBulkFormData((prev) => ({ ...prev, [name]: value }));
+      }
+    } else {
+      setBulkFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
   const generateCouponName = (index) => {
     const { namePrefix, nameSuffix } = bulkFormData;
-    const paddedIndex = String(index).padStart(String(bulkFormData.count).length, '0');
-    
-    return `${namePrefix}${namePrefix ? '_' : ''}${nameSuffix}_${paddedIndex}`;
+    const paddedIndex = String(index).padStart(String(bulkFormData.count || 1).length, '0');
+
+    if (namePrefix && nameSuffix) {
+      return `${namePrefix}_${nameSuffix}_${paddedIndex}`;
+    } else if (namePrefix) {
+      return `${namePrefix}_${paddedIndex}`;
+    } else if (nameSuffix) {
+      return `${nameSuffix}_${paddedIndex}`;
+    }
+    return `COUPON_${paddedIndex}`;
+  };
+
+  const validateForm = () => {
+    if (!formData.vendorId) {
+      toast.error("Please select a vendor");
+      return false;
+    }
+
+    if (!formData.validityDate) {
+      toast.error("Please select a validity date");
+      return false;
+    }
+
+    // Check if date is in future
+    const selectedDate = new Date(formData.validityDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate <= today) {
+      toast.error("Validity date must be in the future");
+      return false;
+    }
+
+    // Convert string values to numbers for validation
+    const discountPercentage = Number(formData.discountPercentage);
+    const requiredCoins = Number(formData.requiredCoins);
+    const limitForSameUser = Number(formData.limitForSameUser);
+    const maxUsage = Number(formData.maxUsage);
+    const bulkCount = Number(bulkFormData.count);
+
+    if (requiredCoins < 0 || isNaN(requiredCoins)) {
+      toast.error("Required coins must be a valid number");
+      return false;
+    }
+
+    if (formData.couponCodeType === "%" && (discountPercentage < 1 || discountPercentage > 100 || isNaN(discountPercentage))) {
+      toast.error("Discount percentage must be between 1 and 100");
+      return false;
+    }
+
+    if (discountPercentage <= 0 || isNaN(discountPercentage)) {
+      toast.error("Discount amount must be greater than 0");
+      return false;
+    }
+
+    if (limitForSameUser < 1 || isNaN(limitForSameUser)) {
+      toast.error("Limit per user must be at least 1");
+      return false;
+    }
+
+    if (maxUsage < 1 || isNaN(maxUsage)) {
+      toast.error("Max usage must be at least 1");
+      return false;
+    }
+
+    if (creationMode === "single" && !formData.name.trim()) {
+      toast.error("Please enter a coupon name");
+      return false;
+    }
+
+    if (creationMode === "bulk" && (bulkCount < 1 || bulkCount > 1000 || isNaN(bulkCount))) {
+      toast.error("Please enter a count between 1 and 1000");
+      return false;
+    }
+
+    return true;
   };
 
   const handleAddCoupon = async (e) => {
     e.preventDefault();
-    setLoading(true);
 
-    if (!formData.vendorId) {
-      alert("Please select a vendor");
-      setLoading(false);
+    if (!validateForm()) {
       return;
     }
 
-    try {
-      const formDataToSend = new FormData();
-      
-      // Add all form fields
-      Object.keys(formData).forEach(key => {
-        formDataToSend.append(key, formData[key]);
-      });
-      
-      // Add image if provided
-      if (couponImage) {
-        formDataToSend.append('couponImage', couponImage);
-      }
+    setLoading(true);
 
-      const res = await fetch(`https://api.redemly.com/api/vendor/create-coupon/${formData.vendorId}`, {
+    try {
+      const payload = {
+        vendorId: formData.vendorId,
+        name: formData.name,
+        category: formData.category,
+        discountPercentage: Number(formData.discountPercentage),
+        requiredCoins: Number(formData.requiredCoins),
+        validityDate: formData.validityDate,
+        couponCodeType: formData.couponCodeType,
+        limitForSameUser: Number(formData.limitForSameUser),
+        maxUsage: Number(formData.maxUsage)
+      };
+
+      const res = await fetch('https://api.redemly.com/api/admin/createcouponbyadmin  ', {
         method: "POST",
-        body: formDataToSend,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        alert("Coupon created successfully!");
-        setFormData({
-          vendorId: vendors.length > 0 ? vendors[0]._id : "",
+        toast.success("🎉 Coupon created successfully!");
+
+        // Show coupon details in console for debugging
+        console.log("Created coupon:", data.coupon);
+
+        // Reset form but keep vendor and category
+        setFormData(prev => ({
+          ...prev,
           name: "",
           discountPercentage: "",
           requiredCoins: "",
           validityDate: "",
-          category: categories.length > 0 ? categories[0].categoryName : "",
-          couponCodeType: "%",
-          limitForSameUser: 1,
-        });
-        setCouponImage(null);
-        setImagePreview(null);
+          limitForSameUser: "",
+          maxUsage: ""
+        }));
       } else {
-        alert("Error creating coupon: " + (data.message || "Unknown error"));
+        toast.error("Error creating coupon: " + (data.message || "Unknown error"));
       }
     } catch (err) {
-      alert("Server error: " + err.message);
+      toast.error("Server error: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -165,333 +282,403 @@ const CreateCoupon = () => {
 
   const handleBulkCreate = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
 
-    if (!formData.vendorId) {
-      alert("Please select a vendor");
-      setLoading(false);
-      return;
-    }
-
-    if (bulkFormData.count < 1 || bulkFormData.count > 1000) {
-      alert("Please enter a count between 1 and 1000");
-      setLoading(false);
-      return;
-    }
-
     try {
-      const formDataToSend = new FormData();
-      
-      // Add all form fields
-      Object.keys(formData).forEach(key => {
-        formDataToSend.append(key, formData[key]);
-      });
-      
-      // Add bulk data fields
-      Object.keys(bulkFormData).forEach(key => {
-        formDataToSend.append(key, bulkFormData[key]);
-      });
-      
-      // Add image if provided
-      if (couponImage) {
-        formDataToSend.append('couponImage', couponImage);
-      }
+      const payload = {
+        vendorId: formData.vendorId,
+        count: Number(bulkFormData.count),
+        namePrefix: bulkFormData.namePrefix,
+        nameSuffix: bulkFormData.nameSuffix,
+        category: formData.category,
+        discountPercentage: Number(formData.discountPercentage),
+        requiredCoins: Number(formData.requiredCoins),
+        validityDate: formData.validityDate,
+        couponCodeType: formData.couponCodeType,
+        limitForSameUser: Number(formData.limitForSameUser),
+        maxUsage: Number(formData.maxUsage)
+      };
 
-      const res = await fetch(`https://api.redemly.com/api/vendor/create-bulkcoupon/${formData.vendorId}`, {
+      const res = await fetch('https://api.redemly.com/api/admin/bulk-create-coupons  ', {
         method: "POST",
-        body: formDataToSend,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        alert(`Successfully created ${data.created} coupons! ${data.failed > 0 ? `${data.failed} failed.` : ''}`);
-        
-        // Reset form
-        setFormData({
-          vendorId: vendors.length > 0 ? vendors[0]._id : "",
-          name: "",
+        toast.success(`✅ Successfully created ${data.created} coupons! ${data.failed > 0 ? `${data.failed} failed.` : ''}`);
+
+        // Log first coupon for reference
+        if (data.coupons && data.coupons.length > 0) {
+          console.log("Sample coupon created:", data.coupons[0]);
+        }
+
+        // Reset form but keep vendor and category
+        setFormData(prev => ({
+          ...prev,
           discountPercentage: "",
           requiredCoins: "",
           validityDate: "",
-          category: categories.length > 0 ? categories[0].categoryName : "",
-          couponCodeType: "%",
-          limitForSameUser: 1,
-        });
-        
+          limitForSameUser: "",
+          maxUsage: ""
+        }));
+
         setBulkFormData({
-          count: 1,
+          count: "",
           namePrefix: "",
           nameSuffix: "COUPON",
         });
-        
-        setCouponImage(null);
-        setImagePreview(null);
       } else {
-        alert("Error creating coupons: " + (data.message || "Unknown error"));
+        toast.error("Error creating coupons: " + (data.message || "Unknown error"));
       }
     } catch (err) {
-      alert("Server error: " + err.message);
+      toast.error("Server error: " + err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="p-6 min-h-screen bg-gray-50">
-      <h1 className="text-2xl font-semibold text-center mb-6 text-blue-900 mt-10">Create Coupons</h1>
+  // Set minimum date to tomorrow
+  const getMinDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  };
 
-      {/* Mode selector */}
-      <div className="flex justify-center mb-6">
-        <div className="bg-white p-1 rounded-md shadow-sm">
-          <button
-            type="button"
-            className={`px-4 py-2 rounded-md text-sm font-medium ${
-              creationMode === "single" 
-                ? "bg-purple-900 text-white" 
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
-            onClick={() => setCreationMode("single")}
-          >
-            Single Coupon
-          </button>
-          <button
-            type="button"
-            className={`px-4 py-2 rounded-md text-sm font-medium ${
-              creationMode === "bulk" 
-                ? "bg-purple-900 text-white" 
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
-            onClick={() => setCreationMode("bulk")}
-          >
-            Bulk Create
-          </button>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4 md:p-8">
+      <ToastContainer position="top-right" autoClose={3000} />
+
+      {/* Header */}
+      <div className="max-w-7xl mx-auto mb-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Create Coupons</h1>
+            <p className="text-gray-600 mt-2">Create single or bulk coupons for vendors</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <StatCard
+              icon={FaStore}
+              label="Total Vendors"
+              value={vendors.length}
+              color="blue"
+            />
+            <StatCard
+              icon={FaLayerGroup}
+              label="Categories"
+              value={categories.length}
+              color="green"
+            />
+          </div>
+        </div>
+
+        {/* Mode selector with premium design */}
+        <div className="mt-8 flex justify-center">
+          <div className="bg-white p-2 rounded-2xl shadow-lg border border-gray-200">
+            <div className="flex gap-1">
+              <button
+                type="button"
+                className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2 ${creationMode === "single"
+                    ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
+                    : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                onClick={() => setCreationMode("single")}
+              >
+                <FaPlus className="w-4 h-4" />
+                Single Coupon
+              </button>
+              <button
+                type="button"
+                className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center gap-2 ${creationMode === "bulk"
+                    ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
+                    : "text-gray-700 hover:bg-gray-50"
+                  }`}
+                onClick={() => setCreationMode("bulk")}
+              >
+                <FaCopy className="w-4 h-4" />
+                Bulk Create
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      <form
-        onSubmit={creationMode === "single" ? handleAddCoupon : handleBulkCreate}
-        className="bg-white p-6 rounded-md shadow-md max-w-4xl mx-auto"
-        encType="multipart/form-data"
-      >
-        <h2 className="text-lg font-semibold mb-4 text-gray-700 flex items-center gap-2">
-          {creationMode === "single" ? <FaPlus /> : <FaCopy />} 
-          {creationMode === "single" ? "Add Coupon" : "Bulk Create Coupons"}
-        </h2>
-
-        {/* Vendor Dropdown */}
-        <div className="mb-4">
-          <label className="block mb-1 text-gray-600 font-medium">Select Vendor</label>
-          {loadingVendors ? (
-            <p>Loading vendors...</p>
-          ) : errorVendors ? (
-            <p className="text-red-600">Error: {errorVendors}</p>
-          ) : (
-            <select
-              name="vendorId"
-              value={formData.vendorId}
-              onChange={handleFormChange}
-              required
-              className="px-3 py-2 border border-gray-300 rounded w-full max-w-sm"
-            >
-              {vendors.map((vendor) => (
-                <option key={vendor._id} value={vendor._id}>
-                  {vendor.businessName} ({vendor.name})
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
-          {creationMode === "single" ? (
-            <div className="flex flex-col">
-              <label className="mb-1 text-gray-600 font-medium">Coupon Name</label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleFormChange}
-                required
-                placeholder="e.g. Summer Feast"
-                className="px-3 py-2 border border-gray-300 rounded"
-              />
-            </div>
-          ) : (
-            <>
-              <div className="flex flex-col">
-                <label className="mb-1 text-gray-600 font-medium">Number of Coupons</label>
-                <input
-                  type="number"
-                  name="count"
-                  value={bulkFormData.count}
-                  onChange={handleBulkFormChange}
-                  required
-                  min="1"
-                  max="1000"
-                  placeholder="e.g. 100"
-                  className="px-3 py-2 border border-gray-300 rounded"
-                />
-              </div>
-              <div className="flex flex-col">
-                <label className="mb-1 text-gray-600 font-medium">Name Prefix (Optional)</label>
-                <input
-                  type="text"
-                  name="namePrefix"
-                  value={bulkFormData.namePrefix}
-                  onChange={handleBulkFormChange}
-                  placeholder="e.g. SUMMER"
-                  className="px-3 py-2 border border-gray-300 rounded"
-                />
-              </div>
-              <div className="flex flex-col">
-                <label className="mb-1 text-gray-600 font-medium">Name Suffix</label>
-                <input
-                  type="text"
-                  name="nameSuffix"
-                  value={bulkFormData.nameSuffix}
-                  onChange={handleBulkFormChange}
-                  required
-                  placeholder="e.g. COUPON"
-                  className="px-3 py-2 border border-gray-300 rounded"
-                />
-              </div>
-              <div className="flex flex-col justify-end">
-                <p className="text-xs text-gray-500 mb-1">
-                  Example: {generateCouponName(1)}
-                </p>
-              </div>
-            </>
-          )}
-
-          <div className="flex flex-col">
-            <label className="mb-1 text-gray-600 font-medium">Discount ({formData.couponCodeType})</label>
-            <input
-              type="number"
-              name="discountPercentage"
-              value={formData.discountPercentage}
-              onChange={handleFormChange}
-              required
-              min="1"
-              max={formData.couponCodeType === "%" ? "100" : ""}
-              placeholder={formData.couponCodeType === "%" ? "e.g. 20" : "e.g. 500"}
-              className="px-3 py-2 border border-gray-300 rounded"
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="mb-1 text-gray-600 font-medium">Valid Till</label>
-            <input
-              type="date"
-              name="validityDate"
-              value={formData.validityDate}
-              onChange={handleFormChange}
-              required
-              className="px-3 py-2 border border-gray-300 rounded"
-            />
-          </div>
-
-          {/* Category Dropdown (from API) */}
-          <div className="flex flex-col">
-            <label className="mb-1 text-gray-600 font-medium">Category</label>
-            {loadingCategories ? (
-              <p>Loading categories...</p>
-            ) : errorCategories ? (
-              <p className="text-red-600">Error: {errorCategories}</p>
-            ) : (
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleFormChange}
-                className="px-3 py-2 border border-gray-300 rounded"
-              >
-                {categories.map((cat) => (
-                  <option key={cat._id} value={cat.categoryName}>
-                    {cat.categoryName}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
-
-          <div className="flex flex-col">
-            <label className="mb-1 text-gray-600 font-medium">Coupon Code Type</label>
-            <select
-              name="couponCodeType"
-              value={formData.couponCodeType}
-              onChange={handleFormChange}
-              className="px-3 py-2 border border-gray-300 rounded"
-            >
-              <option value="%">Percentage (%)</option>
-              <option value="₹">Fixed Amount (₹)</option>
-            </select>
-          </div>
-
-          <div className="flex flex-col">
-            <label className="mb-1 text-gray-600 font-medium">Limit For Same User</label>
-            <input
-              type="number"
-              name="limitForSameUser"
-              value={formData.limitForSameUser}
-              onChange={handleFormChange}
-              required
-              min="1"
-              className="px-3 py-2 border border-gray-300 rounded"
-            />
-          </div>
-
-          {/* Image Upload */}
-          <div className="flex flex-col md:col-span-2">
-            <label className="mb-1 text-gray-600 font-medium">Coupon Image</label>
-            <div className="flex items-center gap-4">
-              <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-gray-300 rounded cursor-pointer hover:bg-gray-50">
-                {imagePreview ? (
-                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover rounded" />
-                ) : (
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <FaUpload className="w-8 h-8 text-gray-400 mb-2" />
-                    <p className="text-xs text-gray-500">Upload Image</p>
+      {/* Main Form */}
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200">
+          {/* Form Header */}
+          <div className="bg-gradient-to-r from-purple-700 to-indigo-700 p-6">
+            <h2 className="text-xl font-bold text-white flex items-center gap-3">
+              {creationMode === "single" ? (
+                <>
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    <FaPlus className="w-5 h-5" />
                   </div>
-                )}
-                <input type="file" className="hidden" onChange={handleImageChange} accept="image/*" />
-              </label>
-              <div>
-                <p className="text-xs text-gray-500 mb-1">Upload an image for your coupon</p>
-                {couponImage && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCouponImage(null);
-                      setImagePreview(null);
-                    }}
-                    className="text-xs text-red-600 hover:text-red-800"
-                  >
-                    Remove Image
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {creationMode === "bulk" && (
-          <div className="mt-4 p-3 bg-blue-50 rounded-md">
-            <p className="text-sm text-blue-700">
-              <strong>Note:</strong> The same image will be used for all coupons in bulk creation.
+                  Create Single Coupon
+                </>
+              ) : (
+                <>
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    <FaCopy className="w-5 h-5" />
+                  </div>
+                  Bulk Create Coupons
+                </>
+              )}
+            </h2>
+            <p className="text-purple-100 mt-2">
+              {creationMode === "single"
+                ? "Create a single coupon with custom details"
+                : "Create multiple coupons with sequential naming"}
             </p>
           </div>
-        )}
 
-        <div className="text-right mt-6">
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-purple-900 hover:bg-purple-700 text-white px-6 py-2 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          <form
+            onSubmit={creationMode === "single" ? handleAddCoupon : handleBulkCreate}
+            className="p-6 md:p-8"
           >
-            {loading ? "Creating..." : creationMode === "single" ? "Create Coupon" : `Create ${bulkFormData.count} Coupons`}
-          </button>
+            {/* Vendor Selection */}
+            <div className="mb-8">
+              <InputField icon={FaStore} label="Select Vendor">
+                {loadingVendors ? (
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <FaSpinner className="w-4 h-4 animate-spin" />
+                    Loading vendors...
+                  </div>
+                ) : errorVendors ? (
+                  <p className="text-red-600">{errorVendors}</p>
+                ) : (
+                  <select
+                    name="vendorId"
+                    value={formData.vendorId}
+                    onChange={handleFormChange}
+                    required
+                    className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-300 bg-white shadow-sm w-full"
+                  >
+                    {vendors.map((vendor) => (
+                      <option key={vendor._id} value={vendor._id}>
+                        {vendor.businessName} ({vendor.name})
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </InputField>
+            </div>
+
+            {/* Form Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {/* Coupon Name / Bulk Fields */}
+              {creationMode === "single" ? (
+                <InputField icon={FaTag} label="Coupon Name">
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleFormChange}
+                    required
+                    placeholder="e.g. Summer Feast 2024"
+                    className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-300 bg-white shadow-sm"
+                  />
+                </InputField>
+              ) : (
+                <>
+                  <InputField icon={FaCopy} label="Number of Coupons">
+                    <input
+                      type="text"
+                      name="count"
+                      value={bulkFormData.count}
+                      onChange={handleBulkFormChange}
+                      required
+                      placeholder="e.g. 100"
+                      className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-300 bg-white shadow-sm"
+                    />
+                  </InputField>
+                  <InputField icon={FaTag} label="Name Prefix (Optional)">
+                    <input
+                      type="text"
+                      name="namePrefix"
+                      value={bulkFormData.namePrefix}
+                      onChange={handleBulkFormChange}
+                      placeholder="e.g. SUMMER"
+                      className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-300 bg-white shadow-sm"
+                    />
+                  </InputField>
+                  <InputField icon={FaTag} label="Name Suffix">
+                    <input
+                      type="text"
+                      name="nameSuffix"
+                      value={bulkFormData.nameSuffix}
+                      onChange={handleBulkFormChange}
+                      required
+                      placeholder="e.g. COUPON"
+                      className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-300 bg-white shadow-sm"
+                    />
+                  </InputField>
+                </>
+              )}
+
+              {/* Discount Percentage */}
+              <InputField icon={FaPercent} label={`Discount ${formData.couponCodeType}`}>
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    name="discountPercentage"
+                    value={formData.discountPercentage}
+                    onChange={handleFormChange}
+                    required
+                    placeholder={formData.couponCodeType === "%" ? "e.g. 20" : "e.g. 500"}
+                    className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-300 bg-white shadow-sm flex-1"
+                  />
+                  <select
+                    name="couponCodeType"
+                    value={formData.couponCodeType}
+                    onChange={handleFormChange}
+                    className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-300 bg-white shadow-sm w-32"
+                  >
+                    <option value="%">% Off</option>
+                    <option value="₹">₹ Off</option>
+                  </select>
+                </div>
+              </InputField>
+
+              {/* Required Coins */}
+              <InputField icon={FaCoins} label="Required Coins">
+                <input
+                  type="text"
+                  name="requiredCoins"
+                  value={formData.requiredCoins}
+                  onChange={handleFormChange}
+                  required
+                  placeholder="e.g. 50"
+                  className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-300 bg-white shadow-sm"
+                />
+              </InputField>
+
+              {/* Validity Date */}
+              <InputField icon={FaCalendarAlt} label="Valid Till">
+                <input
+                  type="date"
+                  name="validityDate"
+                  value={formData.validityDate}
+                  onChange={handleFormChange}
+                  required
+                  min={getMinDate()}
+                  className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-300 bg-white shadow-sm"
+                />
+              </InputField>
+
+              {/* Category */}
+              <InputField icon={FaLayerGroup} label="Category">
+                {loadingCategories ? (
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <FaSpinner className="w-4 h-4 animate-spin" />
+                    Loading categories...
+                  </div>
+                ) : errorCategories ? (
+                  <p className="text-red-600">{errorCategories}</p>
+                ) : (
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleFormChange}
+                    className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-300 bg-white shadow-sm"
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat._id} value={cat.categoryName}>
+                        {cat.categoryName}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </InputField>
+
+              {/* Limit For Same User */}
+              <InputField icon={FaUserCheck} label="Limit Per User">
+                <input
+                  type="text"
+                  name="limitForSameUser"
+                  value={formData.limitForSameUser}
+                  onChange={handleFormChange}
+                  required
+                  placeholder="e.g. 2"
+                  className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-300 bg-white shadow-sm"
+                />
+              </InputField>
+
+              {/* Max Usage */}
+              <InputField icon={FaUserCheck} label="Max Usage Limit">
+                <input
+                  type="text"
+                  name="maxUsage"
+                  value={formData.maxUsage}
+                  onChange={handleFormChange}
+                  required
+                  placeholder="e.g. 500"
+                  className="px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-300 bg-white shadow-sm"
+                />
+              </InputField>
+            </div>
+
+            {/* Bulk Creation Preview */}
+            {creationMode === "bulk" && previewCoupons.length > 0 && (
+              <div className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-200">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <FaCopy className="w-4 h-4 text-blue-600" />
+                  Preview Names (First 5)
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                  {previewCoupons.map((name, index) => (
+                    <div
+                      key={index}
+                      className="bg-white p-3 rounded-xl border border-blue-100 text-center shadow-sm"
+                    >
+                      <div className="text-xs text-blue-600 font-medium mb-1">#{index + 1}</div>
+                      <div className="text-sm font-semibold text-gray-700 truncate">{name}</div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-sm text-gray-600 mt-3">
+                  Total coupons to create: <span className="font-bold text-purple-600">{bulkFormData.count || 0}</span>
+                </p>
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
+              >
+                {loading ? (
+                  <>
+                    <FaSpinner className="w-5 h-5 animate-spin" />
+                    {creationMode === "single" ? "Creating Coupon..." : "Creating Coupons..."}
+                  </>
+                ) : creationMode === "single" ? (
+                  <>
+                    <FaPlus className="w-5 h-5" />
+                    Create Single Coupon
+                  </>
+                ) : (
+                  <>
+                    <FaCopy className="w-5 h-5" />
+                    Create {bulkFormData.count || 0} Coupons
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
   );
 };
