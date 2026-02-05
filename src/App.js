@@ -102,6 +102,7 @@ import CreateBanner from "./Pages/CreateBanner.js";
 import AdminAllBanners from "./Pages/AdminAllBanners.js";
 import VendorPrice from "./Pages/VendorPrice.js";
 import AdminRedemlyRevenue from "./Pages/AdminRedemlyRevunue.js";
+import AdminConfiguration from "./Pages/AdminConfiguration.js";
 
 
 
@@ -211,15 +212,15 @@ function App() {
               <Route path="/quizzes" element={<AllQuizzesTable />} />
               <Route path="/add-bulk-funfacts" element={<BulkFunFactUploader />} />
               <Route path="/allfanfacts" element={<AllFunFactsTable />} />
-               <Route path="/notifications" element={<AdminNotifications />} />
+              <Route path="/notifications" element={<AdminNotifications />} />
               <Route path="/generatefacts" element={<FunFactsGenerator />} />
               <Route path="/generatenews" element={<NewsFetcher />} />
               <Route path="/spincount" element={<SpinCountPage />} />
               <Route path="/create-banner" element={<CreateBanner />} />
               <Route path="/banners" element={<AdminAllBanners />} />
-              <Route path="/vendorprice" element={<VendorPrice/>}/>
-              <Route path='/revenue' element={<AdminRedemlyRevenue/>}/>
-
+              <Route path="/vendorprice" element={<VendorPrice />} />
+              <Route path='/revenue' element={<AdminRedemlyRevenue />} />
+              <Route path='/config' element={<AdminConfiguration />} />
 
 
 

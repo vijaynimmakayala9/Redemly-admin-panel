@@ -55,6 +55,11 @@ const Sidebar = ({ isCollapsed, isMobile, setIsCollapsed }) => {
       dropdown: [{ name: "Get All Users", path: "/users" }],
     },
     {
+      icon: <i className="ri-settings-3-fill"></i>,
+      name: "Configuration",
+      dropdown: [{ name: "Configuration", path: "/config" }],
+    },
+    {
       icon: <i className="ri-store-fill"></i>,
       name: "Vendors",
       dropdown: [
