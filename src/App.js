@@ -103,6 +103,7 @@ import AdminAllBanners from "./Pages/AdminAllBanners.js";
 import VendorPrice from "./Pages/VendorPrice.js";
 import AdminRedemlyRevenue from "./Pages/AdminRedemlyRevunue.js";
 import AdminConfiguration from "./Pages/AdminConfiguration.js";
+import AdminOfflinePayments from "./Pages/AdminOfflinePayments.js";
 
 
 
@@ -221,6 +222,7 @@ function App() {
               <Route path="/vendorprice" element={<VendorPrice />} />
               <Route path='/revenue' element={<AdminRedemlyRevenue />} />
               <Route path='/config' element={<AdminConfiguration />} />
+              <Route path="/offline-payments" element={<AdminOfflinePayments />} />
 
 
 

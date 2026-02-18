@@ -126,6 +126,7 @@ const Sidebar = ({ isCollapsed, isMobile, setIsCollapsed }) => {
         { name: "All Vendor Payment", path: "/allpayments" },
         { name: "Vendor Payment Pending", path: "/payment" },
         { name: "Vendor Paid Payment", path: "/rcvdpayment" },
+        { name: "Offline Payments", path: "/offline-payments"},
       ],
     },
     {
