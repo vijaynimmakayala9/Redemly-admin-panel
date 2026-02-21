@@ -1,16 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import Papa from "papaparse";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 const API_BASE = "https://api.redemly.com/api/admin";
-
-const BASE_URL = 'https://api.redemly.com';
-
+const BASE_URL = "https://api.redemly.com";
 const PAGE_SIZE = 5;
 
 const OfflinePayments = () => {
   const [requests, setRequests] = useState([]);
-  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [adminNotes, setAdminNotes] = useState({});
 
@@ -27,9 +25,8 @@ const OfflinePayments = () => {
     try {
       setLoading(true);
       const res = await axios.get(`${API_BASE}/payments/offline-requests`);
-      setRequests(res.data.data.requests);
-      setStats(res.data.data.stats);
-    } catch (err) {
+      setRequests(res.data.data.requests || []);
+    } catch {
       alert("Failed to fetch requests");
     } finally {
       setLoading(false);
@@ -40,7 +37,12 @@ const OfflinePayments = () => {
     fetchRequests();
   }, []);
 
-  /* ================= SEARCH + FILTER ================= */
+  /* Reset page on filter/search */
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, statusFilter, periodFilter]);
+
+  /* ================= FILTER ================= */
   const filteredData = useMemo(() => {
     return requests.filter((item) => {
       const matchesSearch =
@@ -58,13 +60,21 @@ const OfflinePayments = () => {
   }, [requests, search, statusFilter, periodFilter]);
 
   /* ================= PAGINATION ================= */
-  const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
-  );
+  const totalPages = Math.max(1, Math.ceil(filteredData.length / PAGE_SIZE));
 
-  /* ================= EXPORT CSV ================= */
+  const paginatedData = useMemo(() => {
+    return filteredData.slice(
+      (currentPage - 1) * PAGE_SIZE,
+      currentPage * PAGE_SIZE
+    );
+  }, [filteredData, currentPage]);
+
+  const changePage = (page) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+  };
+
+  /* ================= CSV EXPORT ================= */
   const exportCSV = () => {
     const csvData = filteredData.map((item) => ({
       Vendor: item.vendor.businessName,
@@ -78,7 +88,7 @@ const OfflinePayments = () => {
 
     const csv = Papa.unparse(csvData);
     const blob = new Blob([csv]);
-    const url = window.URL.createObjectURL(blob);
+    const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
     a.href = url;
@@ -89,10 +99,10 @@ const OfflinePayments = () => {
   /* ================= REVIEW ================= */
   const handleReview = async (id, action) => {
     try {
-      const res = await axios.patch(
-        `${API_BASE}/offline/${id}/review`,
-        { action, adminNotes: adminNotes[id] || "" }
-      );
+      const res = await axios.patch(`${API_BASE}/offline/${id}/review`, {
+        action,
+        adminNotes: adminNotes[id] || "",
+      });
 
       const approval = res.data.approval;
 
@@ -100,11 +110,11 @@ const OfflinePayments = () => {
         prev.map((req) =>
           req.id === id
             ? {
-              ...req,
-              status: approval.status,
-              adminNotes: approval.adminNotes,
-              reviewedAt: approval.reviewedAt,
-            }
+                ...req,
+                status: approval.status,
+                adminNotes: approval.adminNotes,
+                reviewedAt: approval.reviewedAt,
+              }
             : req
         )
       );
@@ -113,16 +123,49 @@ const OfflinePayments = () => {
     }
   };
 
+  /* ================= SMART PAGINATION UI ================= */
+  const renderPagination = () => {
+    const pages = [];
+    const current = currentPage;
+    const total = totalPages;
+
+    pages.push(1);
+    if (current > 3) pages.push("start");
+
+    for (let i = current - 1; i <= current + 1; i++) {
+      if (i > 1 && i < total) pages.push(i);
+    }
+
+    if (current < total - 2) pages.push("end");
+    if (total > 1) pages.push(total);
+
+    return pages.map((p, i) =>
+      p === "start" || p === "end" ? (
+        <span key={i} className="px-2">...</span>
+      ) : (
+        <button
+          key={i}
+          onClick={() => changePage(p)}
+          className={`px-3 py-1 rounded border ${
+            currentPage === p
+              ? "bg-blue-600 text-white"
+              : "hover:bg-gray-100"
+          }`}
+        >
+          {p}
+        </button>
+      )
+    );
+  };
+
   /* ================= UI ================= */
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-
       <h1 className="text-3xl font-bold mb-6">Offline Payments</h1>
 
-      {/* 🔎 SEARCH + FILTER BAR */}
-      <div className="bg-white p-4 rounded-xl shadow mb-6 flex flex-wrap gap-4 items-center">
+      {/* SEARCH BAR */}
+      <div className="bg-white p-4 rounded-xl shadow mb-6 flex flex-wrap gap-4">
         <input
-          type="text"
           placeholder="Search vendor..."
           className="border p-2 rounded w-60"
           value={search}
@@ -173,66 +216,62 @@ const OfflinePayments = () => {
           <tbody>
             {loading ? (
               <tr><td colSpan="6" className="p-6 text-center">Loading...</td></tr>
-            ) : paginatedData.map((item) => (
-              <tr key={item.id} className="border-t">
-                <td className="p-4">
-                  <p className="font-semibold">{item.vendor.businessName}</p>
-                  <p className="text-xs text-gray-500">{item.vendor.email}</p>
-                </td>
-
-                <td className="p-4">${item.amount.USD}</td>
-                <td className="p-4">{item.period.label}</td>
-                <td className="p-4 capitalize">{item.status}</td>
-
-                <td className="p-4">
-                  <a
-                    href={`${BASE_URL}${item.paymentProof}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white transition text-sm font-semibold"
-                  >
-                    View Proof
-                  </a>
-                </td>
-
-                <td className="p-4">
-                  {item.status === "pending" ? (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleReview(item.id, "approve")}
-                        className="bg-green-500 text-white px-3 py-1 rounded text-xs"
-                      >
-                        Approve
-                      </button>
-                      <button
-                        onClick={() => handleReview(item.id, "reject")}
-                        className="bg-red-500 text-white px-3 py-1 rounded text-xs"
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  ) : (
-                    <span className="text-xs text-gray-500">Reviewed</span>
-                  )}
-                </td>
-              </tr>
-            ))}
+            ) : (
+              paginatedData.map((item) => (
+                <tr key={item.id} className="border-t">
+                  <td className="p-4">
+                    <p className="font-semibold">{item.vendor.businessName}</p>
+                    <p className="text-xs text-gray-500">{item.vendor.email}</p>
+                  </td>
+                  <td className="p-4">${item.amount.USD}</td>
+                  <td className="p-4">{item.period.label}</td>
+                  <td className="p-4 capitalize">{item.status}</td>
+                  <td className="p-4">
+                    <a
+                      href={`${BASE_URL}${item.paymentProof}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-3 py-1 rounded bg-blue-100 text-blue-700"
+                    >
+                      View Proof
+                    </a>
+                  </td>
+                  <td className="p-4">
+                    {item.status === "pending" ? (
+                      <div className="flex gap-2">
+                        <button onClick={() => handleReview(item.id,"approve")} className="bg-green-500 text-white px-3 py-1 rounded text-xs">Approve</button>
+                        <button onClick={() => handleReview(item.id,"reject")} className="bg-red-500 text-white px-3 py-1 rounded text-xs">Reject</button>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-500">Reviewed</span>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* 📄 PAGINATION */}
-      <div className="flex justify-center mt-6 gap-2">
-        {[...Array(totalPages)].map((_, i) => (
-          <button
-            key={i}
-            className={`px-3 py-1 rounded ${currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200"
-              }`}
-            onClick={() => setCurrentPage(i + 1)}
-          >
-            {i + 1}
-          </button>
-        ))}
+      {/* SMART PAGINATION */}
+      <div className="flex justify-center items-center gap-2 mt-6 flex-wrap">
+        <button
+          onClick={() => changePage(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-3 py-1 border rounded disabled:opacity-40"
+        >
+          <FaChevronLeft />
+        </button>
+
+        {renderPagination()}
+
+        <button
+          onClick={() => changePage(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="px-3 py-1 border rounded disabled:opacity-40"
+        >
+          <FaChevronRight />
+        </button>
       </div>
     </div>
   );

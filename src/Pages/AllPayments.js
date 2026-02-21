@@ -60,7 +60,7 @@ export default function AllPayments() {
   const fetchPayments = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_BASE}/admin/payments`);
+      const res = await axios.get(`${API_BASE}/admin/all-payments`);
       setPayments(res.data.data.payments || []);
       setSummary(res.data.data.summary);
     } catch (err) {
@@ -451,6 +451,9 @@ export default function AllPayments() {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="p-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    S NO
+                  </th>
+                  <th className="p-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Vendor
                   </th>
                   <th className="p-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -495,6 +498,9 @@ export default function AllPayments() {
                       key={p._id} 
                       className="hover:bg-gray-50/80 transition-colors duration-150"
                     >
+                      <td className="p-4">
+                        {(currentPage - 1)*PAGE_SIZE + idx + 1}
+                      </td>
                       <td className="p-4">
                         <div>
                           <p className="font-medium text-gray-900">{p.vendorId?.businessName || "Unknown Vendor"}</p>

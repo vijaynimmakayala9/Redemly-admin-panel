@@ -227,7 +227,7 @@ const Dashboard = () => {
       label: "Revenue Today",
       value: `$${dashboardData?.todayStats?.revenueToday || 0}`,
       color: "emerald",
-      path: "/dashboard",
+      path: "/revenue",
       gradient: "from-emerald-500 to-teal-600",
       hoverGradient: "from-emerald-600 to-teal-700",
       description: "Today's total revenue"
