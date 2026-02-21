@@ -95,11 +95,11 @@ const VendorPrice = () => {
               <thead className="bg-gray-100">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-semibold">
-                    Price / Coupon
+                    Price Per Coupon
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">
+                  {/* <th className="px-4 py-3 text-left text-sm font-semibold">
                     Currency
-                  </th>
+                  </th> */}
                   <th className="px-4 py-3 text-left text-sm font-semibold">
                     Status
                   </th>
@@ -117,9 +117,9 @@ const VendorPrice = () => {
                   <td className="px-4 py-3">
                     {priceData.pricePerCoupon}
                   </td>
-                  <td className="px-4 py-3">
+                  {/* <td className="px-4 py-3">
                     {priceData.currency}
-                  </td>
+                  </td> */}
                   <td className="px-4 py-3">
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-medium

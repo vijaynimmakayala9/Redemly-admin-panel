@@ -1,227 +1,190 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import {
-  FaDollarSign,
-  FaRupeeSign,
-  FaUsers,
-  FaChartLine,
-  FaCreditCard,
-  FaUniversity,
-  FaWallet,
+  FaDollarSign, FaRupeeSign, FaUsers, FaChartLine,
+  FaWallet, FaCreditCard, FaSearch, FaFileExport,
+  FaChevronLeft, FaChevronRight
 } from "react-icons/fa";
-import { MdPayments } from "react-icons/md";
 
-const API_BASE = "https://api.redemly.com/api";
+const API = "https://api.redemly.com/api/admin/revenue";
+const PAGE_SIZE = 5;
+
+/* 🔥 Tailwind Hover Card Style */
+const cardBase =
+  "relative bg-white border rounded-2xl shadow-md p-5 overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-blue-500 before:scale-y-0 before:origin-top before:transition-transform before:duration-300 hover:before:scale-y-100";
 
 export default function AdminRedemlyRevenue() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
 
+  /* FETCH API */
   useEffect(() => {
+    const fetchRevenue = async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get(API);
+        setData(res.data);
+      } catch (err) {
+        console.error(err);
+        setData(null);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchRevenue();
   }, []);
 
-  const fetchRevenue = async () => {
-    try {
-      setLoading(true);
-      const res = await axios.get(`${API_BASE}/admin/revenue`);
-      setData(res.data);
-    } catch (err) {
-      console.error(err);
-      setData(null);
-    } finally {
-      setLoading(false);
-    }
+  /* SAFE DATA */
+  const summary = data?.summary || {};
+  const breakdown = data?.breakdown || {};
+  const pending = data?.pending || {};
+  const monthly = data?.trends?.monthly || [];
+
+  /* SEARCH */
+  const filtered = useMemo(() => {
+    return monthly.filter(m =>
+      m.month?.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [monthly, search]);
+
+  /* PAGINATION */
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+
+  const paginated = useMemo(() => {
+    return filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  }, [filtered, page]);
+
+  /* EXPORT CSV */
+  const exportCSV = () => {
+    if (!filtered.length) return;
+    const headers = ["Month","Revenue","Transactions","Vendors"];
+    const rows = filtered.map(m => [m.month, m.revenue, m.txns, m.vendors]);
+    const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv]);
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "revenue-trends.csv";
+    a.click();
   };
 
-  if (loading) {
-    return <p className="text-center py-20 text-gray-500">Loading revenue data…</p>;
-  }
-
-  if (!data) {
-    return <p className="text-center py-20 text-gray-500">No revenue data available</p>;
-  }
-
-  const { summary, breakdown, pending, trends, topVendors, recentPayments, period } = data;
-
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-10">
+    <div className="min-h-screen bg-slate-50 p-6 space-y-10 max-w-7xl mx-auto">
 
-        {/* Header */}
-        <div>
-          <h2 className="text-3xl font-bold text-slate-800">Revenue Analytics</h2>
-          <p className="text-gray-500">
-            {period.label} • {period.type.toUpperCase()}
-          </p>
-        </div>
+      {loading && <div className="text-center py-20 text-gray-500">Loading revenue…</div>}
+      {!loading && !data && <div className="text-center py-20 text-gray-500">No revenue data available</div>}
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <KPI title="Total Revenue (USD)" value={`$${summary.totalRevenue.USD}`} icon={<FaDollarSign />} color="bg-blue-600" />
-          <KPI title="Total Revenue (INR)" value={`₹${summary.totalRevenue.INR}`} icon={<FaRupeeSign />} color="bg-emerald-600" />
-          <KPI title="Transactions" value={summary.totalTransactions} icon={<MdPayments />} color="bg-purple-600" />
-          <KPI title="Unique Vendors" value={summary.uniqueVendors} icon={<FaUsers />} color="bg-orange-600" />
-        </div>
-
-        {/* Secondary KPIs */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          <KPI title="Avg Transaction" value={`$${summary.averageTransaction}`} icon={<FaChartLine />} color="bg-indigo-600" />
-          <KPI title="Avg / Vendor" value={`$${summary.averagePerVendor}`} icon={<FaUsers />} color="bg-teal-600" />
-          <KPI title="Conversion Rate" value={summary.conversionRate} icon={<FaChartLine />} color="bg-pink-600" />
-          <KPI title="Growth Rate" value={`${trends.growthRate}%`} icon={<FaChartLine />} color="bg-cyan-600" />
-        </div>
-
-        {/* Revenue Breakdown */}
-        <Section title="Revenue Breakdown">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <BreakdownCard label="Online Revenue" value={`$${breakdown.onlineRevenue}`} icon={<FaCreditCard />} color="bg-blue-500" />
-            <BreakdownCard label="Cash Revenue" value={`$${breakdown.cashRevenue}`} icon={<FaWallet />} color="bg-green-500" />
-            <BreakdownCard label="Bank Revenue" value={`$${breakdown.bankRevenue}`} icon={<FaUniversity />} color="bg-indigo-500" />
+      {!loading && data && (
+        <>
+          {/* KPI CARDS */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <KPI title="Revenue USD" value={`$${summary?.totalRevenue?.USD ?? 0}`} icon={<FaDollarSign/>}/>
+            <KPI title="Revenue INR" value={`₹${summary?.totalRevenue?.INR ?? 0}`} icon={<FaRupeeSign/>}/>
+            <KPI title="Transactions" value={summary.totalTransactions ?? 0} icon={<FaChartLine/>}/>
+            <KPI title="Vendors" value={summary.uniqueVendors ?? 0} icon={<FaUsers/>}/>
           </div>
-        </Section>
 
-        {/* Pending Collection */}
-        <Section title="Pending Collections">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <Stat label="Pending USD" value={`$${pending.totalPending.USD}`} color="bg-red-500" />
-            <Stat label="Pending INR" value={`₹${pending.totalPending.INR}`} color="bg-rose-500" />
-            <Stat label="Pending Txns" value={pending.pendingTransactions} color="bg-yellow-500" />
-            <Stat label="Collection Rate" value={`${pending.collectionRate}%`} color="bg-emerald-500" />
+          {/* SECONDARY */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <KPI title="Avg Transaction" value={`$${summary.averageTransaction ?? 0}`} icon={<FaChartLine/>}/>
+            <KPI title="Online Revenue" value={`$${breakdown.onlineRevenue ?? 0}`} icon={<FaCreditCard/>}/>
+            <KPI title="Cash Revenue" value={`$${breakdown.cashRevenue ?? 0}`} icon={<FaWallet/>}/>
           </div>
-        </Section>
 
-        {/* Monthly Trends */}
-        <Section title="Monthly Trends">
-          <div className="overflow-x-auto">
-            <table className="w-full border rounded-lg bg-white">
-              <thead className="bg-slate-800 text-white">
-                <tr>
-                  <th className="p-3 text-left">Month</th>
-                  <th className="p-3">Revenue</th>
-                  <th className="p-3">Transactions</th>
-                  <th className="p-3">Vendors</th>
-                </tr>
-              </thead>
-              <tbody>
-                {trends.monthly.map((m) => (
-                  <tr key={m.month} className="border-t hover:bg-slate-50">
-                    <td className="p-3">{m.monthName}</td>
-                    <td className="p-3">${m.revenue}</td>
-                    <td className="p-3">{m.transactions}</td>
-                    <td className="p-3">{m.vendors}</td>
+          {/* PENDING */}
+          <Card title="Pending Collections">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <Stat label="Pending Amount" value={`$${pending.totalPending ?? 0}`}/>
+              <Stat label="Pending Txns" value={pending.pendingTransactions ?? 0}/>
+              <Stat label="Pending Vendors" value={pending.pendingVendors ?? 0}/>
+            </div>
+          </Card>
+
+          {/* MONTHLY TABLE */}
+          <Card title="Monthly Trends">
+            <div className="flex flex-col md:flex-row gap-3 justify-between mb-4">
+              <div className="relative">
+                <FaSearch className="absolute left-3 top-3 text-gray-400"/>
+                <input
+                  placeholder="Search month..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className="pl-10 pr-4 py-2 border rounded-lg"
+                />
+              </div>
+
+              <button onClick={exportCSV}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center gap-2">
+                <FaFileExport/> Export CSV
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full bg-white border rounded-lg">
+                <thead className="bg-slate-800 text-center text-white">
+                  <tr>
+                    <th className="p-3">Month</th>
+                    <th className="p-3">Revenue</th>
+                    <th className="p-3">Transactions</th>
+                    <th className="p-3">Vendors</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Section>
+                </thead>
+                <tbody>
+                  {paginated.map(m => (
+                    <tr key={m.month} className="border-t text-center hover:bg-slate-50">
+                      <td className="p-3">{m.month}</td>
+                      <td className="p-3">${m.revenue}</td>
+                      <td className="p-3">{m.txns}</td>
+                      <td className="p-3">{m.vendors}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-        {/* Top Vendors */}
-        <Section title="Top Vendors">
-          <div className="overflow-x-auto">
-            <table className="w-full border rounded-lg bg-white">
-              <thead className="bg-slate-900 text-white">
-                <tr>
-                  <th className="p-3 text-left">Vendor</th>
-                  <th className="p-3">Total Paid</th>
-                  <th className="p-3">Transactions</th>
-                  <th className="p-3">Online</th>
-                  <th className="p-3">Cash</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topVendors.map((v) => (
-                  <tr key={v.vendorId} className="border-t hover:bg-slate-50">
-                    <td className="p-3">{v.vendorName}</td>
-                    <td className="p-3">${v.totalPaid}</td>
-                    <td className="p-3">{v.transactions}</td>
-                    <td className="p-3">{v.onlinePayments}</td>
-                    <td className="p-3">{v.cashPayments}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Section>
-
-        {/* Recent Payments */}
-        <Section title="Recent Payments">
-          <div className="overflow-x-auto">
-            <table className="w-full border rounded-lg bg-white">
-              <thead className="bg-blue-600 text-white">
-                <tr>
-                  <th className="p-3 text-left">Vendor</th>
-                  <th className="p-3">Amount</th>
-                  <th className="p-3">Method</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3">Month</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentPayments.map((p) => (
-                  <tr key={p.id} className="border-t hover:bg-slate-50">
-                    <td className="p-3">{p.vendorName}</td>
-                    <td className="p-3">${p.amount}</td>
-                    <td className="p-3 capitalize">{p.method}</td>
-                    <td className="p-3">
-                      <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">
-                        {p.status}
-                      </span>
-                    </td>
-                    <td className="p-3">{p.month}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Section>
-
-      </div>
+            {/* PAGINATION */}
+            <div className="flex justify-between items-center mt-4">
+              <p>Page {page} of {totalPages}</p>
+              <div className="flex gap-2">
+                <button disabled={page===1} onClick={()=>setPage(p=>p-1)}
+                  className="px-4 py-2 border rounded disabled:opacity-40">
+                  <FaChevronLeft/>
+                </button>
+                <button disabled={page===totalPages} onClick={()=>setPage(p=>p+1)}
+                  className="px-4 py-2 border rounded disabled:opacity-40">
+                  <FaChevronRight/>
+                </button>
+              </div>
+            </div>
+          </Card>
+        </>
+      )}
     </div>
   );
 }
 
-/* ---------------- UI HELPERS ---------------- */
-
-function KPI({ title, value, icon, color }) {
-  return (
-    <div className={`p-5 rounded-2xl ${color} text-white shadow-lg hover:shadow-xl transition flex justify-between`}>
-      <div>
-        <p className="text-xs uppercase opacity-90">{title}</p>
-        <p className="text-2xl font-bold mt-1">{value}</p>
-      </div>
-      <div className="text-3xl opacity-90">{icon}</div>
-    </div>
-  );
-}
-
-function BreakdownCard({ label, value, icon, color }) {
-  return (
-    <div className={`p-5 rounded-xl ${color} text-white shadow-md flex justify-between`}>
-      <div>
-        <p className="text-sm opacity-90">{label}</p>
-        <p className="text-xl font-bold mt-1">{value}</p>
-      </div>
-      <div className="text-2xl">{icon}</div>
-    </div>
-  );
-}
-
-function Stat({ label, value, color }) {
-  return (
-    <div className={`p-4 rounded-xl ${color} text-white text-center shadow-md`}>
-      <p className="text-xs uppercase opacity-90">{label}</p>
-      <p className="text-xl font-bold mt-1">{value}</p>
-    </div>
-  );
-}
-
-function Section({ title, children }) {
-  return (
+/* UI COMPONENTS */
+const KPI = ({title,value,icon}) => (
+  <div className={`${cardBase} flex justify-between`}>
     <div>
-      <h3 className="text-xl font-semibold text-slate-800 mb-4">{title}</h3>
-      {children}
+      <p className="text-xs text-gray-500">{title}</p>
+      <p className="text-2xl font-bold">{value}</p>
     </div>
-  );
-}
+    <div className="text-3xl text-blue-600">{icon}</div>
+  </div>
+);
+
+const Stat = ({label,value}) => (
+  <div className={`${cardBase} text-center`}>
+    <p className="text-sm text-gray-500">{label}</p>
+    <p className="text-xl font-bold">{value}</p>
+  </div>
+);
+
+const Card = ({title,children}) => (
+  <div className={`${cardBase} p-6`}>
+    <h3 className="text-xl font-semibold mb-4">{title}</h3>
+    {children}
+  </div>
+);

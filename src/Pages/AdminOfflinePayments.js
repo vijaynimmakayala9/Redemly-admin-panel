@@ -4,6 +4,8 @@ import Papa from "papaparse";
 
 const API_BASE = "https://api.redemly.com/api/admin";
 
+const BASE_URL = 'https://api.redemly.com';
+
 const PAGE_SIZE = 5;
 
 const OfflinePayments = () => {
@@ -98,11 +100,11 @@ const OfflinePayments = () => {
         prev.map((req) =>
           req.id === id
             ? {
-                ...req,
-                status: approval.status,
-                adminNotes: approval.adminNotes,
-                reviewedAt: approval.reviewedAt,
-              }
+              ...req,
+              status: approval.status,
+              adminNotes: approval.adminNotes,
+              reviewedAt: approval.reviewedAt,
+            }
             : req
         )
       );
@@ -183,8 +185,13 @@ const OfflinePayments = () => {
                 <td className="p-4 capitalize">{item.status}</td>
 
                 <td className="p-4">
-                  <a href={item.paymentProof} target="_blank" rel="noreferrer" className="text-blue-600 underline">
-                    View
+                  <a
+                    href={`${BASE_URL}${item.paymentProof}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white transition text-sm font-semibold"
+                  >
+                    View Proof
                   </a>
                 </td>
 
@@ -219,9 +226,8 @@ const OfflinePayments = () => {
         {[...Array(totalPages)].map((_, i) => (
           <button
             key={i}
-            className={`px-3 py-1 rounded ${
-              currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200"
-            }`}
+            className={`px-3 py-1 rounded ${currentPage === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200"
+              }`}
             onClick={() => setCurrentPage(i + 1)}
           >
             {i + 1}

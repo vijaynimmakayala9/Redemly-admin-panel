@@ -6,6 +6,9 @@ const AllUserCoupons = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [expandedUsers, setExpandedUsers] = useState({});
+  const PAGE_SIZE = 10;
+
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Category colors mapping
   const categoryColorMap = {
@@ -30,6 +33,19 @@ const AllUserCoupons = () => {
 
     fetchUserCoupons();
   }, []);
+
+  /* ================= PAGINATION ================= */
+  const totalPages = Math.ceil(users.length / PAGE_SIZE);
+
+  const paginatedUsers = users.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const changePage = (page) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+  };
 
   const toggleUserExpansion = (userId) => {
     setExpandedUsers(prev => ({
@@ -72,14 +88,14 @@ const AllUserCoupons = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {users.map((user) => (
+            {paginatedUsers.map((user) => (
               <React.Fragment key={user._id}>
                 <tr className="hover:bg-gray-50">
                   <td className="py-4 px-4">
                     <div className="flex items-center">
-                      <img 
-                        src={user.profileImage} 
-                        alt={user.name} 
+                      <img
+                        src={user.profileImage}
+                        alt={user.name}
                         className="w-10 h-10 rounded-full mr-3"
                       />
                       <div>
@@ -104,7 +120,7 @@ const AllUserCoupons = () => {
                     </span>
                   </td>
                   <td className="py-4 px-4">
-                    <button 
+                    <button
                       onClick={() => toggleUserExpansion(user._id)}
                       className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                     >
@@ -112,7 +128,7 @@ const AllUserCoupons = () => {
                     </button>
                   </td>
                 </tr>
-                
+
                 {/* Expanded user details */}
                 {expandedUsers[user._id] && (
                   <tr>
@@ -163,9 +179,8 @@ const AllUserCoupons = () => {
                                     {new Date(coupon.claimedAt).toLocaleDateString()}
                                   </td>
                                   <td className="py-3 px-4">
-                                    <span className={`text-xs px-2 py-1 rounded ${
-                                      coupon.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                                    }`}>
+                                    <span className={`text-xs px-2 py-1 rounded ${coupon.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                                      }`}>
                                       {coupon.status}
                                     </span>
                                   </td>
@@ -218,9 +233,8 @@ const AllUserCoupons = () => {
                                     {new Date(coupon.usedOn).toLocaleDateString()}
                                   </td>
                                   <td className="py-3 px-4">
-                                    <span className={`text-xs px-2 py-1 rounded-full ${
-                                      coupon.status === 'Used' ? 'bg-red-100 text-red-800' : 'bg-gray-100'
-                                    }`}>
+                                    <span className={`text-xs px-2 py-1 rounded-full ${coupon.status === 'Used' ? 'bg-red-100 text-red-800' : 'bg-gray-100'
+                                      }`}>
                                       {coupon.status}
                                     </span>
                                   </td>
@@ -238,6 +252,66 @@ const AllUserCoupons = () => {
           </tbody>
         </table>
       </div>
+      {/* ================= PAGINATION UI ================= */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-8 gap-2 flex-wrap items-center">
+
+          {/* Prev */}
+          <button
+            onClick={() => changePage(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-3 py-1 border rounded disabled:opacity-40"
+          >
+            Prev
+          </button>
+
+          {/* Smart Page Numbers */}
+          {(() => {
+            const pages = [];
+            const current = currentPage;
+            const total = totalPages;
+
+            pages.push(1);
+
+            if (current > 3) pages.push("start");
+
+            for (let i = current - 1; i <= current + 1; i++) {
+              if (i > 1 && i < total) pages.push(i);
+            }
+
+            if (current < total - 2) pages.push("end");
+
+            if (total > 1) pages.push(total);
+
+            return pages.map((p, i) =>
+              p === "start" || p === "end" ? (
+                <span key={i} className="px-2">...</span>
+              ) : (
+                <button
+                  key={i}
+                  onClick={() => changePage(p)}
+                  className={`px-3 py-1 border rounded ${currentPage === p
+                      ? "bg-blue-600 text-white"
+                      : "hover:bg-gray-100"
+                    }`}
+                >
+                  {p}
+                </button>
+              )
+            );
+          })()}
+
+          {/* Next */}
+          <button
+            onClick={() => changePage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 border rounded disabled:opacity-40"
+          >
+            Next
+          </button>
+
+        </div>
+      )}
     </div>
   );
 };

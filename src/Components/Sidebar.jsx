@@ -110,14 +110,14 @@ const Sidebar = ({ isCollapsed, isMobile, setIsCollapsed }) => {
         { name: "Get All Fan Facts", path: "/allfanfacts" },
       ],
     },
-    {
-      icon: <i className="ri-settings-3-fill"></i>,
-      name: "Settings",
-      dropdown: [
-        { name: "Create Privacy & Policy", path: "/create-privacy" },
-        { name: "View Privacy & Policy", path: "/get-policy" },
-      ],
-    },
+    // {
+    //   icon: <i className="ri-settings-3-fill"></i>,
+    //   name: "Settings",
+    //   dropdown: [
+    //     { name: "Create Privacy & Policy", path: "/create-privacy" },
+    //     { name: "View Privacy & Policy", path: "/get-policy" },
+    //   ],
+    // },
     {
       icon: <i className="ri-settings-3-fill"></i>,
       name: "Payment",

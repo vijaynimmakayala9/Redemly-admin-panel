@@ -19,30 +19,63 @@ export default function ReceivedPayments() {
   const [showFilters, setShowFilters] = useState(false);
 
   // API Data States
+  // API: /api/admin/paid
+  // Returns: { success, data: { paidPayments[], pagination, summary, monthlyBreakdown[] } }
   const [paidPayments, setPaidPayments] = useState([]);
   const [summary, setSummary] = useState(null);
+  // methodSummary is NOT returned by the API — derived client-side from paidPayments
   const [methodSummary, setMethodSummary] = useState([]);
-  const [monthlySummary, setMonthlySummary] = useState([]);
+  // API returns monthlyBreakdown (not monthlyPaidSummary)
+  const [monthlyBreakdown, setMonthlyBreakdown] = useState([]);
   const [allMonths, setAllMonths] = useState([]);
 
-  const vendorsPerPage = 8;
+  const vendorsPerPage = 5;
+
+  /* ---------------- Derive method summary from paidPayments ---------------- */
+  const deriveMethodSummary = (payments) => {
+    const methodMap = {};
+    const totalAmt = payments.reduce((sum, p) => sum + (p.pricePerCoupon || 0), 0);
+
+    payments.forEach((p) => {
+      const method = p.paymentMethod || "unknown";
+      if (!methodMap[method]) {
+        methodMap[method] = { method, count: 0, amount: 0 };
+      }
+      methodMap[method].count += 1;
+      methodMap[method].amount += p.pricePerCoupon || 0;
+    });
+
+    return Object.values(methodMap).map((m) => ({
+      ...m,
+      percentage: totalAmt > 0 ? (m.amount / totalAmt) * 100 : 0,
+    }));
+  };
 
   /* ---------------- Fetch Paid Payments ---------------- */
+  // Correct endpoint: /api/admin/paid
   const fetchPaidPayments = async () => {
     try {
       setLoading(true);
-      // Note: There's a double slash in the endpoint, fixing it
-      const res = await axios.get(`${API_BASE}/admin/payments/paid`);
-      
+      const res = await axios.get(`${API_BASE}/admin/paid`);
+
       if (res.data.success) {
         const data = res.data.data;
-        setPaidPayments(data.paidPayments || []);
-        setSummary(data.summary);
-        setMethodSummary(data.methodSummary || []);
-        setMonthlySummary(data.monthlyPaidSummary || []);
-        
-        // Extract unique months
-        const uniqueMonths = [...new Set(data.paidPayments.map(p => p.month))].sort();
+
+        // API: data.paidPayments[]
+        const payments = data.paidPayments || [];
+        setPaidPayments(payments);
+
+        // API: data.summary { totalAmount, totalRecords, cashRevenue, onlineRevenue, averagePayment }
+        setSummary(data.summary || null);
+
+        // API: data.monthlyBreakdown[] { month, totalAmount, totalRecords, vendorsCount }
+        setMonthlyBreakdown(data.monthlyBreakdown || []);
+
+        // Derive method summary client-side (not returned by API)
+        setMethodSummary(deriveMethodSummary(payments));
+
+        // Extract unique months from paidPayments for the filter dropdown
+        const uniqueMonths = [...new Set(payments.map((p) => p.month))].sort();
         setAllMonths(uniqueMonths);
       }
     } catch (err) {
@@ -58,35 +91,42 @@ export default function ReceivedPayments() {
 
   /* ---------------- Filter Logic ---------------- */
   const filteredPayments = paidPayments.filter((payment) => {
-    // Search filter
-    const matchesSearch = 
-      (payment.vendorId?.businessName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    // Search filter — vendorId.businessName or vendorId.name, userId.name, couponId.couponCode, _id
+    const matchesSearch =
+      (payment.vendorId?.businessName || payment.vendorId?.name || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       (payment.userId?.name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (payment.couponId?.couponCode || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (payment._id || "").toLowerCase().includes(searchTerm.toLowerCase());
 
-    // Month filter
+    // Month filter — payment.month is "YYYY-MM" format
     const matchesMonth = selectedMonth === "all" || payment.month === selectedMonth;
 
-    // Payment method filter
+    // Payment method filter — payment.paymentMethod e.g. "offline"
     const matchesMethod = selectedMethod === "all" || payment.paymentMethod === selectedMethod;
 
-    // Date filter (custom implementation)
+    // Date filter
     let matchesDate = true;
     if (dateFilter !== "all") {
-      const paymentDate = new Date(payment.onlinePaymentDate || payment.claimedAt || payment.createdAt);
+      const paymentDate = new Date(
+        payment.paidAt || payment.claimedAt || payment.createdAt
+      );
       const now = new Date();
-      
-      switch(dateFilter) {
+
+      switch (dateFilter) {
         case "thisMonth":
-          matchesDate = paymentDate.getMonth() === now.getMonth() && 
-                       paymentDate.getFullYear() === now.getFullYear();
+          matchesDate =
+            paymentDate.getMonth() === now.getMonth() &&
+            paymentDate.getFullYear() === now.getFullYear();
           break;
-        case "lastMonth":
+        case "lastMonth": {
           const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-          matchesDate = paymentDate.getMonth() === lastMonth.getMonth() && 
-                       paymentDate.getFullYear() === lastMonth.getFullYear();
+          matchesDate =
+            paymentDate.getMonth() === lastMonth.getMonth() &&
+            paymentDate.getFullYear() === lastMonth.getFullYear();
           break;
+        }
         case "thisYear":
           matchesDate = paymentDate.getFullYear() === now.getFullYear();
           break;
@@ -99,13 +139,21 @@ export default function ReceivedPayments() {
   });
 
   /* ---------------- Calculate Statistics ---------------- */
-  const totalPayments = paidPayments.length;
+  // API: summary.totalAmount (sum of pricePerCoupon per paid payment, approved by admin)
   const totalAmount = summary?.totalAmount || 0;
-  const totalBillAmount = paidPayments.reduce((sum, payment) => sum + (payment.pricePerCoupon || 0), 0);
+  const totalPayments = summary?.totalRecords || paidPayments.length;
+
+  // Bill amount = sum of pricePerCoupon across all payments
+  const totalBillAmount = paidPayments.reduce(
+    (sum, payment) => sum + (payment.pricePerCoupon || 0),
+    0
+  );
+
+  // Coupon discount = sum of (pricePerCoupon * discountPercentage / 100)
   const totalCouponAmount = paidPayments.reduce((sum, payment) => {
     const discount = payment.couponId?.discountPercentage || 0;
     const amount = payment.pricePerCoupon || 0;
-    return sum + (amount * discount / 100);
+    return sum + (amount * discount) / 100;
   }, 0);
 
   /* ---------------- Pagination Logic ---------------- */
@@ -121,36 +169,43 @@ export default function ReceivedPayments() {
       return;
     }
 
-    const exportData = filteredPayments
-      .slice(0, exportLimit)
-      .map((payment) => ({
-        PaymentID: payment._id,
-        VendorName: payment.vendorId?.businessName || "Unknown Vendor",
-        VendorEmail: payment.vendorId?.email || "N/A",
-        VendorPhone: payment.vendorId?.phone || "N/A",
-        CustomerName: payment.userId?.name || "N/A",
-        CustomerEmail: payment.userId?.email || "N/A",
-        CouponCode: payment.couponId?.couponCode || "N/A",
-        DiscountPercentage: payment.couponId?.discountPercentage || "N/A",
-        Amount: `$${(payment.pricePerCoupon || 0).toFixed(2)}`,
-        Month: payment.month,
-        PaymentMethod: payment.paymentMethod || "N/A",
-        Status: payment.paymentStatus,
-        ClaimedDate: payment.claimedAt ? new Date(payment.claimedAt).toLocaleDateString() : "N/A",
-        PaymentDate: payment.onlinePaymentDate ? new Date(payment.onlinePaymentDate).toLocaleDateString() : "N/A",
-        TransactionID: payment.razorpayPaymentId || "N/A",
-      }));
+    const exportData = filteredPayments.slice(0, exportLimit).map((payment) => ({
+      PaymentID: payment._id,
+      VendorName: payment.vendorId?.businessName || payment.vendorId?.name || "Unknown Vendor",
+      VendorEmail: payment.vendorId?.email || "N/A",
+      VendorPhone: payment.vendorId?.phone || "N/A",
+      CustomerName: payment.userId?.name || "N/A",
+      CustomerEmail: payment.userId?.email || "N/A",
+      CouponName: payment.couponId?.name || "N/A",
+      CouponCode: payment.couponId?.couponCode || "N/A",
+      DiscountPercentage: payment.couponId?.discountPercentage || "N/A",
+      Amount: `$${(payment.pricePerCoupon || 0).toFixed(2)}`,
+      // paymentDetails.amountUSD is the admin-verified total for the batch
+      ApprovedAmountUSD: payment.paymentDetails?.amountUSD
+        ? `$${payment.paymentDetails.amountUSD}`
+        : "N/A",
+      Month: payment.month,
+      PaymentMethod: payment.paymentMethod || "N/A",
+      Status: payment.paymentStatus,
+      PeriodType: payment.paymentDetails?.periodType || "N/A",
+      ClaimedDate: payment.claimedAt
+        ? new Date(payment.claimedAt).toLocaleDateString()
+        : "N/A",
+      PaidDate: payment.paidAt
+        ? new Date(payment.paidAt).toLocaleDateString()
+        : "N/A",
+      TransactionID:
+        payment.transactionId ||
+        payment.razorpayPaymentId ||
+        payment.paymentDetails?.approvalId ||
+        "N/A",
+      AdminNotes: payment.paymentDetails?.adminNotes || "N/A",
+    }));
 
     const ws = utils.json_to_sheet(exportData);
     const wb = utils.book_new();
     utils.book_append_sheet(wb, ws, "ReceivedPayments");
-    writeFile(wb, `received_payments_${new Date().toISOString().split('T')[0]}.xlsx`);
-  };
-
-  /* ---------------- Handle Invoice Download ---------------- */
-  const handleDownloadInvoice = (id) => {
-    alert(`Downloading invoice for payment ID: ${id}`);
-    // Implement actual invoice download logic here
+    writeFile(wb, `received_payments_${new Date().toISOString().split("T")[0]}.xlsx`);
   };
 
   /* ---------------- Reset Filters ---------------- */
@@ -162,29 +217,53 @@ export default function ReceivedPayments() {
     setCurrentPage(1);
   };
 
+  /* ---------------- Unique payment methods for filter dropdown ---------------- */
+  const uniqueMethods = [...new Set(paidPayments.map((p) => p.paymentMethod).filter(Boolean))];
+
   /* ---------------- Status Badge Component ---------------- */
   const StatusBadge = ({ status }) => {
     const getStatusConfig = (status) => {
       const configs = {
-        paid: { 
+        paid: {
           color: "bg-emerald-50 text-emerald-700 border-emerald-200",
-          icon: <MdCheckCircle className="inline mr-1" />
+          icon: <MdCheckCircle className="inline mr-1" />,
         },
-        pending: { 
+        pending: {
           color: "bg-amber-50 text-amber-700 border-amber-200",
-          icon: <MdPendingActions className="inline mr-1" />
+          icon: <MdPendingActions className="inline mr-1" />,
         },
       };
-      return configs[status] || { 
+      return configs[status] || {
         color: "bg-gray-50 text-gray-700 border-gray-200",
-        icon: null 
+        icon: null,
       };
     };
 
     const config = getStatusConfig(status);
     return (
-      <span className={`px-3 py-1.5 rounded-full text-xs font-medium border ${config.color} flex items-center justify-center gap-1`}>
+      <span
+        className={`px-3 py-1.5 rounded-full text-xs font-medium border ${config.color} flex items-center justify-center gap-1`}
+      >
         {config.icon} {status?.charAt(0).toUpperCase() + status?.slice(1)}
+      </span>
+    );
+  };
+
+  /* ---------------- Period Badge Component ---------------- */
+  const PeriodBadge = ({ periodType }) => {
+    if (!periodType) return null;
+    const colors = {
+      weekly: "bg-blue-50 text-blue-700",
+      monthly: "bg-purple-50 text-purple-700",
+      daily: "bg-green-50 text-green-700",
+    };
+    return (
+      <span
+        className={`px-2 py-0.5 rounded text-xs font-medium capitalize ${
+          colors[periodType] || "bg-gray-100 text-gray-600"
+        }`}
+      >
+        {periodType}
       </span>
     );
   };
@@ -203,23 +282,27 @@ export default function ReceivedPayments() {
                 Track and manage all received payments from vendors
               </p>
             </div>
-            
+
             <div className="flex gap-3">
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-all duration-200"
               >
                 <FaFilter className="text-gray-600" />
-                <span className="font-medium">{showFilters ? "Hide Filters" : "Show Filters"}</span>
+                <span className="font-medium">
+                  {showFilters ? "Hide Filters" : "Show Filters"}
+                </span>
               </button>
-              
+
               <button
                 onClick={fetchPaidPayments}
                 disabled={loading}
                 className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 disabled:opacity-50"
               >
                 <FaSync className={loading ? "animate-spin" : ""} />
-                <span className="font-medium">{loading ? "Refreshing..." : "Refresh"}</span>
+                <span className="font-medium">
+                  {loading ? "Refreshing..." : "Refresh"}
+                </span>
               </button>
             </div>
           </div>
@@ -227,6 +310,7 @@ export default function ReceivedPayments() {
 
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* API: summary.totalAmount */}
           <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg">
             <div className="flex justify-between items-start">
               <div>
@@ -240,6 +324,7 @@ export default function ReceivedPayments() {
             </div>
           </div>
 
+          {/* sum of pricePerCoupon */}
           <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl p-6 text-white shadow-lg">
             <div className="flex justify-between items-start">
               <div>
@@ -253,6 +338,7 @@ export default function ReceivedPayments() {
             </div>
           </div>
 
+          {/* Coupon discount derived from discountPercentage */}
           <div className="bg-gradient-to-r from-amber-500 to-amber-600 rounded-2xl p-6 text-white shadow-lg">
             <div className="flex justify-between items-start">
               <div>
@@ -286,12 +372,17 @@ export default function ReceivedPayments() {
           <div className="p-6 border-b border-gray-200">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Paid Payment Transactions</h2>
+                <h2 className="text-xl font-bold text-gray-900">
+                  Paid Payment Transactions
+                </h2>
                 <p className="text-gray-600 text-sm mt-1">
-                  Showing {Math.min(indexOfFirstPayment + 1, filteredPayments.length)}-{Math.min(indexOfLastPayment, filteredPayments.length)} of {filteredPayments.length} received payments
+                  Showing{" "}
+                  {Math.min(indexOfFirstPayment + 1, filteredPayments.length)}–
+                  {Math.min(indexOfLastPayment, filteredPayments.length)} of{" "}
+                  {filteredPayments.length} received payments
                 </p>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 <button
                   onClick={resetFilters}
@@ -299,7 +390,7 @@ export default function ReceivedPayments() {
                 >
                   Clear Filters
                 </button>
-                
+
                 <div className="flex gap-2">
                   <select
                     value={exportLimit}
@@ -311,14 +402,14 @@ export default function ReceivedPayments() {
                     <option value={100}>100 records</option>
                     <option value={200}>All records</option>
                   </select>
-                  
+
                   <button
                     onClick={exportCSV}
                     disabled={filteredPayments.length === 0}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                       filteredPayments.length === 0
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        : 'bg-green-600 text-white hover:bg-green-700'
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                        : "bg-green-600 text-white hover:bg-green-700"
                     }`}
                   >
                     <RiFileExcelLine /> Export
@@ -334,52 +425,77 @@ export default function ReceivedPayments() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Search */}
                 <div className="relative">
-                  <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Search
+                  </label>
+                  <FaSearch className="absolute left-3 top-2/3 transform -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Search vendor, customer, transaction..."
+                    placeholder="Search vendor, customer, coupon..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(1);
+                    }}
                     className="pl-10 pr-4 py-2.5 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                   />
                 </div>
 
-                {/* Month Filter */}
+                {/* Month Filter — values are "YYYY-MM" from payment.month */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Month</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Month
+                  </label>
                   <select
                     value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedMonth(e.target.value);
+                      setCurrentPage(1);
+                    }}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="all">All Months</option>
                     {allMonths.map((month) => (
-                      <option key={month} value={month}>{month}</option>
+                      <option key={month} value={month}>
+                        {month}
+                      </option>
                     ))}
                   </select>
                 </div>
 
-                {/* Payment Method Filter */}
+                {/* Payment Method Filter — dynamically built from actual data */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Payment Method
+                  </label>
                   <select
                     value={selectedMethod}
-                    onChange={(e) => setSelectedMethod(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedMethod(e.target.value);
+                      setCurrentPage(1);
+                    }}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="all">All Methods</option>
-                    <option value="online">Online</option>
-                    <option value="cash">Cash</option>
-                    <option value="bank_transfer">Bank Transfer</option>
+                    {uniqueMethods.map((method) => (
+                      <option key={method} value={method}>
+                        {method.charAt(0).toUpperCase() + method.slice(1)}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 {/* Date Filter */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Date Range</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Date Range
+                  </label>
                   <select
                     value={dateFilter}
-                    onChange={(e) => setDateFilter(e.target.value)}
+                    onChange={(e) => {
+                      setDateFilter(e.target.value);
+                      setCurrentPage(1);
+                    }}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="all">All Time</option>
@@ -398,10 +514,16 @@ export default function ReceivedPayments() {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="p-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    S NO
+                  </th>
+                  <th className="p-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Vendor Details
                   </th>
                   <th className="p-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Customer
+                  </th>
+                  <th className="p-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Coupon
                   </th>
                   <th className="p-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Payment Info
@@ -412,9 +534,6 @@ export default function ReceivedPayments() {
                   <th className="p-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
-                  {/* <th className="p-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th> */}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -434,43 +553,46 @@ export default function ReceivedPayments() {
                         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                           <MdOutlinePayment className="text-gray-400 text-2xl" />
                         </div>
-                        <p className="text-gray-900 font-medium mb-2">No Payments Received Yet</p>
-                        <p className="text-gray-600">No payment transactions have been recorded yet.</p>
-                        <p className="text-gray-500 text-sm mt-2">Received payments will appear here once vendors make their payments.</p>
-                        <div className="flex flex-col sm:flex-row gap-3 mt-6">
-                          <button 
-                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
-                            onClick={() => alert("Payment tracking setup will be implemented")}
-                          >
-                            <FaCalendarCheck /> Setup Payment Tracking
-                          </button>
-                          <button 
-                            className="inline-flex items-center gap-2 px-5 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition"
-                            onClick={() => alert("Manual payment entry will be implemented")}
-                          >
-                            <FaMoneyCheckAlt /> Record Manual Payment
-                          </button>
-                        </div>
+                        <p className="text-gray-900 font-medium mb-2">
+                          No Payments Found
+                        </p>
+                        <p className="text-gray-600">
+                          No payment transactions match your current filters.
+                        </p>
+                        <button
+                          onClick={resetFilters}
+                          className="mt-4 px-5 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
+                        >
+                          Clear Filters
+                        </button>
                       </div>
                     </td>
                   </tr>
                 ) : (
                   currentPayments.map((payment, index) => (
-                    <tr 
-                      key={payment._id} 
+                    <tr
+                      key={payment._id}
                       className="hover:bg-gray-50/80 transition-colors duration-150"
                     >
                       <td className="p-4">
+                        {(currentPage - 1)*vendorsPerPage + index + 1}
+                      </td>
+                      {/* Vendor — vendorId.businessName preferred, fallback to vendorId.name */}
+                      <td className="p-4">
                         <div>
                           <p className="font-medium text-gray-900">
-                            {payment.vendorId?.businessName || "Unknown Vendor"}
+                            {payment.vendorId?.businessName || payment.vendorId?.name || "Unknown Vendor"}
                           </p>
-                          <p className="text-sm text-gray-500 mt-1">{payment.vendorId?.email || "No email"}</p>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {payment.vendorId?.email || "No email"}
+                          </p>
                           <p className="text-xs text-gray-400 mt-1">
                             {payment.vendorId?.phone || "No phone"}
                           </p>
                         </div>
                       </td>
+
+                      {/* Customer — userId.name, userId.email */}
                       <td className="p-4">
                         <div>
                           <p className="font-medium text-gray-900">
@@ -481,61 +603,78 @@ export default function ReceivedPayments() {
                           </p>
                         </div>
                       </td>
+
+                      {/* Coupon — couponId.name, couponCode, discountPercentage */}
+                      <td className="p-4">
+                        <div>
+                          <p className="font-medium text-gray-900">
+                            {payment.couponId?.name || "N/A"}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1 font-mono">
+                            {payment.couponId?.couponCode || ""}
+                          </p>
+                          {payment.couponId?.discountPercentage && (
+                            <span className="text-xs px-2 py-0.5 bg-amber-50 text-amber-700 rounded mt-1 inline-block">
+                              {payment.couponId.discountPercentage}% off
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Payment Info — pricePerCoupon, paymentMethod, paymentDetails.amountUSD */}
                       <td className="p-4">
                         <div>
                           <p className="text-lg font-bold text-gray-900">
                             ${(payment.pricePerCoupon || 0).toFixed(2)}
                           </p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded">
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <span className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded capitalize">
                               {payment.paymentMethod || "N/A"}
                             </span>
-                            {payment.couponId?.discountPercentage && (
-                              <span className="text-xs px-2 py-1 bg-amber-50 text-amber-700 rounded">
-                                {payment.couponId.discountPercentage}% off
-                              </span>
-                            )}
                           </div>
-                          {payment.razorpayPaymentId && (
-                            <p className="text-xs text-gray-500 mt-1 truncate">
-                              TXN: {payment.razorpayPaymentId.substring(0, 15)}...
+                          {/* Admin-verified batch amount from paymentDetails */}
+                          {payment.paymentDetails?.amountUSD && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Approved: ${payment.paymentDetails.amountUSD}
+                            </p>
+                          )}
+                          {/* transactionId or paymentDetails.approvalId */}
+                          {(payment.transactionId || payment.paymentDetails?.approvalId) && (
+                            <p className="text-xs text-gray-400 mt-1 truncate max-w-[160px]">
+                              {(payment.transactionId || payment.paymentDetails?.approvalId)
+                                .substring(0, 20)}...
                             </p>
                           )}
                         </div>
                       </td>
+
+                      {/* Period — month + paidAt date + periodType */}
                       <td className="p-4">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 mb-1">
                           <MdOutlineCalendarMonth className="text-gray-400" />
                           <span className="text-gray-700">{payment.month}</span>
                         </div>
+                        {payment.paymentDetails?.periodType && (
+                          <PeriodBadge periodType={payment.paymentDetails.periodType} />
+                        )}
                         <p className="text-sm text-gray-500 mt-1">
-                          {payment.onlinePaymentDate 
-                            ? new Date(payment.onlinePaymentDate).toLocaleDateString()
+                          {payment.paidAt
+                            ? new Date(payment.paidAt).toLocaleDateString()
                             : payment.claimedAt
                             ? new Date(payment.claimedAt).toLocaleDateString()
-                            : "No date"
-                          }
+                            : "No date"}
                         </p>
                       </td>
+
+                      {/* Status */}
                       <td className="p-4">
                         <StatusBadge status={payment.paymentStatus} />
+                        {payment.paymentDetails?.verifiedByAdmin && (
+                          <p className="text-xs text-emerald-600 mt-1 text-center">
+                            ✓ Admin verified
+                          </p>
+                        )}
                       </td>
-                      {/* <td className="p-4">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleDownloadInvoice(payment._id)}
-                            className="flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
-                          >
-                            <FaFileDownload /> Invoice
-                          </button>
-                          <button
-                            onClick={() => alert(`Payment details for ${payment._id}`)}
-                            className="flex items-center gap-2 px-3 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium"
-                          >
-                            <FaMoneyCheckAlt /> Details
-                          </button>
-                        </div>
-                      </td> */}
                     </tr>
                   ))
                 )}
@@ -550,16 +689,16 @@ export default function ReceivedPayments() {
                 <div className="text-sm text-gray-600">
                   Page {currentPage} of {totalPages} • {filteredPayments.length} total payments
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
                     className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     Previous
                   </button>
-                  
+
                   {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
                     let pageNum;
                     if (totalPages <= 5) {
@@ -571,7 +710,7 @@ export default function ReceivedPayments() {
                     } else {
                       pageNum = currentPage - 2 + i;
                     }
-                    
+
                     return (
                       <button
                         key={i}
@@ -586,7 +725,7 @@ export default function ReceivedPayments() {
                       </button>
                     );
                   })}
-                  
+
                   {totalPages > 5 && currentPage < totalPages - 2 && (
                     <>
                       <span className="text-gray-400">...</span>
@@ -600,9 +739,9 @@ export default function ReceivedPayments() {
                       </button>
                     </>
                   )}
-                  
+
                   <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
                     className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
@@ -614,84 +753,117 @@ export default function ReceivedPayments() {
           )}
         </div>
 
-        {/* Payment Method Summary */}
-        {methodSummary.length > 0 && (
+        {/* Summary Section — Method Summary (derived) + Monthly Breakdown (from API) + Quick Stats */}
+        {(methodSummary.length > 0 || monthlyBreakdown.length > 0) && (
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Payment Methods</h3>
-              <div className="space-y-4">
-                {methodSummary.map((method) => (
-                  <div key={method.method} className="flex justify-between items-center">
+            {/* Payment Methods — derived client-side since API doesn't return methodSummary */}
+            {methodSummary.length > 0 && (
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Payment Methods</h3>
+                <div className="space-y-4">
+                  {methodSummary.map((method) => (
+                    <div key={method.method} className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium text-gray-900 capitalize">
+                          {method.method}
+                        </p>
+                        <p className="text-sm text-gray-500">{method.count} payments</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-green-600">
+                          ${method.amount.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {method.percentage.toFixed(1)}% of total
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Monthly Breakdown — API: data.monthlyBreakdown[].{ month, totalAmount, totalRecords, vendorsCount } */}
+            {monthlyBreakdown.length > 0 && (
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Monthly Breakdown</h3>
+                <div className="space-y-4">
+                  {monthlyBreakdown.map((month) => (
+                    <div key={month.month} className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium text-gray-900">{month.month}</p>
+                        <p className="text-sm text-gray-500">
+                          {month.vendorsCount} vendor{month.vendorsCount !== 1 ? "s" : ""}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-blue-600">
+                          ${month.totalAmount?.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {month.totalRecords} payments
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Quick Stats — API: summary.{ totalAmount, totalRecords, averagePayment, cashRevenue, onlineRevenue } */}
+            {summary && (
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Stats</h3>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
                     <div>
-                      <p className="font-medium text-gray-900 capitalize">{method.method}</p>
-                      <p className="text-sm text-gray-500">{method.count} payments</p>
+                      <p className="font-medium text-gray-900">Average Payment</p>
+                      <p className="text-sm text-gray-500">Per transaction</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-green-600">${method.amount?.toFixed(2)}</p>
-                      <p className="text-xs text-gray-500">{method.percentage?.toFixed(1)}% of total</p>
+                      <p className="font-bold text-purple-600">
+                        ${summary.averagePayment?.toFixed(2) || "0.00"}
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Monthly Summary</h3>
-              <div className="space-y-4">
-                {monthlySummary.map((month) => (
-                  <div key={month.month} className="flex justify-between items-center">
+                  <div className="flex justify-between items-center">
                     <div>
-                      <p className="font-medium text-gray-900">{month.month}</p>
-                      <p className="text-sm text-gray-500">{month.vendorsCount} vendors</p>
+                      <p className="font-medium text-gray-900">Total Transactions</p>
+                      <p className="text-sm text-gray-500">Verified payments</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-blue-600">${month.totalAmount?.toFixed(2)}</p>
-                      <p className="text-xs text-gray-500">{month.totalRecords} payments</p>
+                      <p className="font-bold text-emerald-600">
+                        {summary.totalRecords || 0}
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Stats</h3>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="font-medium text-gray-900">Average Payment</p>
-                    <p className="text-sm text-gray-500">Per transaction</p>
+                  {/* API: summary.cashRevenue */}
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-gray-900">Cash Revenue</p>
+                      <p className="text-sm text-gray-500">Offline payments</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-amber-600">
+                        ${(summary.cashRevenue || 0).toFixed(2)}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-purple-600">
-                      ${summary?.averagePayment?.toFixed(2) || "0.00"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="font-medium text-gray-900">Total Transactions</p>
-                    <p className="text-sm text-gray-500">Verified payments</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-emerald-600">{summary?.totalRecords || 0}</p>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="font-medium text-gray-900">Recent Payment</p>
-                    <p className="text-sm text-gray-500">Latest verified</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-amber-600">
-                      {summary?.recentPaymentDate 
-                        ? new Date(summary.recentPaymentDate).toLocaleDateString()
-                        : "N/A"
-                      }
-                    </p>
+                  {/* API: summary.onlineRevenue */}
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="font-medium text-gray-900">Online Revenue</p>
+                      <p className="text-sm text-gray-500">Digital payments</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-blue-600">
+                        ${(summary.onlineRevenue || 0).toFixed(2)}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>

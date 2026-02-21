@@ -256,9 +256,8 @@ export default function UserList() {
           <button
             key={i}
             onClick={() => setCurrentPage(i + 1)}
-            className={`px-4 py-2 rounded ${
-              currentPage === i + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
-            }`}
+            className={`px-4 py-2 rounded ${currentPage === i + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
+              }`}
           >
             {i + 1}
           </button>
@@ -272,139 +271,139 @@ export default function UserList() {
         </button>
       </div>
 
-     {/* Edit Modal */}
-{editModal && editedUser && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-    <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl relative max-h-[90vh] overflow-y-auto">
-      <h3 className="text-xl font-semibold mb-6">
-        Edit User - {editedUser.name}
-      </h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div>
-          <label className="block mb-1 font-medium">Name</label>
-          <input
-            name="name"
-            className="w-full p-2 border rounded"
-            value={editedUser.name || ""}
-            onChange={handleEditChange}
-          />
-        </div>
-        <div>
-          <label className="block mb-1 font-medium">Email</label>
-          <input
-            name="email"
-            type="email"
-            className="w-full p-2 border rounded"
-            value={editedUser.email || ""}
-            onChange={handleEditChange}
-          />
-        </div>
-        <div>
-          <label className="block mb-1 font-medium">Phone</label>
-          <input
-            name="phone"
-            className="w-full p-2 border rounded"
-            value={editedUser.phone || ""}
-            onChange={handleEditChange}
-          />
-        </div>
+      {/* Edit Modal */}
+      {editModal && editedUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl relative max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-semibold mb-6">
+              Edit User - {editedUser.name}
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block mb-1 font-medium">Name</label>
+                <input
+                  name="name"
+                  className="w-full p-2 border rounded"
+                  value={editedUser.name || ""}
+                  onChange={handleEditChange}
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">Email</label>
+                <input
+                  name="email"
+                  type="email"
+                  className="w-full p-2 border rounded"
+                  value={editedUser.email || ""}
+                  onChange={handleEditChange}
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">Phone</label>
+                <input
+                  name="phone"
+                  className="w-full p-2 border rounded"
+                  value={editedUser.phone || ""}
+                  onChange={handleEditChange}
+                />
+              </div>
 
-        <div>
-          <label className="block mb-1 font-medium">City</label>
-          <input
-            name="city"
-            className="w-full p-2 border rounded"
-            value={editedUser.city || ""}
-            onChange={handleEditChange}
-          />
-        </div>
-        <div>
-          <label className="block mb-1 font-medium">Zipcode</label>
-          <input
-            name="zipcode"
-            className="w-full p-2 border rounded"
-            value={editedUser.zipcode || ""}
-            onChange={handleEditChange}
-          />
-        </div>
-        <div>
-          <label className="block mb-1 font-medium">Date of Birth</label>
-          <input
-            name="dateOfBirth"
-            type="date"
-            className="w-full p-2 border rounded"
-            value={
-              editedUser.dateOfBirth
-                ? editedUser.dateOfBirth.split("T")[0]
-                : ""
-            }
-            onChange={handleEditChange}
-          />
-        </div>
+              <div>
+                <label className="block mb-1 font-medium">City</label>
+                <input
+                  name="city"
+                  className="w-full p-2 border rounded"
+                  value={editedUser.city || ""}
+                  onChange={handleEditChange}
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">Zipcode</label>
+                <input
+                  name="zipcode"
+                  className="w-full p-2 border rounded"
+                  value={editedUser.zipcode || ""}
+                  onChange={handleEditChange}
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">Date of Birth</label>
+                <input
+                  name="dateOfBirth"
+                  type="date"
+                  className="w-full p-2 border rounded"
+                  value={
+                    editedUser.dateOfBirth
+                      ? editedUser.dateOfBirth.split("T")[0]
+                      : ""
+                  }
+                  onChange={handleEditChange}
+                />
+              </div>
 
-        <div>
-          <label className="block mb-1 font-medium">Coins</label>
-          <input
-            name="coins"
-            type="number"
-            className="w-full p-2 border rounded"
-            value={editedUser.coins || 0}
-            onChange={handleEditChange}
-          />
-        </div>
-        <div>
-          <label className="block mb-1 font-medium">Coupon Code</label>
-          <input
-            name="couponCode"
-            className="w-full p-2 border rounded"
-            value={editedUser.couponCode || ""}
-            onChange={handleEditChange}
-          />
-        </div>
-        <div>
-          <label className="block mb-1 font-medium">
-            Favorite Coupons (semicolon separated)
-          </label>
-          <input
-            name="favoriteCoupons"
-            className="w-full p-2 border rounded"
-            value={(editedUser.favoriteCoupons || []).join
-              ? (editedUser.favoriteCoupons || []).join(";")
-              : editedUser.favoriteCoupons || ""}
-            onChange={(e) =>
-              setEditedUser((prev) => ({
-                ...prev,
-                favoriteCoupons: e.target.value
-                  .split(";")
-                  .map((c) => c.trim()),
-              }))
-            }
-          />
-        </div>
-      </div>
+              <div>
+                <label className="block mb-1 font-medium">Coins</label>
+                <input
+                  name="coins"
+                  type="number"
+                  className="w-full p-2 border rounded"
+                  value={editedUser.coins || 0}
+                  onChange={handleEditChange}
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">Coupon Code</label>
+                <input
+                  name="couponCode"
+                  className="w-full p-2 border rounded"
+                  value={editedUser.couponCode || ""}
+                  onChange={handleEditChange}
+                />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">
+                  Favorite Coupons (semicolon separated)
+                </label>
+                <input
+                  name="favoriteCoupons"
+                  className="w-full p-2 border rounded"
+                  value={(editedUser.favoriteCoupons || []).join
+                    ? (editedUser.favoriteCoupons || []).join(";")
+                    : editedUser.favoriteCoupons || ""}
+                  onChange={(e) =>
+                    setEditedUser((prev) => ({
+                      ...prev,
+                      favoriteCoupons: e.target.value
+                        .split(";")
+                        .map((c) => c.trim()),
+                    }))
+                  }
+                />
+              </div>
+            </div>
 
-      <div className="flex justify-end space-x-2 mt-6">
-        <button
-          onClick={() => {
-            setEditModal(false);
-            setEditedUser(null);
-          }}
-          className="px-4 py-2 bg-gray-300 rounded"
-          disabled={loading}
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSave}
-          className="px-4 py-2 bg-green-600 text-white rounded"
-          disabled={loading}
-        >
-          {loading ? "Saving..." : "Save"}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+            <div className="flex justify-end space-x-2 mt-6">
+              <button
+                onClick={() => {
+                  setEditModal(false);
+                  setEditedUser(null);
+                }}
+                className="px-4 py-2 bg-gray-300 rounded"
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 bg-green-600 text-white rounded"
+                disabled={loading}
+              >
+                {loading ? "Saving..." : "Save"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
