@@ -31,8 +31,11 @@ const Sidebar = ({ isCollapsed, isMobile, setIsCollapsed }) => {
     setOpenDropdown(openDropdown === name ? null : name);
   };
 
-  const handleLogout = async () => {
-        window.location.href = "/";
+  const handleLogout = () => {
+    const ok = window.confirm("Are you sure you want to logout?");
+    if (!ok) return;
+
+    window.location.href = "/";
   };
 
   // Close sidebar when clicking a link on mobile
@@ -122,11 +125,11 @@ const Sidebar = ({ isCollapsed, isMobile, setIsCollapsed }) => {
       icon: <i className="ri-settings-3-fill"></i>,
       name: "Payment",
       dropdown: [
-        { name: "Vendor Price", path: "/vendorprice"},
+        { name: "Vendor Price", path: "/vendorprice" },
         { name: "All Vendor Payment", path: "/allpayments" },
         { name: "Vendor Payment Pending", path: "/payment" },
         { name: "Vendor Paid Payment", path: "/rcvdpayment" },
-        { name: "Offline Payments", path: "/offline-payments"},
+        { name: "Offline Payments", path: "/offline-payments" },
       ],
     },
     {

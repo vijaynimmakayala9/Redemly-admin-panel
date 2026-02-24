@@ -124,25 +124,50 @@ export default function UserList() {
   const totalPages = Math.ceil(filtered.length / usersPerPage);
 
   const exportData = (type) => {
-    const exportUsers = filtered.slice(0, downloadLimit).map((u) => ({
-      id: u.id,
-      name: u.name || "",
-      email: u.email || "",
-      phone: u.phone || "",
-      city: u.city || "",
-      zipcode: u.zipcode || "",
-      dateOfBirth: u.dateOfBirth || "",
-      coins: u.coins ?? "",
-      couponCode: u.couponCode || "",
-      favoriteCoupons: (u.favoriteCoupons || []).join(";"),
-      steps: JSON.stringify(u.steps),
-      createdAt: u.createdAt,
-      updatedAt: u.updatedAt,
+    // Decide which users to export
+    const exportSource = currentUsers.slice(0, downloadLimit);
+
+    // Clean & format data for Excel
+    const cleanUsers = exportSource.map((u, index) => ({
+      "S.No": index + 1,
+      "Name": u.name || "-",
+      "Email": u.email || "-",
+      "Phone": u.phone || "-",
+      "City": u.city || "-",
+      "Zip Code": u.zipcode || "-",
+      "Coins": u.coins ?? 0,
+      "Coupon Code": u.couponCode || "-",
+      "Favorite Coupons": (u.favoriteCoupons || []).join(", "),
+      "Date of Birth": u.dateOfBirth
+        ? new Date(u.dateOfBirth).toLocaleDateString()
+        : "-",
+      "Joined On": u.createdAt
+        ? new Date(u.createdAt).toLocaleDateString()
+        : "-",
     }));
-    const ws = utils.json_to_sheet(exportUsers);
+
+    const ws = utils.json_to_sheet(cleanUsers);
+
+    // ⭐ Make columns auto width (very important)
+    ws["!cols"] = [
+      { wch: 6 },  // S.No
+      { wch: 20 }, // Name
+      { wch: 28 }, // Email
+      { wch: 16 }, // Phone
+      { wch: 16 }, // City
+      { wch: 12 }, // Zip
+      { wch: 10 }, // Coins
+      { wch: 18 }, // Coupon
+      { wch: 30 }, // Favorites
+      { wch: 14 }, // DOB
+      { wch: 14 }, // Joined
+    ];
+
     const wb = utils.book_new();
     utils.book_append_sheet(wb, ws, "Users");
-    writeFile(wb, `users_export.${type}`);
+
+    const fileName = `Users_${new Date().toLocaleDateString().replaceAll("/", "-")}.${type}`;
+    writeFile(wb, fileName);
   };
 
   return (
@@ -301,10 +326,19 @@ export default function UserList() {
               <div>
                 <label className="block mb-1 font-medium">Phone</label>
                 <input
+                  type="tel"
                   name="phone"
-                  className="w-full p-2 border rounded"
                   value={editedUser.phone || ""}
-                  onChange={handleEditChange}
+                  inputMode="numeric"
+                  pattern="[0-9]{10}"
+                  maxLength={10}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                    handleEditChange({ target: { name: "phone", value: digits } });
+                  }}
+                  className="w-full p-2 border rounded"
+                  placeholder="Enter 10 digit phone number"
+                  required
                 />
               </div>
 

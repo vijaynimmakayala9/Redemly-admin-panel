@@ -928,10 +928,10 @@ export default function VendorDetail() {
                 <h3 className="text-lg font-semibold text-gray-900">Payment History</h3>
                 <p className="text-gray-600 text-sm">All payment records for this vendor</p>
               </div>
-              <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+              {/* <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                 <FaReceipt className="mr-2" />
                 Record New Payment
-              </button>
+              </button> */}
             </div>
           </div>
 

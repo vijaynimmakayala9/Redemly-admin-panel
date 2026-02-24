@@ -110,11 +110,11 @@ const OfflinePayments = () => {
         prev.map((req) =>
           req.id === id
             ? {
-                ...req,
-                status: approval.status,
-                adminNotes: approval.adminNotes,
-                reviewedAt: approval.reviewedAt,
-              }
+              ...req,
+              status: approval.status,
+              adminNotes: approval.adminNotes,
+              reviewedAt: approval.reviewedAt,
+            }
             : req
         )
       );
@@ -146,11 +146,10 @@ const OfflinePayments = () => {
         <button
           key={i}
           onClick={() => changePage(p)}
-          className={`px-3 py-1 rounded border ${
-            currentPage === p
+          className={`px-3 py-1 rounded border ${currentPage === p
               ? "bg-blue-600 text-white"
               : "hover:bg-gray-100"
-          }`}
+            }`}
         >
           {p}
         </button>
@@ -239,11 +238,20 @@ const OfflinePayments = () => {
                   <td className="p-4">
                     {item.status === "pending" ? (
                       <div className="flex gap-2">
-                        <button onClick={() => handleReview(item.id,"approve")} className="bg-green-500 text-white px-3 py-1 rounded text-xs">Approve</button>
-                        <button onClick={() => handleReview(item.id,"reject")} className="bg-red-500 text-white px-3 py-1 rounded text-xs">Reject</button>
+                        <button onClick={() => handleReview(item.id, "approve")} className="bg-green-500 text-white px-3 py-1 rounded text-xs">Approve</button>
+                        <button onClick={() => handleReview(item.id, "reject")} className="bg-red-500 text-white px-3 py-1 rounded text-xs">Reject</button>
                       </div>
                     ) : (
-                      <span className="text-xs text-gray-500">Reviewed</span>
+                      <span
+                        className={`text-xs px-2.5 py-1 rounded-full font-semibold ${item.status?.toLowerCase() === "approved"
+                            ? "bg-green-100 text-green-700"
+                            : item.status?.toLowerCase() === "rejected"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
+                      >
+                        {item.status}
+                      </span>
                     )}
                   </td>
                 </tr>

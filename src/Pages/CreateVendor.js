@@ -53,9 +53,9 @@ const CreateVendor = () => {
       const response = await axios.get(
         `https://api.redemly.com/api/vendor/getById/${vendorId}`
       );
-      
+
       const vendor = response.data.vendor;
-      
+
       setFormData({
         firstName: vendor.firstName || "",
         lastName: vendor.lastName || "",
@@ -159,7 +159,7 @@ const CreateVendor = () => {
       const file = files[0];
       setFormData({ ...formData, [name]: file });
       setLogoChanged(true);
-      
+
       // Create preview
       if (file) {
         const reader = new FileReader();
@@ -178,7 +178,7 @@ const CreateVendor = () => {
     if (name === "password" || name === "confirmPassword") {
       setPasswordError("");
     }
-    
+
     // Clear messages
     setErrorMessage("");
     setSuccessMessage("");
@@ -300,7 +300,7 @@ const CreateVendor = () => {
       setLoading(true);
 
       const data = new FormData();
-      
+
       // Add basic fields
       data.append("firstName", formData.firstName);
       data.append("lastName", formData.lastName);
@@ -311,16 +311,16 @@ const CreateVendor = () => {
       data.append("latitude", parseFloat(formData.latitude));
       data.append("longitude", parseFloat(formData.longitude));
       data.append("note", formData.note || "");
-      
+
       // Add addresses as JSON string
       data.append("addresses", JSON.stringify(addresses));
-      
+
       // Add password and terms only for create mode
       if (!isEditMode) {
         data.append("password", formData.password);
         data.append("acceptTerms", formData.acceptTerms);
       }
-      
+
       // Add business logo if changed or in create mode
       if (formData.businessLogo && (logoChanged || !isEditMode)) {
         data.append("businessLogo", formData.businessLogo);
@@ -358,13 +358,13 @@ const CreateVendor = () => {
           );
 
           console.log("Registration response:", response.data);
-          
+
           // Check if response has token directly (like VendorRegistration)
           if (response.data.token) {
             setVendorToken(response.data.token);
             setSuccessMessage("Vendor registered! Please enter the OTP sent to vendor's email.");
             setStep(2);
-          } 
+          }
           // Check if response has success and token
           else if (response.data.success && response.data.token) {
             setVendorToken(response.data.token);
@@ -392,14 +392,14 @@ const CreateVendor = () => {
         } catch (postError) {
           console.error("POST error:", postError.response?.data || postError);
           // If the error is about OTP already sent, show OTP screen
-          if (postError.response?.data?.message?.includes("OTP") || 
-              postError.response?.data?.message?.includes("verification")) {
+          if (postError.response?.data?.message?.includes("OTP") ||
+            postError.response?.data?.message?.includes("verification")) {
             setSuccessMessage("Vendor registered! Please enter the OTP sent to vendor's email.");
             setVendorToken(postError.response.data.token || "pending");
             setStep(2);
           } else {
             setErrorMessage(
-              postError.response?.data?.message || 
+              postError.response?.data?.message ||
               "Failed to create vendor. Please check all fields and try again."
             );
           }
@@ -408,7 +408,7 @@ const CreateVendor = () => {
     } catch (error) {
       console.error("General error:", error);
       setErrorMessage(
-        error.response?.data?.message || 
+        error.response?.data?.message ||
         `Failed to ${isEditMode ? 'update' : 'create'} vendor.`
       );
     } finally {
@@ -444,7 +444,7 @@ const CreateVendor = () => {
     } catch (err) {
       console.error("OTP verification error:", err.response?.data || err);
       setErrorMessage(
-        err.response?.data?.message || 
+        err.response?.data?.message ||
         "OTP Verification Failed! Please check the OTP and try again."
       );
     } finally {
@@ -457,7 +457,7 @@ const CreateVendor = () => {
     try {
       setOtpLoading(true);
       setErrorMessage("");
-      
+
       // This would require an API endpoint to resend OTP
       // For now, we'll just show a message
       setSuccessMessage("OTP has been resent to vendor's email.");
@@ -541,7 +541,7 @@ const CreateVendor = () => {
                     <User className="w-6 h-6 mr-2 text-blue-600" />
                     Personal Information
                   </h3>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -606,7 +606,7 @@ const CreateVendor = () => {
                     <Building className="w-6 h-6 mr-2 text-blue-600" />
                     Business Information
                   </h3>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -647,14 +647,22 @@ const CreateVendor = () => {
                         Phone *
                       </label>
                       <input
-                        type="text"
+                        type="tel"
                         name="phone"
                         value={formData.phone}
-                        onChange={handleChange}
+                        inputMode="numeric"
+                        pattern="[0-9]{10}"
+                        maxLength={10}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                          handleChange({
+                            target: { name: "phone", value: digits }
+                          });
+                        }}
                         className="w-full px-4 py-3 rounded-xl border border-gray-300 
-                                 focus:ring-2 focus:ring-blue-500 focus:border-blue-600 
-                                 outline-none transition-all"
-                        placeholder="Enter phone number"
+             focus:ring-2 focus:ring-blue-500 focus:border-blue-600 
+             outline-none transition-all"
+                        placeholder="Enter 10 digit phone number"
                         required
                       />
                     </div>
@@ -667,7 +675,7 @@ const CreateVendor = () => {
                     <MapPin className="w-6 h-6 mr-2 text-blue-600" />
                     Location Information
                   </h3>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -729,7 +737,7 @@ const CreateVendor = () => {
                           </>
                         )}
                       </button>
-                      
+
                       {formData.latitude && formData.longitude && (
                         <button
                           type="button"
@@ -761,7 +769,7 @@ const CreateVendor = () => {
                       Add Address
                     </button>
                   </div>
-                  
+
                   {addresses.map((address, index) => (
                     <div key={index} className="p-6 border border-gray-200 rounded-xl bg-gray-50">
                       <div className="flex justify-between items-center mb-4">
@@ -777,7 +785,7 @@ const CreateVendor = () => {
                           </button>
                         )}
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                           <input
@@ -827,7 +835,7 @@ const CreateVendor = () => {
                       <FileText className="w-6 h-6 mr-2 text-blue-600" />
                       Account Security
                     </h3>
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -883,12 +891,12 @@ const CreateVendor = () => {
                         </div>
                       </div>
                     </div>
-                    
+
                     {passwordError && (
                       <div className="p-3 text-red-600 bg-red-50 border border-red-200 
                                     rounded-lg text-sm font-medium">
                         {passwordError}
-                    </div>
+                      </div>
                     )}
                   </div>
                 )}
@@ -899,7 +907,7 @@ const CreateVendor = () => {
                     <FileText className="w-6 h-6 mr-2 text-blue-600" />
                     Additional Information
                   </h3>
-                  
+
                   {/* Note */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -945,13 +953,13 @@ const CreateVendor = () => {
                             : "Click to upload"}
                         </span>
                       </label>
-                      
+
                       {/* Image Preview */}
                       {imagePreview && (
                         <div className="w-32 h-32 rounded-xl overflow-hidden border border-gray-300">
-                          <img 
-                            src={imagePreview} 
-                            alt="Logo preview" 
+                          <img
+                            src={imagePreview}
+                            alt="Logo preview"
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -1044,13 +1052,13 @@ const CreateVendor = () => {
               <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-green-100 flex items-center justify-center">
                 <Mail className="w-12 h-12 text-green-600" />
               </div>
-              
+
               <h3 className="text-2xl font-bold text-gray-800 mb-3">Enter Verification Code</h3>
               <p className="text-gray-600 mb-6">
                 An OTP has been sent to <span className="font-semibold text-blue-600">{formData.email}</span>.
                 Please enter the 6-digit code to activate the vendor account.
               </p>
-              
+
               <p className="text-sm text-gray-500 mb-8">
                 The vendor should check their email for the verification code.
               </p>
