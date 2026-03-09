@@ -203,19 +203,9 @@ const Dashboard = () => {
 
   const todayStatsConfig = [
     {
-      icon: FiPlusCircle,
-      label: "Today's Coupons",
-      value: dashboardData?.todayStats?.todaysCoupons || 0,
-      color: "orange",
-      path: "/coupons?filter=today",
-      gradient: "from-orange-500 to-red-500",
-      hoverGradient: "from-orange-600 to-red-600",
-      description: "Coupons created today"
-    },
-    {
       icon: FiActivity,
       label: "Redeemed Coupons",
-      value: dashboardData?.todayStats?.redeemedCouponsToday || 0,
+      value: dashboardData?.redemptions?.today || 0,
       color: "rose",
       path: "/redeemed-coupons",
       gradient: "from-rose-500 to-pink-600",
@@ -225,7 +215,7 @@ const Dashboard = () => {
     {
       icon: FiDollarSign,
       label: "Revenue Today",
-      value: `$${dashboardData?.todayStats?.revenueToday || 0}`,
+      value: `$${dashboardData?.redemptions?.revenueToday || 0}`,
       color: "emerald",
       path: "/revenue",
       gradient: "from-emerald-500 to-teal-600",
@@ -332,11 +322,11 @@ const Dashboard = () => {
   // Get restaurant data from backend - Fixed to use correct data structure
   const getRestaurantChartData = () => {
     if (restaurantFilter === "today") {
-      return formatRestaurantData(dashboardData.charts?.topRestaurantsData?.today || []);
+      return formatRestaurantData(dashboardData.charts?.restaurantRedemptionData?.today || []);
     } else if (restaurantFilter === "weekly") {
-      return formatRestaurantData(dashboardData.charts?.topRestaurantsData?.weekly || []);
+      return formatRestaurantData(dashboardData.charts?.restaurantRedemptionData?.weekly || []);
     } else {
-      return formatRestaurantData(dashboardData.charts?.topRestaurantsData?.monthly || []);
+      return formatRestaurantData(dashboardData.charts?.restaurantRedemptionData?.monthly || []);
     }
   };
 
@@ -378,7 +368,7 @@ const Dashboard = () => {
       </div>
 
       {/* Today's Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 md:gap-6 mb-8">
         {todayStatsConfig.map((stat, index) => (
           <ClickableStatCard
             key={index}

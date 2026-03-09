@@ -185,29 +185,7 @@ export default function AdminRedemlyRevenue() {
             />
           </div>
 
-          {/* PENDING COLLECTIONS CARD */}
-          <Card title="Pending Collections" gradient="from-red-500 to-pink-600">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Stat 
-                label="Pending Amount" 
-                value={`$${pending.totalPending?.toLocaleString() ?? 0}`}
-                icon={<FaClock/>}
-                color="text-red-600"
-              />
-              <Stat 
-                label="Pending Transactions" 
-                value={pending.pendingTransactions ?? 0}
-                icon={<FaExchangeAlt/>}
-                color="text-orange-600"
-              />
-              <Stat 
-                label="Pending Vendors" 
-                value={pending.pendingVendors ?? 0}
-                icon={<FaUsers/>}
-                color="text-yellow-600"
-              />
-            </div>
-          </Card>
+          
 
           {/* MONTHLY TRENDS TABLE */}
           <Card title="Monthly Revenue Trends" gradient="from-blue-500 to-purple-600">
