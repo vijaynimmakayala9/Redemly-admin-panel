@@ -104,6 +104,9 @@ import VendorPrice from "./Pages/VendorPrice.js";
 import AdminRedemlyRevenue from "./Pages/AdminRedemlyRevunue.js";
 import AdminConfiguration from "./Pages/AdminConfiguration.js";
 import AdminOfflinePayments from "./Pages/AdminOfflinePayments.js";
+import AdminNewsBulk from "./Pages/AdminNewsBulk.js";
+import BulkNewsUpload from "./Pages/AdminNewsBulk.js";
+import AdminLatestNews from "./Pages/AdminLatestNews.js";
 
 
 
@@ -223,6 +226,8 @@ function App() {
               <Route path='/revenue' element={<AdminRedemlyRevenue />} />
               <Route path='/config' element={<AdminConfiguration />} />
               <Route path="/offline-payments" element={<AdminOfflinePayments />} />
+              <Route path="/bulknews" element={<BulkNewsUpload />} />
+              <Route path="/latestnews" element={<AdminLatestNews />} />
 
 
 

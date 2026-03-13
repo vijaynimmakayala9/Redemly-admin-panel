@@ -142,7 +142,9 @@ const Sidebar = ({ isCollapsed, isMobile, setIsCollapsed }) => {
       name: "AI Generated",
       dropdown: [
         { name: "Fun Facts", path: "/generatefacts" },
-        { name: "Latest News", path: "/generatenews" },
+        { name: "News Bulk", path: "/bulknews"},
+        { name: "Latest News", path: "/latestnews"},
+        { name: "Generate News", path: "/generatenews" },
       ],
     },
     {
