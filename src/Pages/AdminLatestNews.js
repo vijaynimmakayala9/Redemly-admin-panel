@@ -222,32 +222,43 @@ const AdminLatestNews = () => {
                 className="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden"
               >
 
+                {/* Necessary field: url_large — cover image */}
                 <img
                   src={item.url_large}
                   className="w-full h-44 object-cover"
-                  alt=""
+                  alt={item.catchy_headline}
                 />
 
                 <div className="p-4">
 
+                  {/* Necessary fields: category_emoji + category */}
                   <div className="text-sm text-gray-500 mb-1">
                     {item.category_emoji} {item.category}
                   </div>
 
+                  {/* Necessary field: catchy_headline */}
                   <h3 className="font-semibold text-gray-800 line-clamp-2">
                     {item.catchy_headline}
                   </h3>
 
+                  {/* Necessary field: tldr */}
                   <p className="text-sm text-gray-600 mt-2 line-clamp-3">
                     {item.tldr}
                   </p>
 
                   <div className="flex justify-between items-center mt-4">
 
+                    {/* Necessary field: published_at */}
                     <span className="text-xs text-gray-400">
                       {new Date(item.published_at).toLocaleDateString()}
                     </span>
 
+                    {/* Necessary field: source_name */}
+                    <span className="text-xs text-blue-500 font-medium truncate max-w-[100px]">
+                      {item.source_name}
+                    </span>
+
+                    {/* Action: delete using _id */}
                     <button
                       onClick={() => deleteNews(item._id)}
                       className="text-red-500 hover:text-red-700 text-sm"
@@ -283,6 +294,8 @@ const AdminLatestNews = () => {
                   <th className="p-3 text-left">Image</th>
                   <th className="p-3 text-left">Headline</th>
                   <th className="p-3 text-left">Category</th>
+                  <th className="p-3 text-left">TLDR</th>
+                  <th className="p-3 text-left">Source</th>
                   <th className="p-3 text-left">Published</th>
                   <th className="p-3 text-left">Action</th>
                 </tr>
@@ -299,39 +312,53 @@ const AdminLatestNews = () => {
 
                     <tr key={item._id} className="border-t hover:bg-gray-50">
 
+                      {/* Necessary field: serial number (derived) */}
                       <td className="p-3 font-medium text-gray-600">
                         {serialNumber}
                       </td>
 
+                      {/* Necessary field: url — thumbnail */}
                       <td className="p-3">
                         <img
                           src={item.url}
                           className="w-16 h-12 object-cover rounded"
-                          alt=""
+                          alt={item.catchy_headline}
                         />
                       </td>
 
-                      <td className="p-3 font-medium text-gray-700">
+                      {/* Necessary field: catchy_headline */}
+                      <td className="p-3 font-medium text-gray-700 max-w-[220px]">
                         {item.catchy_headline}
                       </td>
 
-                      <td className="p-3">
+                      {/* Necessary fields: category_emoji + category */}
+                      <td className="p-3 whitespace-nowrap">
                         {item.category_emoji} {item.category}
                       </td>
 
-                      <td className="p-3 text-gray-500">
+                      {/* Necessary field: tldr */}
+                      <td className="p-3 text-gray-500 max-w-[200px] line-clamp-2">
+                        {item.tldr}
+                      </td>
+
+                      {/* Necessary field: source_name */}
+                      <td className="p-3 text-blue-500 font-medium whitespace-nowrap">
+                        {item.source_name}
+                      </td>
+
+                      {/* Necessary field: published_at */}
+                      <td className="p-3 text-gray-500 whitespace-nowrap">
                         {new Date(item.published_at).toLocaleDateString()}
                       </td>
 
+                      {/* Action: delete using _id */}
                       <td className="p-3">
-
                         <button
                           onClick={() => deleteNews(item._id)}
                           className="text-red-500 hover:text-red-700"
                         >
                           <FaTrash/>
                         </button>
-
                       </td>
 
                     </tr>
