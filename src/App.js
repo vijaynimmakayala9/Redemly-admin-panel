@@ -107,6 +107,7 @@ import AdminOfflinePayments from "./Pages/AdminOfflinePayments.js";
 import AdminNewsBulk from "./Pages/AdminNewsBulk.js";
 import BulkNewsUpload from "./Pages/AdminNewsBulk.js";
 import AdminLatestNews from "./Pages/AdminLatestNews.js";
+import AdminFeedbacksForApp from "./Pages/AdminFeedbacksForApp.js";
 
 
 
@@ -228,6 +229,7 @@ function App() {
               <Route path="/offline-payments" element={<AdminOfflinePayments />} />
               <Route path="/bulknews" element={<BulkNewsUpload />} />
               <Route path="/latestnews" element={<AdminLatestNews />} />
+              <Route path="/feedbacks" element={<AdminFeedbacksForApp />} />
 
 
 

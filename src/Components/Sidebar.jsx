@@ -142,8 +142,8 @@ const Sidebar = ({ isCollapsed, isMobile, setIsCollapsed }) => {
       name: "AI Generated",
       dropdown: [
         { name: "Fun Facts", path: "/generatefacts" },
-        { name: "News Bulk", path: "/bulknews"},
-        { name: "Latest News", path: "/latestnews"},
+        { name: "News Bulk", path: "/bulknews" },
+        { name: "Latest News", path: "/latestnews" },
         { name: "Generate News", path: "/generatenews" },
       ],
     },
@@ -151,6 +151,16 @@ const Sidebar = ({ isCollapsed, isMobile, setIsCollapsed }) => {
       icon: <i className="ri-notification-3-fill"></i>,
       name: "Notifications",
       dropdown: [{ name: "All Notifications", path: "/notifications" }],
+    },
+    {
+      icon: <i className="ri-star-fill"></i>,
+      name: "Feedbacks",
+      dropdown: [
+        {
+          name: "All Feedbacks",
+          path: "/feedbacks"
+        }
+      ]
     },
     {
       icon: <i className="ri-logout-box-fill"></i>,
