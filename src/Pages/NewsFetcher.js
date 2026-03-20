@@ -3,13 +3,20 @@ import axios from "axios";
 
 const CATEGORIES = [
   "US Immigration",
-      "Startup News",
-      "Cricket",
-      "Tech Jobs",
-      "Geopolitical News",
-      "Stock Market & Crypto",
-      "AI Developments",
-      "AP/TS Local News"
+  "Startup News",
+  "Cricket",
+  "Tech Jobs",
+  "Geopolitical News",
+  "Stock Market & Crypto",
+  "AI Developments",
+  "AP/TS Local News",
+  // "Immigration",
+  // "Stocks & Finance",
+  // "AI & Tech",
+  // "India",
+  // "Cricket",
+  // "Geopolitics",
+  // "Austin Local",
 ];
 
 const NewsFetcher = () => {
@@ -61,7 +68,7 @@ const NewsFetcher = () => {
     if (searchTerm.trim() === "") {
       setFilteredStoredNews(storedNews);
     } else {
-      const filtered = storedNews.filter(news => 
+      const filtered = storedNews.filter(news =>
         news.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (news.description && news.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (news.source && news.source.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -130,14 +137,14 @@ const NewsFetcher = () => {
   const getPaginationNumbers = () => {
     const totalNumbers = 5;
     const totalBlocks = totalNumbers + 2;
-    
+
     if (totalPages <= totalBlocks) {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
     }
 
     const startPage = Math.max(2, currentPage - 1);
     const endPage = Math.min(totalPages - 1, currentPage + 1);
-    
+
     let pages = [1];
 
     if (startPage > 2) {
@@ -284,7 +291,7 @@ const NewsFetcher = () => {
                 Refresh
               </button>
             </div>
-            
+
             {/* Stored News ke liye alag filter section */}
             <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
               {/* Category filter for stored news */}
@@ -331,7 +338,7 @@ const NewsFetcher = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="text-sm text-gray-600">
             Showing {filteredStoredNews.length} articles
             {storedCategory && ` in ${storedCategory}`}
@@ -428,7 +435,7 @@ const NewsFetcher = () => {
                   </span> of{" "}
                   <span className="font-medium">{filteredStoredNews.length}</span> articles
                 </div>
-                
+
                 <div className="flex items-center space-x-1">
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
@@ -437,24 +444,23 @@ const NewsFetcher = () => {
                   >
                     Previous
                   </button>
-                  
+
                   {getPaginationNumbers().map((pageNum, index) => (
                     <button
                       key={index}
                       onClick={() => typeof pageNum === 'number' && setCurrentPage(pageNum)}
                       disabled={pageNum === '...'}
-                      className={`px-3 py-2 border rounded-md text-sm font-medium min-w-[40px] ${
-                        pageNum === '...' 
-                          ? 'bg-transparent cursor-default' 
-                          : currentPage === pageNum 
-                          ? 'bg-purple-700 text-white border-purple-700' 
-                          : 'bg-white text-gray-700 hover:bg-gray-50'
-                      } transition-colors`}
+                      className={`px-3 py-2 border rounded-md text-sm font-medium min-w-[40px] ${pageNum === '...'
+                          ? 'bg-transparent cursor-default'
+                          : currentPage === pageNum
+                            ? 'bg-purple-700 text-white border-purple-700'
+                            : 'bg-white text-gray-700 hover:bg-gray-50'
+                        } transition-colors`}
                     >
                       {pageNum}
                     </button>
                   ))}
-                  
+
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
@@ -470,13 +476,13 @@ const NewsFetcher = () => {
           <div className="p-8 text-center">
             <div className="text-gray-400 text-6xl mb-4">📰</div>
             <p className="text-gray-500 text-lg">
-              {searchTerm 
+              {searchTerm
                 ? `No news found matching "${searchTerm}"${storedCategory ? ` in ${storedCategory}` : ""}.`
                 : `No stored news found${storedCategory ? ` for ${storedCategory}` : ""}.`
               }
             </p>
             <p className="text-gray-400 mt-2">
-              {searchTerm 
+              {searchTerm
                 ? "Try a different search term or clear the search."
                 : "Try generating some news or select a different category."
               }

@@ -8,14 +8,21 @@ const DELETE_API = "https://api.redemly.com/api/users/delete-news";
 const ITEMS_PER_PAGE = 6;
 
 const CATEGORIES = [
-  "US Immigration",
-  "Startup News",
+  "Immigration",
+  "Stocks & Finance",
+  "AI & Tech",
+  "India",
   "Cricket",
-  "Tech Jobs",
-  "Geopolitical News",
-  "Stock Market & Crypto",
-  "AI Developments",
-  "AP/TS Local News"
+  "Geopolitics",
+  "Austin Local",
+  // "US Immigration",
+  // "Startup News",
+  // "Cricket",
+  // "Tech Jobs",
+  // "Geopolitical News",
+  // "Stock Market & Crypto",
+  // "AI Developments",
+  // "AP/TS Local News"
 ];
 
 const AdminLatestNews = () => {
@@ -149,22 +156,20 @@ const AdminLatestNews = () => {
 
             <button
               onClick={() => setView("grid")}
-              className={`px-4 py-2 rounded-lg text-sm ${
-                view === "grid"
+              className={`px-4 py-2 rounded-lg text-sm ${view === "grid"
                   ? "bg-blue-600 text-white"
                   : "bg-gray-100"
-              }`}
+                }`}
             >
               Grid
             </button>
 
             <button
               onClick={() => setView("table")}
-              className={`px-4 py-2 rounded-lg text-sm ${
-                view === "table"
+              className={`px-4 py-2 rounded-lg text-sm ${view === "table"
                   ? "bg-blue-600 text-white"
                   : "bg-gray-100"
-              }`}
+                }`}
             >
               Table
             </button>
@@ -263,7 +268,7 @@ const AdminLatestNews = () => {
                       onClick={() => deleteNews(item._id)}
                       className="text-red-500 hover:text-red-700 text-sm"
                     >
-                      <FaTrash/>
+                      <FaTrash />
                     </button>
 
                   </div>
@@ -357,7 +362,7 @@ const AdminLatestNews = () => {
                           onClick={() => deleteNews(item._id)}
                           className="text-red-500 hover:text-red-700"
                         >
-                          <FaTrash/>
+                          <FaTrash />
                         </button>
                       </td>
 
@@ -393,11 +398,10 @@ const AdminLatestNews = () => {
               key={index}
               disabled={p === "..."}
               onClick={() => p !== "..." && setPage(p)}
-              className={`px-3 py-1 rounded-lg border text-sm ${
-                p === page
+              className={`px-3 py-1 rounded-lg border text-sm ${p === page
                   ? "bg-blue-600 text-white"
                   : "bg-white hover:bg-gray-100"
-              } ${p === "..." ? "cursor-default border-none" : ""}`}
+                } ${p === "..." ? "cursor-default border-none" : ""}`}
             >
               {p}
             </button>
