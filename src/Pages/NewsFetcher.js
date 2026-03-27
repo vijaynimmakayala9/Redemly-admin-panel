@@ -2,21 +2,21 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 const CATEGORIES = [
-  "US Immigration",
-  "Startup News",
-  "Cricket",
-  "Tech Jobs",
-  "Geopolitical News",
-  "Stock Market & Crypto",
-  "AI Developments",
-  "AP/TS Local News",
-  // "Immigration",
-  // "Stocks & Finance",
-  // "AI & Tech",
-  // "India",
+  // "US Immigration",
+  // "Startup News",
   // "Cricket",
-  // "Geopolitics",
-  // "Austin Local",
+  // "Tech Jobs",
+  // "Geopolitical News",
+  // "Stock Market & Crypto",
+  // "AI Developments",
+  // "AP/TS Local News",
+  'Immigration',
+  'Stocks & Finance',
+  'AI & Tech',
+  'India',
+  'Cricket',
+  'Geopolitics',
+  'Austin Local'
 ];
 
 const NewsFetcher = () => {
@@ -451,10 +451,10 @@ const NewsFetcher = () => {
                       onClick={() => typeof pageNum === 'number' && setCurrentPage(pageNum)}
                       disabled={pageNum === '...'}
                       className={`px-3 py-2 border rounded-md text-sm font-medium min-w-[40px] ${pageNum === '...'
-                          ? 'bg-transparent cursor-default'
-                          : currentPage === pageNum
-                            ? 'bg-purple-700 text-white border-purple-700'
-                            : 'bg-white text-gray-700 hover:bg-gray-50'
+                        ? 'bg-transparent cursor-default'
+                        : currentPage === pageNum
+                          ? 'bg-purple-700 text-white border-purple-700'
+                          : 'bg-white text-gray-700 hover:bg-gray-50'
                         } transition-colors`}
                     >
                       {pageNum}
