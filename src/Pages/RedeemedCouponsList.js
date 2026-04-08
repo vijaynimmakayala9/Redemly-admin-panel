@@ -204,7 +204,7 @@ const RedeemedCouponsList = () => {
           <tbody>
             {currentData.length > 0 ? (
               currentData.map((item, index) => (
-                <tr key={item.Coupon_ID || index} className="text-center border-b">
+                <tr key={index} className="text-center border-b">
                   <td className="p-1 border">{item.SI_No}</td>
                   <td className="p-1 border">{item.Customer_ID}</td>
                   <td className="p-1 border truncate max-w-xs">{item.Vendor_Name}</td>
