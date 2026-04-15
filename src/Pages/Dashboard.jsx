@@ -16,14 +16,14 @@ import {
   FiShoppingCart,
   FiLayers,
 } from "react-icons/fi";
-import { 
-  AreaChart, 
-  Area, 
-  ResponsiveContainer, 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
+import {
+  AreaChart,
+  Area,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
   Tooltip,
   Cell,
   CartesianGrid,
@@ -55,13 +55,13 @@ const Dashboard = () => {
       try {
         setLoading(true);
         const response = await fetch("https://api.redemly.com/api/admin/dashboard");
-        
+
         if (!response.ok) {
           throw new Error(`Failed to fetch dashboard data: ${response.status}`);
         }
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
           console.log("Dashboard API Response:", data.data);
           setDashboardData(data.data);
@@ -82,23 +82,23 @@ const Dashboard = () => {
   // Format earnings data from backend
   const formatEarningsData = (data) => {
     if (!data || !Array.isArray(data)) return [];
-    
+
     const formatted = data.map(item => ({
       name: item.day || item.week || "N/A",
       revenue: item.revenue || 0
     }));
-    
+
     return formatted;
   };
 
   const formatRedemptionData = (data) => {
     if (!data || !Array.isArray(data)) return [];
-    
+
     const formatted = data.map(item => ({
       name: item.day || item.week || "N/A",
       redeemed: item.redeemed || 0
     }));
-    
+
     return formatted;
   };
 
@@ -106,7 +106,7 @@ const Dashboard = () => {
     if (!data || !Array.isArray(data) || data.length === 0) {
       return [{ name: "No Data", redeemed: 0 }];
     }
-    
+
     return data.map((item, index) => ({
       name: item.name || `Restaurant ${index + 1}`,
       redeemed: item.redeemed || 0
@@ -117,7 +117,7 @@ const Dashboard = () => {
     if (!data || !Array.isArray(data) || data.length === 0) {
       return [{ name: "No Data", revenue: 0, coupons: 0 }];
     }
-    
+
     return data.slice(0, 10).map((item, index) => ({
       name: item.name || `Restaurant ${index + 1}`,
       revenue: item.revenue || 0,
@@ -128,9 +128,9 @@ const Dashboard = () => {
   // Get table data from backend response
   const getUserInsightsData = () => {
     if (!dashboardData?.tables?.userInsightsData) return [];
-    
+
     return dashboardData.tables.userInsightsData.map((user, index) => ({
-      id: user._id || index,
+      id: user.userId || index,
       user: user.user || "Unknown User",
       lastLogin: user.lastLogin || "N/A",
       accountCreated: user.accountCreated || "N/A",
@@ -146,9 +146,9 @@ const Dashboard = () => {
 
   const getRestaurantInsightsData = () => {
     if (!dashboardData?.tables?.restaurantInsightsData) return [];
-    
+
     return dashboardData.tables.restaurantInsightsData.map((rest, index) => ({
-      id: rest._id || index,
+      id: rest.vendorId || index,
       restaurant: rest.restaurant || "Unknown Restaurant",
       redemption: rest.redemption || 0,
       avgRating: rest.avgRating || 0,
@@ -277,7 +277,7 @@ const Dashboard = () => {
           <div className="text-5xl text-red-500 mb-4">⚠️</div>
           <h3 className="text-2xl font-bold text-red-700 mb-2">Error Loading Dashboard</h3>
           <p className="text-red-600 mb-4">{error}</p>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
           >
@@ -318,7 +318,7 @@ const Dashboard = () => {
   // Chart data preparation from backend
   const earningsChartData = formatEarningsData(dashboardData.charts?.earningsData?.[revenueFilter] || []);
   const redemptionChartData = formatRedemptionData(dashboardData.charts?.redemptionData?.[redemptionFilter] || []);
-  
+
   // Get restaurant data from backend - Fixed to use correct data structure
   const getRestaurantChartData = () => {
     if (restaurantFilter === "today") {
@@ -424,13 +424,13 @@ const Dashboard = () => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis 
-                  dataKey="name" 
+                <XAxis
+                  dataKey="name"
                   tick={{ fontSize: 12 }}
                 />
                 <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip 
-                  contentStyle={{ 
+                <Tooltip
+                  contentStyle={{
                     borderRadius: '12px',
                     border: 'none',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
@@ -478,13 +478,13 @@ const Dashboard = () => {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis 
-                  dataKey="name" 
+                <XAxis
+                  dataKey="name"
                   tick={{ fontSize: 12 }}
                 />
                 <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip 
-                  contentStyle={{ 
+                <Tooltip
+                  contentStyle={{
                     borderRadius: '12px',
                     border: 'none',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
@@ -532,16 +532,16 @@ const Dashboard = () => {
                   margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis 
-                    dataKey="name" 
+                  <XAxis
+                    dataKey="name"
                     tick={{ fontSize: 12 }}
                     angle={-45}
                     textAnchor="end"
                     height={60}
                   />
                   <YAxis tick={{ fontSize: 12 }} />
-                  <Tooltip 
-                    contentStyle={{ 
+                  <Tooltip
+                    contentStyle={{
                       borderRadius: '12px',
                       border: 'none',
                       boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
@@ -593,8 +593,8 @@ const Dashboard = () => {
                   margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis 
-                    dataKey="name" 
+                  <XAxis
+                    dataKey="name"
                     tick={{ fontSize: 12 }}
                     angle={-45}
                     textAnchor="end"
@@ -602,8 +602,8 @@ const Dashboard = () => {
                   />
                   <YAxis yAxisId="left" orientation="left" stroke="#8884d8" tick={{ fontSize: 12 }} />
                   <YAxis yAxisId="right" orientation="right" stroke="#82ca9d" tick={{ fontSize: 12 }} />
-                  <Tooltip 
-                    contentStyle={{ 
+                  <Tooltip
+                    contentStyle={{
                       borderRadius: '12px',
                       border: 'none',
                       boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
@@ -651,7 +651,7 @@ const Dashboard = () => {
             <p className="text-gray-500">Detailed user engagement metrics</p>
           </div>
           {userInsightsData.length > 0 && (
-            <button 
+            <button
               onClick={() => navigate("/users")}
               className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all shadow-md"
             >
@@ -660,7 +660,7 @@ const Dashboard = () => {
             </button>
           )}
         </div>
-        
+
         {userInsightsData.length > 0 ? (
           <>
             <div className="overflow-x-auto rounded-xl border border-gray-200">
@@ -675,11 +675,15 @@ const Dashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentUsers.map((user, idx) => (
-                    <tr 
-                      key={idx} 
+                  {currentUsers.map((user) => (
+                    <tr
+                      key={user.id}
                       className="border-t border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
-                      onClick={() => navigate(`/user/${user.id || idx}`)}
+                      onClick={() => {
+                        console.log("Navigating ID:", user.id);
+                        console.log("currentUsers:", currentUsers);
+                        navigate(`/users/${user.id}`);
+                      }}
                     >
                       <td className="px-6 py-4 font-medium">{user.user}</td>
                       <td className="px-6 py-4">{user.lastLogin}</td>
@@ -722,11 +726,10 @@ const Dashboard = () => {
                     <button
                       key={i}
                       onClick={() => setCurrentPage(i + 1)}
-                      className={`px-4 py-2 rounded-lg transition-all ${
-                        currentPage === i + 1 
-                          ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md" 
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
+                      className={`px-4 py-2 rounded-lg transition-all ${currentPage === i + 1
+                        ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
                     >
                       {i + 1}
                     </button>
@@ -751,7 +754,7 @@ const Dashboard = () => {
             <p className="text-gray-500">Performance metrics for restaurant partners</p>
           </div>
           {restaurantInsightsData.length > 0 && (
-            <button 
+            <button
               onClick={() => navigate("/vendorlist")}
               className="flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all shadow-md"
             >
@@ -760,7 +763,7 @@ const Dashboard = () => {
             </button>
           )}
         </div>
-        
+
         {restaurantInsightsData.length > 0 ? (
           <>
             <div className="overflow-x-auto rounded-xl border border-gray-200">
@@ -776,8 +779,8 @@ const Dashboard = () => {
                 </thead>
                 <tbody>
                   {currentRestaurants.map((rest, idx) => (
-                    <tr 
-                      key={idx} 
+                    <tr
+                      key={idx}
                       className="border-t border-gray-200 hover:bg-gray-50 transition-colors cursor-pointer"
                       onClick={() => navigate(`/vendor/${rest.id || idx}`)}
                     >
@@ -796,11 +799,10 @@ const Dashboard = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                          rest.activeOffer > 0 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${rest.activeOffer > 0
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                          }`}>
                           {rest.activeOffer > 0 ? rest.activeOffer : 'None'}
                         </span>
                       </td>
@@ -822,11 +824,10 @@ const Dashboard = () => {
                     <button
                       key={i}
                       onClick={() => setCurrentRestPage(i + 1)}
-                      className={`px-4 py-2 rounded-lg transition-all ${
-                        currentRestPage === i + 1 
-                          ? "bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md" 
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
+                      className={`px-4 py-2 rounded-lg transition-all ${currentRestPage === i + 1
+                        ? "bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
                     >
                       {i + 1}
                     </button>
@@ -886,17 +887,17 @@ const Dashboard = () => {
 };
 
 // Clickable Stat Card Component
-const ClickableStatCard = ({ 
-  icon: Icon, 
-  label, 
-  value, 
-  gradient, 
-  hoverGradient, 
-  description, 
-  isHovered, 
+const ClickableStatCard = ({
+  icon: Icon,
+  label,
+  value,
+  gradient,
+  hoverGradient,
+  description,
+  isHovered,
   onClick,
   onMouseEnter,
-  onMouseLeave 
+  onMouseLeave
 }) => {
   return (
     <div
@@ -906,9 +907,9 @@ const ClickableStatCard = ({
       onMouseLeave={onMouseLeave}
     >
       <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-5 ${isHovered ? 'opacity-10' : ''} transition-opacity`}></div>
-      
+
       <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${gradient} ${isHovered ? 'opacity-100' : 'opacity-0'} transition-opacity`}></div>
-      
+
       <div className="relative flex items-center justify-between">
         <div className="flex items-center">
           <div className={`p-3 rounded-xl bg-gradient-to-br ${gradient} text-white shadow-md`}>
@@ -920,12 +921,12 @@ const ClickableStatCard = ({
             <p className="text-gray-400 text-xs mt-1">{description}</p>
           </div>
         </div>
-        
+
         <div className={`transition-transform ${isHovered ? 'translate-x-1' : ''}`}>
           <FiChevronRight className={`text-gray-400 ${isHovered ? 'text-gray-600' : ''}`} />
         </div>
       </div>
-      
+
       <div className={`absolute bottom-2 right-4 text-xs text-gray-400 transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
         Click to view →
       </div>

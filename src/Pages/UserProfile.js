@@ -815,6 +815,10 @@ function UserDetail() {
               <table className="min-w-full">
                 <tbody>
                   <tr className="border-b border-gray-200">
+                    <td className="py-2 sm:py-3 px-2 sm:px-4 font-semibold text-gray-700 w-1/3 text-sm sm:text-base">UserId</td>
+                    <td className="py-2 sm:py-3 px-2 sm:px-4 text-sm sm:text-base">{user.id || 'N/A'}</td>
+                  </tr>
+                  <tr className="border-b border-gray-200">
                     <td className="py-2 sm:py-3 px-2 sm:px-4 font-semibold text-gray-700 w-1/3 text-sm sm:text-base">Name</td>
                     <td className="py-2 sm:py-3 px-2 sm:px-4 text-sm sm:text-base">{user.name || 'N/A'}</td>
                   </tr>

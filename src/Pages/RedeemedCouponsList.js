@@ -123,17 +123,20 @@ const RedeemedCouponsList = () => {
   };
 
   const formatTime = (date, time) => {
-    try {
-      return new Date(`${date} ${time} GMT+0530`).toLocaleTimeString("en-US", {
-        timeZone: "America/New_York",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
-    } catch {
-      return time || "—";
-    }
-  };
+  try {
+    // Input is assumed in ET (New York)
+    const etDate = new Date(`${date} ${time} GMT-0400`); // or -0500 depending on EST/EDT
+
+    return etDate.toLocaleTimeString("en-US", {
+      timeZone: "America/Chicago", // CST/CDT
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch {
+    return time || "—";
+  }
+};
 
   if (loading) return <Skeleton />;
   if (error)
@@ -221,7 +224,7 @@ const RedeemedCouponsList = () => {
               {[
                 "#", "Cust ID", "Customer", "Vendor", "Category",
                 "Product", "Coupon", "Code", "Disc%",
-                "Downloaded", "Redeemed", "Time (ET)", "Order", "Value", "Feedback",
+                "Downloaded", "Redeemed", "Time (CST)", "Order", "Value", "Feedback",
               ].map((h) => (
                 <th
                   key={h}
@@ -350,7 +353,7 @@ const RedeemedCouponsList = () => {
                   ["Coupon", c.Coupon_Name],
                   ["Downloaded", c.Download_Date],
                   ["Redeemed", c.Redeemed_Date],
-                  ["Time (ET)", formatTime(c.Redeemed_Date, c.Redeemed_Time)],
+                  ["Time (CST)", formatTime(c.Redeemed_Date, c.Redeemed_Time)],
                   ["Value", c.Order_Value],
                 ].map(([label, val]) => (
                   <div key={label}>
