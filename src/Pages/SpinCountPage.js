@@ -30,20 +30,17 @@ const SpinCountPage = () => {
       );
 
       if (res.data?.success) {
-        // API returns a SINGLE object → convert to array
         const normalizedData = [
           {
-            id: "spin-config-1", // synthetic ID
+            id: "spin-config-1",
             dailySpinLimit: res.data.dailySpinLimit,
             createdAt: res.data.createdAt,
             updatedAt: res.data.updatedAt,
           },
         ];
-
         setSpinConfigs(normalizedData);
       }
     } catch (err) {
-      console.error(err);
       alert("Failed to fetch spin configuration");
     } finally {
       setLoading(false);
@@ -138,20 +135,22 @@ const SpinCountPage = () => {
   const indexOfFirst = indexOfLast - downloadLimit;
   const currentConfigs = spinConfigs.slice(indexOfFirst, indexOfLast);
 
-  /* ================= UI ================= */
   return (
-    <div className="p-6 bg-white min-h-screen">
-      <h1 className="text-2xl font-semibold text-center mb-6">
+    <div className="p-4 sm:p-6 bg-gray-50 min-h-screen">
+      {/* TITLE */}
+      <h1 className="text-xl sm:text-2xl font-semibold text-center mb-6">
         Spin Count Management
       </h1>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ADD FORM */}
         <form
           onSubmit={handleAddSpinLimit}
-          className="bg-gray-50 p-6 rounded shadow space-y-4"
+          className="bg-white p-4 sm:p-6 rounded-xl shadow-md space-y-4"
         >
-          <h2 className="text-lg font-semibold">Add Spin Limit</h2>
+          <h2 className="text-base sm:text-lg font-semibold">
+            Add Spin Limit
+          </h2>
 
           <input
             type="number"
@@ -160,129 +159,130 @@ const SpinCountPage = () => {
             onChange={(e) =>
               setFormData({ dailySpinLimit: e.target.value })
             }
-            className="w-full p-3 border rounded"
+            className="w-full p-2 sm:p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
             placeholder="Daily spin limit"
           />
 
-          <button className="w-full bg-blue-600 text-white py-2 rounded">
+          <button className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
             Add
           </button>
         </form>
 
         {/* TABLE */}
-<div className="lg:col-span-2">
-  {loading ? (
-    <div className="py-10 text-center text-gray-500">Loading...</div>
-  ) : (
-    <div className="overflow-x-auto rounded-xl shadow border bg-white">
-      <table className="w-full text-sm">
-        <thead className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-          <tr>
-            <th className="p-3 text-left w-16">S.No</th>
-            <th className="p-3 text-left">Daily Spin Limit</th>
-            <th className="p-3 text-left">Created</th>
-            <th className="p-3 text-left">Updated</th>
-            <th className="p-3 text-center">Actions</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {currentConfigs.length > 0 ? (
-            currentConfigs.map((config, index) => (
-              <tr
-                key={config.id}
-                className="border-t hover:bg-gray-50 transition"
-              >
-                {/* S NO */}
-                <td className="p-3 font-medium text-gray-600">
-                  {(currentPage - 1) * downloadLimit + index + 1}
-                </td>
-
-                {/* LIMIT */}
-                <td className="p-3">
-                  {editingId === config.id ? (
-                    <input
-                      type="number"
-                      min="1"
-                      value={editFormData.dailySpinLimit}
-                      onChange={(e) =>
-                        setEditFormData({
-                          dailySpinLimit: e.target.value,
-                        })
-                      }
-                      className="w-24 px-2 py-1 border rounded focus:ring-2 focus:ring-blue-500"
-                      autoFocus
-                    />
-                  ) : (
-                    <span className="inline-block px-3 py-1 text-green-700 bg-green-100 rounded-full font-semibold">
-                      {config.dailySpinLimit}
-                    </span>
-                  )}
-                </td>
-
-                {/* CREATED */}
-                <td className="p-3 text-gray-600">
-                  {new Date(config.createdAt).toLocaleDateString("en-IN")}
-                </td>
-
-                {/* UPDATED */}
-                <td className="p-3 text-gray-600">
-                  {new Date(config.updatedAt).toLocaleDateString("en-IN")}
-                </td>
-
-                {/* ACTIONS */}
-                <td className="p-3">
-                  <div className="flex justify-center gap-2">
-                    {editingId === config.id ? (
-                      <>
-                        <button
-                          onClick={handleEditSpinLimit}
-                          className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={cancelEditing}
-                          className="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 transition"
-                        >
-                          Cancel
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => startEditing(config)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded transition"
-                          title="Edit"
-                        >
-                          <FaEdit />
-                        </button>
-                        <button
-                          onClick={handleDelete}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded transition"
-                          title="Delete"
-                        >
-                          <FaTrash />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))
+        <div className="lg:col-span-2">
+          {loading ? (
+            <div className="py-10 text-center text-gray-500">
+              Loading...
+            </div>
           ) : (
-            <tr>
-              <td colSpan="5" className="p-8 text-center text-gray-500">
-                No spin configuration found
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  )}
-</div>
+            <div className="overflow-x-auto rounded-xl shadow bg-white">
+              <table className="min-w-[600px] w-full text-xs sm:text-sm">
+                <thead className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+                  <tr>
+                    <th className="p-2 sm:p-3 text-left">#</th>
+                    <th className="p-2 sm:p-3 text-left">Limit</th>
+                    <th className="p-2 sm:p-3 text-left">Created</th>
+                    <th className="p-2 sm:p-3 text-left">Updated</th>
+                    <th className="p-2 sm:p-3 text-center">Actions</th>
+                  </tr>
+                </thead>
 
+                <tbody>
+                  {currentConfigs.length > 0 ? (
+                    currentConfigs.map((config, index) => (
+                      <tr
+                        key={config.id}
+                        className="border-t hover:bg-gray-50 transition"
+                      >
+                        <td className="p-2 sm:p-3">
+                          {(currentPage - 1) * downloadLimit +
+                            index +
+                            1}
+                        </td>
+
+                        <td className="p-2 sm:p-3">
+                          {editingId === config.id ? (
+                            <input
+                              type="number"
+                              min="1"
+                              value={editFormData.dailySpinLimit}
+                              onChange={(e) =>
+                                setEditFormData({
+                                  dailySpinLimit: e.target.value,
+                                })
+                              }
+                              className="w-20 px-2 py-1 border rounded"
+                            />
+                          ) : (
+                            <span className="px-2 py-1 text-green-700 bg-green-100 rounded-full text-xs sm:text-sm">
+                              {config.dailySpinLimit}
+                            </span>
+                          )}
+                        </td>
+
+                        <td className="p-2 sm:p-3 text-gray-600">
+                          {new Date(
+                            config.createdAt
+                          ).toLocaleDateString("en-IN")}
+                        </td>
+
+                        <td className="p-2 sm:p-3 text-gray-600">
+                          {new Date(
+                            config.updatedAt
+                          ).toLocaleDateString("en-IN")}
+                        </td>
+
+                        <td className="p-2 sm:p-3">
+                          <div className="flex justify-center gap-2">
+                            {editingId === config.id ? (
+                              <>
+                                <button className="px-2 py-1 text-xs bg-green-600 text-white rounded">
+                                  Save
+                                </button>
+                                <button
+                                  onClick={cancelEditing}
+                                  className="px-2 py-1 text-xs bg-gray-500 text-white rounded"
+                                >
+                                  Cancel
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() =>
+                                    startEditing(config)
+                                  }
+                                  className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                                >
+                                  <FaEdit size={14} />
+                                </button>
+                                <button
+                                  onClick={handleDelete}
+                                  className="p-2 text-red-600 hover:bg-red-50 rounded"
+                                >
+                                  <FaTrash size={14} />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan="5"
+                        className="p-6 text-center text-gray-500"
+                      >
+                        No data found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

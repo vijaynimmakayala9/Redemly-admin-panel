@@ -901,33 +901,72 @@ const ClickableStatCard = ({
 }) => {
   return (
     <div
-      className="relative bg-white rounded-2xl shadow-lg border border-gray-200 p-5 cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden"
+      className="relative bg-white rounded-xl md:rounded-2xl shadow-md md:shadow-lg border border-gray-200 
+      p-4 md:p-5 lg:p-6 cursor-pointer transition-all duration-300 
+      hover:shadow-xl hover:-translate-y-1 overflow-hidden"
       onClick={onClick}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
-      <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-5 ${isHovered ? 'opacity-10' : ''} transition-opacity`}></div>
+      {/* BACKGROUND */}
+      <div
+        className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-5 ${isHovered ? "opacity-10" : ""
+          } transition-opacity`}
+      />
 
-      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${gradient} ${isHovered ? 'opacity-100' : 'opacity-0'} transition-opacity`}></div>
+      {/* TOP LINE */}
+      <div
+        className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${gradient} ${isHovered ? "opacity-100" : "opacity-0"
+          } transition-opacity`}
+      />
 
-      <div className="relative flex items-center justify-between">
-        <div className="flex items-center">
-          <div className={`p-3 rounded-xl bg-gradient-to-br ${gradient} text-white shadow-md`}>
-            <Icon className="text-2xl" />
+      {/* CONTENT */}
+      <div className="relative flex flex-col sm:flex-row md:flex-row items-start md:items-center justify-between gap-4">
+
+        {/* LEFT */}
+        <div className="flex items-start md:items-center gap-3 md:gap-4 w-full min-w-0">
+
+          {/* ICON */}
+          <div
+            className={`flex-shrink-0 p-2 md:p-3 rounded-lg md:rounded-xl 
+            bg-gradient-to-br ${gradient} text-white shadow-md`}
+          >
+            <Icon className="text-lg md:text-xl lg:text-2xl" />
           </div>
-          <div className="ml-4">
-            <p className="text-gray-500 text-sm font-medium">{label}</p>
-            <p className="text-2xl font-bold text-gray-800 mt-1">{value}</p>
-            <p className="text-gray-400 text-xs mt-1">{description}</p>
+
+          {/* TEXT */}
+          <div className="min-w-0 w-full">
+            <p className="text-gray-500 text-[11px] md:text-xs lg:text-sm font-medium truncate">
+              {label}
+            </p>
+
+            <p className="text-lg md:text-xl lg:text-2xl font-bold text-gray-800 mt-1 break-words">
+              {value}
+            </p>
+
+            <p className="text-gray-400 text-[10px] md:text-xs mt-1 line-clamp-2">
+              {description}
+            </p>
           </div>
         </div>
 
-        <div className={`transition-transform ${isHovered ? 'translate-x-1' : ''}`}>
-          <FiChevronRight className={`text-gray-400 ${isHovered ? 'text-gray-600' : ''}`} />
+        {/* RIGHT ARROW */}
+        <div
+          className={`flex-shrink-0 self-end md:self-auto transition-transform ${isHovered ? "translate-x-1" : ""
+            }`}
+        >
+          <FiChevronRight
+            className={`text-gray-400 text-sm md:text-base ${isHovered ? "text-gray-600" : ""
+              }`}
+          />
         </div>
       </div>
 
-      <div className={`absolute bottom-2 right-4 text-xs text-gray-400 transition-opacity ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
+      {/* FOOTER */}
+      <div
+        className={`absolute bottom-2 right-3 md:right-4 text-[10px] md:text-xs text-gray-400 transition-opacity ${isHovered ? "opacity-100" : "opacity-0"
+          }`}
+      >
         Click to view →
       </div>
     </div>

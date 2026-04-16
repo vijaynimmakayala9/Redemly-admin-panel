@@ -19,9 +19,7 @@ export default function AdminLayout({ children }) {
       }
     };
 
-    // Initial check
     handleResize();
-
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
@@ -67,17 +65,26 @@ export default function AdminLayout({ children }) {
   };
 
   return (
-    <div className="flex h-screen relative overflow-hidden">
-      {/* Overlay for mobile */}
+    <div className="flex h-screen w-full relative overflow-hidden bg-[#EFF0F1]">
+      {/* Overlay for mobile: Only visible when sidebar is open on mobile screens */}
       {isMobile && !isCollapsed && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
+          className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
           onClick={() => setIsCollapsed(true)}
         />
       )}
 
-      {/* Sidebar */}
-      <div ref={sidebarRef}>
+      {/* Sidebar Container: 
+          We define the width logic here so Flexbox knows how much space to give the Main Content.
+      */}
+      <div 
+        ref={sidebarRef} 
+        className={`z-50 transition-all duration-300 ease-in-out ${
+          isMobile 
+            ? `fixed inset-y-0 left-0 transform ${isCollapsed ? "-translate-x-full" : "translate-x-0"}` 
+            : `${isCollapsed ? "w-20" : "w-64"}`
+        }`}
+      >
         <Sidebar 
           isCollapsed={isCollapsed} 
           isMobile={isMobile} 
@@ -85,9 +92,11 @@ export default function AdminLayout({ children }) {
         />
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col transition-all duration-300 w-full">
-        {/* Navbar */}
+      {/* Main Content Area:
+          1. flex-1: Takes up all remaining space.
+          2. min-w-0: CRITICAL. Prevents content from forcing the container to be wider than the viewport.
+      */}
+      <div className="flex-1 flex flex-col min-w-0 h-full relative">
         <Navbar 
           setIsCollapsed={setIsCollapsed} 
           isCollapsed={isCollapsed}
@@ -96,9 +105,9 @@ export default function AdminLayout({ children }) {
         />
         
         {/* Page Content */}
-        <div className="p-3 sm:p-4 md:p-6 overflow-y-auto bg-[#EFF0F1] flex-1">
+        <main className="p-3 sm:p-4 md:p-6 overflow-y-auto flex-1 bg-[#EFF0F1]">
           {children}
-        </div>
+        </main>
       </div>
     </div>
   );

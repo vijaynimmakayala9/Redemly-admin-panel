@@ -73,7 +73,7 @@ export default function AdminRedemlyRevenue() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6 space-y-8 max-w-7xl mx-auto">
-      
+
       {/* HEADER with colorful gradient */}
       <div className="relative mb-8">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl blur-xl opacity-30"></div>
@@ -109,7 +109,7 @@ export default function AdminRedemlyRevenue() {
           </div>
         </div>
       )}
-      
+
       {!loading && !data && (
         <div className="text-center py-20">
           <div className="inline-block p-8 bg-white rounded-2xl shadow-xl">
@@ -123,34 +123,34 @@ export default function AdminRedemlyRevenue() {
         <>
           {/* KPI CARDS with colorful icons */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <KPI 
-              title="Revenue USD" 
-              value={`$${summary?.totalRevenue?.USD?.toLocaleString() ?? 0}`} 
-              icon={<FaDollarSign/>}
+            <KPI
+              title="Revenue USD"
+              value={`$${summary?.totalRevenue?.USD?.toLocaleString() ?? 0}`}
+              icon={<FaDollarSign />}
               gradient="from-green-500 to-emerald-600"
               iconBg="bg-green-100"
               iconColor="text-green-600"
             />
-            <KPI 
-              title="Revenue INR" 
-              value={`₹${summary?.totalRevenue?.INR?.toLocaleString() ?? 0}`} 
-              icon={<FaRupeeSign/>}
+            <KPI
+              title="Revenue INR"
+              value={`₹${summary?.totalRevenue?.INR?.toLocaleString() ?? 0}`}
+              icon={<FaRupeeSign />}
               gradient="from-blue-500 to-cyan-600"
               iconBg="bg-blue-100"
               iconColor="text-blue-600"
             />
-            <KPI 
-              title="Transactions" 
-              value={summary.totalTransactions?.toLocaleString() ?? 0} 
-              icon={<FaChartLine/>}
+            <KPI
+              title="Transactions"
+              value={summary.totalTransactions?.toLocaleString() ?? 0}
+              icon={<FaChartLine />}
               gradient="from-purple-500 to-pink-600"
               iconBg="bg-purple-100"
               iconColor="text-purple-600"
             />
-            <KPI 
-              title="Vendors" 
-              value={summary.uniqueVendors ?? 0} 
-              icon={<FaStore/>}
+            <KPI
+              title="Vendors"
+              value={summary.uniqueVendors ?? 0}
+              icon={<FaStore />}
               gradient="from-orange-500 to-red-600"
               iconBg="bg-orange-100"
               iconColor="text-orange-600"
@@ -159,39 +159,39 @@ export default function AdminRedemlyRevenue() {
 
           {/* SECONDARY CARDS */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <KPI 
-              title="Avg Transaction" 
-              value={`$${summary.averageTransaction?.toLocaleString() ?? 0}`} 
-              icon={<FaMoneyBillWave/>}
+            <KPI
+              title="Avg Transaction"
+              value={`$${summary.averageTransaction?.toLocaleString() ?? 0}`}
+              icon={<FaMoneyBillWave />}
               gradient="from-teal-500 to-cyan-600"
               iconBg="bg-teal-100"
               iconColor="text-teal-600"
             />
-            <KPI 
-              title="Online Revenue" 
-              value={`$${breakdown.onlineRevenue?.toLocaleString() ?? 0}`} 
-              icon={<FaCreditCard/>}
+            <KPI
+              title="Online Revenue"
+              value={`$${breakdown.onlineRevenue?.toLocaleString() ?? 0}`}
+              icon={<FaCreditCard />}
               gradient="from-indigo-500 to-blue-600"
               iconBg="bg-indigo-100"
               iconColor="text-indigo-600"
             />
-            <KPI 
-              title="Cash Revenue" 
-              value={`$${breakdown.cashRevenue?.toLocaleString() ?? 0}`} 
-              icon={<FaWallet/>}
+            <KPI
+              title="Cash Revenue"
+              value={`$${breakdown.cashRevenue?.toLocaleString() ?? 0}`}
+              icon={<FaWallet />}
               gradient="from-yellow-500 to-amber-600"
               iconBg="bg-yellow-100"
               iconColor="text-yellow-600"
             />
           </div>
 
-          
+
 
           {/* MONTHLY TRENDS TABLE */}
           <Card title="Monthly Revenue Trends" gradient="from-blue-500 to-purple-600">
             <div className="flex flex-col md:flex-row gap-3 justify-between mb-4">
               <div className="relative flex-1">
-                <FaSearch className="absolute left-3 top-3 text-gray-400"/>
+                <FaSearch className="absolute left-3 top-3 text-gray-400" />
                 <input
                   placeholder="Search month..."
                   value={search}
@@ -202,7 +202,7 @@ export default function AdminRedemlyRevenue() {
 
               <button onClick={exportCSV}
                 className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl flex items-center gap-2 hover:shadow-lg transition-all duration-300 transform hover:scale-105">
-                <FaFileExport/> Export CSV
+                <FaFileExport /> Export CSV
               </button>
             </div>
 
@@ -238,11 +238,11 @@ export default function AdminRedemlyRevenue() {
                       <td className="p-4 text-center">
                         {idx < paginated.length - 1 && paginated[idx + 1]?.revenue < m.revenue ? (
                           <span className="inline-flex items-center gap-1 text-green-600 bg-green-100 px-2 py-1 rounded-full text-xs">
-                            <FaArrowUp/> +{((m.revenue - paginated[idx + 1].revenue) / paginated[idx + 1].revenue * 100).toFixed(1)}%
+                            <FaArrowUp /> +{((m.revenue - paginated[idx + 1].revenue) / paginated[idx + 1].revenue * 100).toFixed(1)}%
                           </span>
                         ) : idx < paginated.length - 1 ? (
                           <span className="inline-flex items-center gap-1 text-red-600 bg-red-100 px-2 py-1 rounded-full text-xs">
-                            <FaArrowDown/> -{((paginated[idx + 1].revenue - m.revenue) / paginated[idx + 1].revenue * 100).toFixed(1)}%
+                            <FaArrowDown /> -{((paginated[idx + 1].revenue - m.revenue) / paginated[idx + 1].revenue * 100).toFixed(1)}%
                           </span>
                         ) : (
                           <span className="text-gray-400">—</span>
@@ -260,19 +260,19 @@ export default function AdminRedemlyRevenue() {
                 Showing page {page} of {totalPages} • {filtered.length} total records
               </p>
               <div className="flex gap-2">
-                <button 
-                  disabled={page === 1} 
+                <button
+                  disabled={page === 1}
                   onClick={() => setPage(p => p - 1)}
                   className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors"
                 >
-                  <FaChevronLeft/>
+                  <FaChevronLeft />
                 </button>
-                <button 
-                  disabled={page === totalPages} 
+                <button
+                  disabled={page === totalPages}
                   onClick={() => setPage(p => p + 1)}
                   className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors"
                 >
-                  <FaChevronRight/>
+                  <FaChevronRight />
                 </button>
               </div>
             </div>
@@ -284,16 +284,43 @@ export default function AdminRedemlyRevenue() {
 }
 
 /* UI COMPONENTS with colorful icons */
-const KPI = ({ title, value, icon, gradient = "from-blue-500 to-purple-600", iconBg = "bg-blue-100", iconColor = "text-blue-600" }) => (
-  <div className={`${cardBase} flex justify-between items-start group`}>
-    <div>
-      <p className="text-xs text-gray-500 uppercase tracking-wider">{title}</p>
-      <p className="text-2xl font-bold mt-1">{value}</p>
+const KPI = ({
+  title,
+  value,
+  icon,
+  gradient = "from-blue-500 to-purple-600",
+  iconBg = "bg-blue-100",
+  iconColor = "text-blue-600",
+}) => (
+  <div
+    className={`${cardBase} relative flex items-start justify-between gap-3 sm:gap-4 group p-4 sm:p-5`}
+  >
+    {/* TEXT */}
+    <div className="min-w-0">
+      <p className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider truncate">
+        {title}
+      </p>
+
+      <p className="text-lg sm:text-2xl lg:text-3xl font-bold mt-1 break-words">
+        {value}
+      </p>
     </div>
-    <div className={`p-3 ${iconBg} rounded-xl group-hover:scale-110 transition-transform duration-300`}>
-      <div className={`text-2xl ${iconColor}`}>{icon}</div>
+
+    {/* ICON */}
+    <div
+      className={`flex-shrink-0 p-2 sm:p-3 ${iconBg} rounded-lg sm:rounded-xl 
+      group-hover:scale-110 transition-transform duration-300`}
+    >
+      <div className={`text-lg sm:text-2xl ${iconColor}`}>
+        {icon}
+      </div>
     </div>
-    <div className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-0 group-hover:opacity-5 transition-opacity pointer-events-none`} />
+
+    {/* HOVER GRADIENT */}
+    <div
+      className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-0 
+      group-hover:opacity-5 transition-opacity pointer-events-none rounded-xl`}
+    />
   </div>
 );
 

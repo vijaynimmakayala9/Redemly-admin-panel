@@ -28,45 +28,43 @@ export default function AdminFeedbackForApp() {
 
     const renderStars = (rating) => {
         return [...Array(5)].map((_, i) => (
-            <span key={i} className="text-yellow-400 text-sm">
+            <span key={i} className="text-yellow-400 text-xs sm:text-sm">
                 {i < rating ? "★" : "☆"}
             </span>
         ));
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-10">
+        <div className="min-h-screen bg-gray-50 p-3 sm:p-6 lg:p-10">
 
             {/* HEADER */}
-
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6 sm:mb-8">
                 <div>
-                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">
+                    <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-800">
                         App Feedback Dashboard
                     </h1>
 
-                    <p className="text-gray-500 text-sm mt-1">
+                    <p className="text-gray-500 text-xs sm:text-sm mt-1">
                         Monitor user feedback, ratings and experience
                     </p>
                 </div>
             </div>
 
             {/* STATS */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 mb-6 sm:mb-8">
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
-
-                <div className="bg-white rounded-2xl shadow-sm border p-6 hover:shadow-md transition">
-                    <p className="text-sm text-gray-500">Total Feedback</p>
-                    <h2 className="text-3xl font-semibold text-gray-800 mt-1">
+                <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border p-4 sm:p-6 hover:shadow-md transition">
+                    <p className="text-xs sm:text-sm text-gray-500">Total Feedback</p>
+                    <h2 className="text-2xl sm:text-3xl font-semibold text-gray-800 mt-1">
                         {stats.totalFeedbacks || 0}
                     </h2>
                 </div>
 
-                <div className="bg-white rounded-2xl shadow-sm border p-6 hover:shadow-md transition">
-                    <p className="text-sm text-gray-500">Average Rating</p>
+                <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border p-4 sm:p-6 hover:shadow-md transition">
+                    <p className="text-xs sm:text-sm text-gray-500">Average Rating</p>
 
-                    <div className="flex items-center gap-3 mt-2">
-                        <span className="text-3xl font-semibold text-gray-800">
+                    <div className="flex items-center gap-2 sm:gap-3 mt-2 flex-wrap">
+                        <span className="text-2xl sm:text-3xl font-semibold text-gray-800">
                             {stats.averageRating || 0}
                         </span>
 
@@ -74,9 +72,9 @@ export default function AdminFeedbackForApp() {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-2xl shadow-sm border p-6 hover:shadow-md transition">
-                    <p className="text-sm text-gray-500">Total Pages</p>
-                    <h2 className="text-3xl font-semibold text-gray-800 mt-1">
+                <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border p-4 sm:p-6 hover:shadow-md transition">
+                    <p className="text-xs sm:text-sm text-gray-500">Total Pages</p>
+                    <h2 className="text-2xl sm:text-3xl font-semibold text-gray-800 mt-1">
                         {pagination.pages || 1}
                     </h2>
                 </div>
@@ -84,9 +82,8 @@ export default function AdminFeedbackForApp() {
             </div>
 
             {/* RATING DISTRIBUTION */}
-
-            <div className="bg-white rounded-2xl shadow-sm border p-6 mb-8">
-                <h2 className="text-lg font-semibold text-gray-800 mb-5">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border p-4 sm:p-6 mb-6 sm:mb-8">
+                <h2 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 sm:mb-5">
                     Rating Distribution
                 </h2>
 
@@ -94,9 +91,9 @@ export default function AdminFeedbackForApp() {
                     Object.entries(stats.ratingDistribution)
                         .reverse()
                         .map(([star, count]) => (
-                            <div key={star} className="mb-4">
+                            <div key={star} className="mb-3 sm:mb-4">
 
-                                <div className="flex justify-between text-sm text-gray-600 mb-1">
+                                <div className="flex justify-between text-xs sm:text-sm text-gray-600 mb-1">
                                     <span>{star} Star</span>
                                     <span>{count}</span>
                                 </div>
@@ -105,7 +102,7 @@ export default function AdminFeedbackForApp() {
                                     <div
                                         className="bg-yellow-400 h-2 rounded-full"
                                         style={{
-                                            width: `${(count / stats.totalFeedbacks) * 100}%`,
+                                            width: `${(count / stats.totalFeedbacks) * 100 || 0}%`,
                                         }}
                                     ></div>
                                 </div>
@@ -115,23 +112,22 @@ export default function AdminFeedbackForApp() {
             </div>
 
             {/* TOPIC BREAKDOWN */}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-6 sm:mb-8">
 
                 {stats.topicBreakdown?.map((topic, i) => (
                     <div
                         key={i}
-                        className="bg-white rounded-2xl shadow-sm border p-5 hover:shadow-md transition"
+                        className="bg-white rounded-xl sm:rounded-2xl shadow-sm border p-4 sm:p-5 hover:shadow-md transition"
                     >
-                        <h3 className="font-semibold text-gray-800 text-sm mb-2">
+                        <h3 className="font-semibold text-gray-800 text-xs sm:text-sm mb-2">
                             {topic._id || "General"}
                         </h3>
 
-                        <p className="text-sm text-gray-500">
+                        <p className="text-xs sm:text-sm text-gray-500">
                             Feedbacks: <span className="font-medium text-gray-700">{topic.count}</span>
                         </p>
 
-                        <p className="text-sm text-gray-500 mt-1">
+                        <p className="text-xs sm:text-sm text-gray-500 mt-1">
                             Avg Rating:{" "}
                             <span className="font-medium text-gray-700">
                                 {topic.averageRating
@@ -145,27 +141,25 @@ export default function AdminFeedbackForApp() {
             </div>
 
             {/* FEEDBACK TABLE */}
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border overflow-hidden">
 
-            <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
-
-                <div className="p-5 border-b flex items-center justify-between">
-                    <h2 className="text-lg font-semibold text-gray-800">
+                <div className="p-4 sm:p-5 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <h2 className="text-base sm:text-lg font-semibold text-gray-800">
                         User Feedback
                     </h2>
                 </div>
 
                 <div className="overflow-x-auto">
+                    <table className="min-w-[700px] w-full text-xs sm:text-sm">
 
-                    <table className="min-w-full text-sm">
-
-                        <thead className="bg-gray-100 text-gray-600 text-xs uppercase tracking-wide">
+                        <thead className="bg-gray-100 text-gray-600 text-[10px] sm:text-xs uppercase tracking-wide">
                             <tr>
-                                <th className="px-6 py-4 text-left">S NO</th>
-                                <th className="px-6 py-4 text-left">User</th>
-                                <th className="px-6 py-4 text-left">Topic</th>
-                                <th className="px-6 py-4 text-left">Rating</th>
-                                <th className="px-6 py-4 text-left">Experience</th>
-                                <th className="px-6 py-4 text-left">Date</th>
+                                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left">S NO</th>
+                                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left">User</th>
+                                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left">Topic</th>
+                                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left">Rating</th>
+                                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left">Experience</th>
+                                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left">Date</th>
                             </tr>
                         </thead>
 
@@ -177,36 +171,37 @@ export default function AdminFeedbackForApp() {
                                     className="border-t hover:bg-gray-50 transition"
                                 >
 
-                                    <td className="px-6 py-4">
-                                        {(page - 1)*pagination.pages + index + 1 }
+                                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                                        {(page - 1) * limit + index + 1}
                                     </td>
-                                    <td className="px-6 py-4">
+
+                                    <td className="px-3 sm:px-6 py-3 sm:py-4">
                                         <div className="flex flex-col">
-                                            <span className="font-medium text-gray-800">
+                                            <span className="font-medium text-gray-800 text-xs sm:text-sm">
                                                 {fb.user?.name}
                                             </span>
 
-                                            <span className="text-xs text-gray-500">
+                                            <span className="text-[10px] sm:text-xs text-gray-500 break-all">
                                                 {fb.user?.email || "No Email"}
                                             </span>
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4">
-                                        <span className="text-xs bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
+                                    <td className="px-3 sm:px-6 py-3 sm:py-4">
+                                        <span className="text-[10px] sm:text-xs bg-blue-100 text-blue-600 px-2 sm:px-3 py-1 rounded-full whitespace-nowrap">
                                             {fb.topic || "General"}
                                         </span>
                                     </td>
 
-                                    <td className="px-6 py-4">
+                                    <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                                         {renderStars(fb.rating)}
                                     </td>
 
-                                    <td className="px-6 py-4 text-gray-600 max-w-xs truncate">
+                                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-gray-600 max-w-[150px] sm:max-w-xs truncate">
                                         {fb.experience}
                                     </td>
 
-                                    <td className="px-6 py-4 text-xs text-gray-500">
+                                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-[10px] sm:text-xs text-gray-500 whitespace-nowrap">
                                         {new Date(fb.createdAt).toLocaleDateString()}
                                     </td>
 
@@ -216,29 +211,27 @@ export default function AdminFeedbackForApp() {
                         </tbody>
 
                     </table>
-
                 </div>
 
                 {/* PAGINATION */}
-
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-5 border-t bg-gray-50">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 sm:p-5 border-t bg-gray-50">
 
                     <button
                         onClick={() => setPage(page - 1)}
                         disabled={page === 1}
-                        className="px-4 py-2 text-sm bg-white border rounded-lg hover:bg-gray-100 disabled:opacity-50"
+                        className="w-full sm:w-auto px-4 py-2 text-sm bg-white border rounded-lg hover:bg-gray-100 disabled:opacity-50"
                     >
                         Previous
                     </button>
 
-                    <span className="text-sm text-gray-600">
+                    <span className="text-xs sm:text-sm text-gray-600 text-center">
                         Page {pagination.page || 1} of {pagination.pages || 1}
                     </span>
 
                     <button
                         onClick={() => setPage(page + 1)}
                         disabled={page === pagination.pages}
-                        className="px-4 py-2 text-sm bg-gray-800 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50"
+                        className="w-full sm:w-auto px-4 py-2 text-sm bg-gray-800 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50"
                     >
                         Next
                     </button>
