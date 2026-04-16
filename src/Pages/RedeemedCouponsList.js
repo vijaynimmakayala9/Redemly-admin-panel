@@ -122,22 +122,6 @@ const RedeemedCouponsList = () => {
     setCurrentPage(1);
   };
 
-  const formatTime = (date, time) => {
-  try {
-    // Input is assumed in ET (New York)
-    const etDate = new Date(`${date} ${time} GMT-0400`); // or -0500 depending on EST/EDT
-
-    return etDate.toLocaleTimeString("en-US", {
-      timeZone: "America/Chicago", // CST/CDT
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  } catch {
-    return time || "—";
-  }
-};
-
   if (loading) return <Skeleton />;
   if (error)
     return (
@@ -224,7 +208,7 @@ const RedeemedCouponsList = () => {
               {[
                 "#", "Cust ID", "Customer", "Vendor", "Category",
                 "Product", "Coupon", "Code", "Disc%",
-                "Downloaded", "Redeemed", "Time (CST)", "Order", "Value", "Feedback",
+                "Downloaded", "Redeemed", "Time", "Order", "Value", "Feedback",
               ].map((h) => (
                 <th
                   key={h}
@@ -278,7 +262,7 @@ const RedeemedCouponsList = () => {
                   <td style={{ padding: "7px 6px", whiteSpace: "nowrap", color: "#6b7280" }}>{c.Download_Date}</td>
                   <td style={{ padding: "7px 6px", whiteSpace: "nowrap" }}>{c.Redeemed_Date}</td>
                   <td style={{ padding: "7px 6px", whiteSpace: "nowrap" }}>
-                    {formatTime(c.Redeemed_Date, c.Redeemed_Time)}
+                    {c.Redeemed_Time}
                   </td>
                   <td style={{ padding: "7px 6px", maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {c.Order_Details}
@@ -353,7 +337,7 @@ const RedeemedCouponsList = () => {
                   ["Coupon", c.Coupon_Name],
                   ["Downloaded", c.Download_Date],
                   ["Redeemed", c.Redeemed_Date],
-                  ["Time (CST)", formatTime(c.Redeemed_Date, c.Redeemed_Time)],
+                  ["Time", c.Redeemed_Time],
                   ["Value", c.Order_Value],
                 ].map(([label, val]) => (
                   <div key={label}>
