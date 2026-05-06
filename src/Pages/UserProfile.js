@@ -61,7 +61,7 @@
 //     const hours = Math.floor(seconds / 3600);
 //     const minutes = Math.floor((seconds % 3600) / 60);
 //     const secs = seconds % 60;
-    
+
 //     if (hours > 0) {
 //       return `${hours}h ${minutes}m ${secs}s`;
 //     } else if (minutes > 0) {
@@ -600,11 +600,10 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
           <button
             key={index}
             onClick={() => onPageChange(page)}
-            className={`px-2 sm:px-4 py-1 sm:py-2 text-sm sm:text-base rounded transition-colors ${
-              currentPage === page
-                ? 'bg-blue-500 text-white'
-                : 'bg-gray-200 hover:bg-gray-300'
-            }`}
+            className={`px-2 sm:px-4 py-1 sm:py-2 text-sm sm:text-base rounded transition-colors ${currentPage === page
+              ? 'bg-blue-500 text-white'
+              : 'bg-gray-200 hover:bg-gray-300'
+              }`}
             aria-label={`Go to page ${page}`}
             aria-current={currentPage === page ? 'page' : undefined}
           >
@@ -637,9 +636,14 @@ function UserDetail() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('profile');
 
+  const [activeTabTime, setActiveTabTime] = useState("buzz");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 5;
+
   // Responsive items per page
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  
+
   // Pagination states
   const [stepsPage, setStepsPage] = useState(1);
   const [myCouponsPage, setMyCouponsPage] = useState(1);
@@ -765,7 +769,7 @@ function UserDetail() {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes}m ${secs}s`;
     } else if (minutes > 0) {
@@ -778,7 +782,7 @@ function UserDetail() {
   // Pagination helper
   const getPaginatedData = (data, page) => {
     if (!data || !Array.isArray(data)) return { items: [], totalPages: 0 };
-    
+
     const startIndex = (page - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const paginatedItems = data.slice(startIndex, endIndex);
@@ -857,17 +861,17 @@ function UserDetail() {
           <h3 className="text-xs sm:text-sm font-semibold opacity-90">Total Coins</h3>
           <p className="text-xl sm:text-2xl md:text-3xl font-bold mt-1 sm:mt-2">{user.coins ?? 0}</p>
         </div>
-        
+
         <div className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg p-3 sm:p-4 shadow">
           <h3 className="text-xs sm:text-sm font-semibold opacity-90">Coupons</h3>
           <p className="text-xl sm:text-2xl md:text-3xl font-bold mt-1 sm:mt-2">{user.coupons ?? 0}</p>
         </div>
-        
+
         <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-lg p-3 sm:p-4 shadow">
           <h3 className="text-xs sm:text-sm font-semibold opacity-90">Favorite Coupons</h3>
           <p className="text-xl sm:text-2xl md:text-3xl font-bold mt-1 sm:mt-2">{user.favoriteCoupons?.length ?? 0}</p>
         </div>
-        
+
         <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-lg p-3 sm:p-4 shadow">
           <h3 className="text-xs sm:text-sm font-semibold opacity-90">Status</h3>
           <p className="text-base sm:text-lg md:text-xl font-bold mt-1 sm:mt-2 flex items-center justify-center sm:justify-start">
@@ -881,7 +885,7 @@ function UserDetail() {
 
   const renderStepsSection = () => {
     const { items: paginatedSteps, totalPages } = getPaginatedData(user.steps, stepsPage);
-    
+
     return (
       <div>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
@@ -890,7 +894,7 @@ function UserDetail() {
             Showing {paginatedSteps.length} of {user.steps?.length || 0} entries
           </span>
         </div>
-        
+
         {user.steps?.length ? (
           <div className="overflow-x-auto -mx-4 sm:mx-0">
             <div className="inline-block min-w-full align-middle">
@@ -907,8 +911,8 @@ function UserDetail() {
                 </thead>
                 <tbody>
                   {paginatedSteps.map((step, index) => (
-                    <tr 
-                      key={step._id || index} 
+                    <tr
+                      key={step._id || index}
                       className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-gray-100'}
                     >
                       <td className="py-2 sm:py-3 px-2 sm:px-4 border-b text-xs sm:text-sm">{formatDate(step.date)}</td>
@@ -931,12 +935,12 @@ function UserDetail() {
             <p className="mt-2 text-sm sm:text-base text-gray-600">No steps data available</p>
           </div>
         )}
-        
+
         {totalPages > 1 && (
-          <Pagination 
-            currentPage={stepsPage} 
-            totalPages={totalPages} 
-            onPageChange={setStepsPage} 
+          <Pagination
+            currentPage={stepsPage}
+            totalPages={totalPages}
+            onPageChange={setStepsPage}
           />
         )}
       </div>
@@ -944,10 +948,10 @@ function UserDetail() {
   };
 
   const renderCouponsSection = () => {
-    const { items: paginatedMyCoupons, totalPages: myCouponsTotalPages } = 
+    const { items: paginatedMyCoupons, totalPages: myCouponsTotalPages } =
       getPaginatedData(user.MyCoupons, myCouponsPage);
-    
-    const { items: paginatedFavorites, totalPages: favoritesTotalPages } = 
+
+    const { items: paginatedFavorites, totalPages: favoritesTotalPages } =
       getPaginatedData(user.favoriteCoupons, favoriteCouponsPage);
 
     return (
@@ -975,7 +979,7 @@ function UserDetail() {
               {user.MyCoupons?.length || 0} coupons
             </span>
           </div>
-          
+
           {user.MyCoupons?.length ? (
             <div className="overflow-x-auto -mx-4 sm:mx-0">
               <div className="inline-block min-w-full align-middle">
@@ -995,8 +999,8 @@ function UserDetail() {
                     {paginatedMyCoupons.map((myCoupon, index) => {
                       const coupon = myCoupon.couponId || {};
                       return (
-                        <tr 
-                          key={myCoupon._id || index} 
+                        <tr
+                          key={myCoupon._id || index}
                           className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-gray-100'}
                         >
                           <td className="py-2 sm:py-3 px-2 sm:px-4 border-b hidden md:table-cell">
@@ -1021,12 +1025,11 @@ function UserDetail() {
                             {myCoupon.couponCode || coupon.couponCode || 'N/A'}
                           </td>
                           <td className="py-2 sm:py-3 px-2 sm:px-4 border-b">
-                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                              myCoupon.status === 'Active' ? 'bg-green-100 text-green-800' :
+                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${myCoupon.status === 'Active' ? 'bg-green-100 text-green-800' :
                               myCoupon.status === 'Expired' ? 'bg-red-100 text-red-800' :
-                              myCoupon.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-gray-100 text-gray-800'
-                            }`}>
+                                myCoupon.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-gray-100 text-gray-800'
+                              }`}>
                               {myCoupon.status || 'N/A'}
                             </span>
                           </td>
@@ -1046,12 +1049,12 @@ function UserDetail() {
               <p className="mt-2 text-sm sm:text-base text-gray-600">No coupons claimed yet</p>
             </div>
           )}
-          
+
           {myCouponsTotalPages > 1 && (
-            <Pagination 
-              currentPage={myCouponsPage} 
-              totalPages={myCouponsTotalPages} 
-              onPageChange={setMyCouponsPage} 
+            <Pagination
+              currentPage={myCouponsPage}
+              totalPages={myCouponsTotalPages}
+              onPageChange={setMyCouponsPage}
             />
           )}
         </div>
@@ -1063,7 +1066,7 @@ function UserDetail() {
               {user.favoriteCoupons?.length || 0} favorites
             </span>
           </div>
-          
+
           {user.favoriteCoupons?.length ? (
             <div className="overflow-x-auto -mx-4 sm:mx-0">
               <div className="inline-block min-w-full align-middle">
@@ -1081,8 +1084,8 @@ function UserDetail() {
                   </thead>
                   <tbody>
                     {paginatedFavorites.map((coupon, index) => (
-                      <tr 
-                        key={coupon._id || index} 
+                      <tr
+                        key={coupon._id || index}
                         className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-gray-100'}
                       >
                         <td className="py-2 sm:py-3 px-2 sm:px-4 border-b hidden sm:table-cell">
@@ -1110,11 +1113,10 @@ function UserDetail() {
                         </td>
                         <td className="py-2 sm:py-3 px-2 sm:px-4 border-b text-xs sm:text-sm hidden md:table-cell">{formatDate(coupon.validityDate)}</td>
                         <td className="py-2 sm:py-3 px-2 sm:px-4 border-b">
-                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                            coupon.status === 'approved' ? 'bg-green-100 text-green-800' :
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${coupon.status === 'approved' ? 'bg-green-100 text-green-800' :
                             coupon.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                               'bg-red-100 text-red-800'
-                          }`}>
+                            }`}>
                             {coupon.status || 'N/A'}
                           </span>
                         </td>
@@ -1132,12 +1134,12 @@ function UserDetail() {
               <p className="mt-2 text-sm sm:text-base text-gray-600">No favorite coupons added yet</p>
             </div>
           )}
-          
+
           {favoritesTotalPages > 1 && (
-            <Pagination 
-              currentPage={favoriteCouponsPage} 
-              totalPages={favoritesTotalPages} 
-              onPageChange={setFavoriteCouponsPage} 
+            <Pagination
+              currentPage={favoriteCouponsPage}
+              totalPages={favoritesTotalPages}
+              onPageChange={setFavoriteCouponsPage}
             />
           )}
         </div>
@@ -1147,7 +1149,7 @@ function UserDetail() {
 
   const renderCoinHistorySection = () => {
     const { items: paginatedHistory, totalPages } = getPaginatedData(user.coinHistory, coinHistoryPage);
-    
+
     return (
       <div>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
@@ -1156,7 +1158,7 @@ function UserDetail() {
             Showing {paginatedHistory.length} of {user.coinHistory?.length || 0} entries
           </span>
         </div>
-        
+
         {user.coinHistory?.length ? (
           <div className="overflow-x-auto -mx-4 sm:mx-0">
             <div className="inline-block min-w-full align-middle">
@@ -1171,16 +1173,15 @@ function UserDetail() {
                 </thead>
                 <tbody>
                   {paginatedHistory.map((entry, index) => (
-                    <tr 
-                      key={entry._id || index} 
+                    <tr
+                      key={entry._id || index}
                       className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100`}
                     >
                       <td className="py-2 sm:py-3 px-2 sm:px-4 border-b">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          entry.type === 'added' ? 'bg-green-100 text-green-800' :
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${entry.type === 'added' ? 'bg-green-100 text-green-800' :
                           entry.type === 'deducted' ? 'bg-red-100 text-red-800' :
                             'bg-blue-100 text-blue-800'
-                        }`}>
+                          }`}>
                           {entry.type?.toUpperCase() || 'N/A'}
                         </span>
                       </td>
@@ -1203,12 +1204,12 @@ function UserDetail() {
             <p className="mt-2 text-sm sm:text-base text-gray-600">No coin history available</p>
           </div>
         )}
-        
+
         {totalPages > 1 && (
-          <Pagination 
-            currentPage={coinHistoryPage} 
-            totalPages={totalPages} 
-            onPageChange={setCoinHistoryPage} 
+          <Pagination
+            currentPage={coinHistoryPage}
+            totalPages={totalPages}
+            onPageChange={setCoinHistoryPage}
           />
         )}
       </div>
@@ -1216,9 +1217,9 @@ function UserDetail() {
   };
 
   const renderNotificationsSection = () => {
-    const { items: paginatedNotifications, totalPages } = 
+    const { items: paginatedNotifications, totalPages } =
       getPaginatedData(user.notifications, notificationsPage);
-    
+
     return (
       <div>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
@@ -1227,7 +1228,7 @@ function UserDetail() {
             {user.notifications?.length || 0} notifications
           </span>
         </div>
-        
+
         {user.notifications?.length ? (
           <div className="overflow-x-auto -mx-4 sm:mx-0">
             <div className="inline-block min-w-full align-middle">
@@ -1243,8 +1244,8 @@ function UserDetail() {
                 </thead>
                 <tbody>
                   {paginatedNotifications.map((notification, index) => (
-                    <tr 
-                      key={notification._id || index} 
+                    <tr
+                      key={notification._id || index}
                       className={`${notification.read ? 'bg-white' : 'bg-blue-50'} hover:bg-gray-100`}
                     >
                       <td className="py-2 sm:py-3 px-2 sm:px-4 border-b font-medium text-xs sm:text-sm">
@@ -1257,9 +1258,8 @@ function UserDetail() {
                         </span>
                       </td>
                       <td className="py-2 sm:py-3 px-2 sm:px-4 border-b">
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                          notification.read ? 'bg-gray-200 text-gray-700' : 'bg-blue-200 text-blue-800'
-                        }`}>
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${notification.read ? 'bg-gray-200 text-gray-700' : 'bg-blue-200 text-blue-800'
+                          }`}>
                           {notification.read ? 'Read' : 'Unread'}
                         </span>
                       </td>
@@ -1278,12 +1278,12 @@ function UserDetail() {
             <p className="mt-2 text-sm sm:text-base text-gray-600">No notifications available</p>
           </div>
         )}
-        
+
         {totalPages > 1 && (
-          <Pagination 
-            currentPage={notificationsPage} 
-            totalPages={totalPages} 
-            onPageChange={setNotificationsPage} 
+          <Pagination
+            currentPage={notificationsPage}
+            totalPages={totalPages}
+            onPageChange={setNotificationsPage}
           />
         )}
       </div>
@@ -1291,9 +1291,9 @@ function UserDetail() {
   };
 
   const renderChatMembersSection = () => {
-    const { items: paginatedMembers, totalPages } = 
+    const { items: paginatedMembers, totalPages } =
       getPaginatedData(user.MyChatMembers, chatMembersPage);
-    
+
     return (
       <div>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-2">
@@ -1322,8 +1322,8 @@ function UserDetail() {
                   {paginatedMembers.map((member, index) => {
                     const userDetails = member.userId || member.userDetails || {};
                     return (
-                      <tr 
-                        key={member._id || index} 
+                      <tr
+                        key={member._id || index}
                         className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50 hover:bg-gray-100'}
                       >
                         <td className="py-2 sm:py-3 px-2 sm:px-4 border-b">
@@ -1345,10 +1345,9 @@ function UserDetail() {
                         <td className="py-2 sm:py-3 px-2 sm:px-4 border-b font-bold text-xs sm:text-sm">{userDetails.coins || 0}</td>
                         <td className="py-2 sm:py-3 px-2 sm:px-4 border-b text-xs sm:text-sm hidden sm:table-cell">{formatDate(userDetails.createdAt)}</td>
                         <td className="py-2 sm:py-3 px-2 sm:px-4 border-b">
-                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                            member.status === 'Accepted' || member.status === 'accepted' ? 
-                              'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                          }`}>
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${member.status === 'Accepted' || member.status === 'accepted' ?
+                            'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                            }`}>
                             {member.status === 'Accepted' || member.status === 'accepted' ? 'Connected' : 'Pending'}
                           </span>
                         </td>
@@ -1367,147 +1366,335 @@ function UserDetail() {
             <p className="mt-2 text-sm sm:text-base text-gray-600">No chat members found</p>
           </div>
         )}
-        
+
         {totalPages > 1 && (
-          <Pagination 
-            currentPage={chatMembersPage} 
-            totalPages={totalPages} 
-            onPageChange={setChatMembersPage} 
+          <Pagination
+            currentPage={chatMembersPage}
+            totalPages={totalPages}
+            onPageChange={setChatMembersPage}
           />
         )}
       </div>
     );
   };
 
- const renderCategoryTimeSpentSection = () => {
-  const raw = user?.categoryTimeSpent || {};
+  const renderCategoryTimeSpentSection = () => {
+    const activityStats = user?.activityStats || {};
+    const dailyActivity = user?.dailyActivity || [];
 
-  /* ONLY REAL CATEGORIES */
-  const categoryKeys = ["facts", "buzz", "quiz", "steps"];
+    const tabs = [
+      { key: "buzz", label: "Buzz (News)", icon: "📰", data: activityStats.news },
+      { key: "facts", label: "Funfacts", icon: "💡", data: activityStats.facts },
+      { key: "quizzes", label: "Quizzes", icon: "❓", data: activityStats.quizzes },
+      // { key: "steps", label: "Steps", icon: "👟", data: activityStats.steps },
+    ];
 
-  /* SANITIZE FUNCTION */
-  const cleanTime = (data = {}) => {
-    const safeNumber = (v) =>
-      v === null || v === undefined || isNaN(v) ? 0 : v;
+    const current = tabs.find((t) => t.key === activeTabTime);
 
-    const safeFormatted =
-      !data.formatted ||
-      data.formatted.includes("NaN")
-        ? "0h 0m 0s"
-        : data.formatted;
+    const getCountsFor = (key, data) => {
+      if (key === "buzz" || key === "facts")
+        return [
+          { label: "Items read", value: data?.read ?? "—" },
+          { label: "Coins earned", value: data?.coinsEarned ?? "—" },
+          { label: "Total time", value: data?.timeSpent ?? "—" },
+          {
+            label: "Unique content",
+            value: data?.readStatus?.totalUniqueContentRead ?? "—",
+          },
+        ];
 
-    return {
-      formatted: safeFormatted,
-      hours: safeNumber(data.hours),
-      minutes: safeNumber(data.minutes),
-      seconds: safeNumber(data.seconds),
-      itemCount: safeNumber(data.itemCount),
-      note: data.note || "",
+      if (key === "quizzes")
+        return [
+          { label: "Attempted", value: data?.attempted ?? "—" },
+          { label: "Correct", value: data?.correct ?? "—" },
+          { label: "Wrong", value: data?.wrong ?? "—" },
+          { label: "Coins earned", value: data?.coinsEarned ?? "—" },
+        ];
+
+      return [{ label: "No data", value: "—" }];
     };
-  };
 
-  /* CLEANED CATEGORY DATA */
-  const categories = categoryKeys.map((key) => ({
-    name: key,
-    ...cleanTime(raw[key]),
-  }));
+    const getRowsFor = (key, data) => {
+      if (key === "buzz" || key === "facts") {
+        const details = data?.readStatus?.details || [];
 
-  const total = cleanTime(raw.total);
-  const percentages = raw.percentageBreakdown || {};
-  const live = raw.liveTimestamp;
-  const disclaimer = raw.disclaimer;
+        return details.map((d) => [
+          d.contentId,
+          d.date,
+          d.timeSpentFormatted,
+        ]);
+      }
 
-  return (
-    <div className="space-y-6">
+      if (key === "quizzes") {
+        return dailyActivity.map((d) => [
+          d.date,
+          d.quizzes.attempted,
+          d.quizzes.correct,
+          d.quizzes.wrong,
+          d.quizzes.coins,
+          `${Math.round(d.quizzes.timeSec / 60)}m`,
+        ]);
+      }
 
-      {/* HEADER */}
-      <div>
-        <h2 className="text-xl md:text-2xl font-bold">
-          Category Time Spent
-        </h2>
-        {disclaimer && (
-          <p className="text-sm text-gray-500 mt-1">{disclaimer}</p>
-        )}
-      </div>
+      return [["—", "—", "—", "—"]];
+    };
 
-      {/* TOTAL CARD */}
-      <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-2xl p-6 shadow-lg">
-        <p className="text-sm opacity-90">Total Time Spent</p>
-        <p className="text-3xl font-bold mt-1">{total.formatted}</p>
-      </div>
+    const getHeadersFor = (key) => {
+      if (key === "buzz" || key === "facts")
+        return ["Content ID", "Date", "Time Spent"];
 
-      {/* CATEGORY GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+      if (key === "quizzes")
+        return [
+          "Date",
+          "Attempted",
+          "Correct",
+          "Wrong",
+          "Coins",
+          "Time",
+        ];
 
-        {categories.map((cat, index) => (
-          <div
-            key={index}
-            className="bg-white rounded-2xl shadow-md border p-6 hover:shadow-xl transition"
-          >
-            {/* TITLE */}
-            <div className="flex justify-between mb-4">
-              <h3 className="text-lg font-semibold capitalize">
-                {cat.name}
-              </h3>
-              <span className="text-sm text-gray-500">
-                {cat.itemCount} items
+      return ["Date", "Steps", "Coins", "Distance"];
+    };
+
+    const counts = getCountsFor(activeTabTime, current?.data);
+    const headers = getHeadersFor(activeTabTime);
+    const rows = getRowsFor(activeTabTime, current?.data);
+
+    const totalPages = Math.ceil(rows.length / rowsPerPage);
+
+    const paginatedRows = rows.slice(
+      (currentPage - 1) * rowsPerPage,
+      currentPage * rowsPerPage
+    );
+
+    const getPaginationNumbers = () => {
+      const pages = [];
+
+      if (totalPages <= 7) {
+        for (let i = 1; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+
+        if (currentPage > 3) pages.push("...");
+
+        for (
+          let i = Math.max(2, currentPage - 1);
+          i <= Math.min(totalPages - 1, currentPage + 1);
+          i++
+        ) {
+          pages.push(i);
+        }
+
+        if (currentPage < totalPages - 2) pages.push("...");
+
+        pages.push(totalPages);
+      }
+
+      return pages;
+    };
+
+    return (
+      <div className="space-y-4 sm:space-y-5 lg:space-y-6 w-full overflow-hidden">
+
+        {/* PREMIUM TABS */}
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => {
+                setActiveTabTime(tab.key);
+                setCurrentPage(1);
+              }}
+              className={`group relative overflow-hidden px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl w-full sm:w-auto transition-all duration-300 border backdrop-blur-xl
+
+            ${activeTabTime === tab.key
+                  ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white border-indigo-500 shadow-[0_10px_30px_rgba(99,102,241,0.35)] scale-[1.02]"
+                  : "bg-white/70 border-gray-200 hover:border-indigo-200 hover:bg-white text-gray-700 hover:shadow-lg"
+                }`}
+            >
+              <div className="flex items-center justify-center gap-2 relative z-10">
+                <span className="text-base sm:text-lg">{tab.icon}</span>
+
+                <span className="font-medium text-xs sm:text-sm lg:text-base">
+                  {tab.label}
+                </span>
+              </div>
+
+              {activeTabTime === tab.key && (
+                <div className="absolute inset-0 bg-white/10" />
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* PREMIUM STATS */}
+        <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          {counts.map((c, i) => (
+            <div
+              key={i}
+              className="relative overflow-hidden rounded-3xl border border-white/40 bg-white/70 backdrop-blur-xl shadow-[0_10px_35px_rgba(0,0,0,0.06)] p-4 sm:p-5 group hover:-translate-y-1 transition-all duration-300"
+            >
+              <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-100 rounded-full blur-3xl opacity-40 group-hover:opacity-70 transition" />
+
+              <p className="text-[10px] sm:text-xs uppercase tracking-wider text-gray-500 mb-3 relative z-10">
+                {c.label}
+              </p>
+
+              <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 relative z-10 break-words">
+                {c.value}
+              </h2>
+            </div>
+          ))}
+        </div>
+
+        {/* PREMIUM TABLE */}
+        <div className="overflow-hidden rounded-[28px] border border-white/50 bg-white/70 backdrop-blur-xl shadow-[0_15px_50px_rgba(0,0,0,0.08)]">
+
+          {/* HEADER */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 bg-gradient-to-r from-indigo-50/70 to-violet-50/70">
+            <div>
+              <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-800">
+                {current?.label}
+              </h2>
+
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                Detailed activity analytics & engagement logs
+              </p>
+            </div>
+
+            <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-white shadow-sm border border-gray-100">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+
+              <span className="text-xs font-medium text-gray-600">
+                Live Activity
               </span>
             </div>
-
-            {/* STATS */}
-            <div className="grid grid-cols-2 gap-4">
-              <StatBox label="Total Time" value={cat.formatted} />
-              <StatBox label="Hours" value={cat.hours} />
-              <StatBox label="Minutes" value={cat.minutes} />
-              <StatBox label="Seconds" value={cat.seconds} />
-            </div>
-
-            {/* PROGRESS BAR */}
-            <div className="mt-4">
-              <div className="flex justify-between text-xs text-gray-500 mb-1">
-                <span>Contribution</span>
-                <span>{percentages?.[cat.name] || 0}%</span>
-              </div>
-
-              <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-indigo-500"
-                  style={{ width: `${percentages?.[cat.name] || 0}%` }}
-                />
-              </div>
-            </div>
-
-            {/* NOTE */}
-            {cat.note && (
-              <p className="mt-3 text-sm text-gray-500 italic">
-                {cat.note}
-              </p>
-            )}
           </div>
-        ))}
 
-      </div>
+          {/* TABLE */}
+          <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300">
+            <table className="w-full min-w-[620px] lg:min-w-full">
+              <thead>
+                <tr className="bg-gray-50/70">
+                  {headers.map((h, i) => (
+                    <th
+                      key={i}
+                      className="px-3 sm:px-6 py-3 sm:py-4 text-left text-[10px] sm:text-xs font-semibold tracking-wider text-gray-500 uppercase"
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
 
-      {/* LAST UPDATED */}
-      {live && (
-        <div className="bg-gray-50 rounded-xl p-4 text-sm text-gray-600">
-          Last Updated:{" "}
-          <span className="font-semibold">
-            {live.date} • {live.time}
-          </span>
+              <tbody>
+                {paginatedRows.map((row, i) => (
+                  <tr
+                    key={i}
+                    className="border-t border-gray-100 hover:bg-indigo-50/30 transition-all duration-200"
+                  >
+                    {row.map((cell, j) => (
+                      <td
+                        key={j}
+                        className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-700 font-medium whitespace-nowrap"
+                      >
+                        <div className="flex items-center gap-2">
+                          {j === 0 && (
+                            <div className="w-2 h-2 rounded-full bg-indigo-500" />
+                          )}
+
+                          {cell}
+                        </div>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* PREMIUM PAGINATION */}
+          {totalPages > 1 && (
+            <div className="flex flex-col lg:flex-row items-center lg:justify-between gap-4 px-3 sm:px-6 py-4 sm:py-5 border-t border-gray-100 bg-white/50">
+
+              <div className="text-xs sm:text-sm text-gray-500 text-center lg:text-left">
+                Showing{" "}
+                <span className="font-semibold text-gray-700">
+                  {(currentPage - 1) * rowsPerPage + 1}
+                </span>
+                {" "}to{" "}
+                <span className="font-semibold text-gray-700">
+                  {Math.min(currentPage * rowsPerPage, rows.length)}
+                </span>
+                {" "}of{" "}
+                <span className="font-semibold text-gray-700">
+                  {rows.length}
+                </span>
+                {" "}entries
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-2 w-full lg:w-auto">
+
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  disabled={currentPage === 1}
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-xl border border-gray-200 bg-white font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                >
+                  ← Prev
+                </button>
+
+                {getPaginationNumbers().map((page, idx) =>
+                  page === "..." ? (
+                    <span
+                      key={idx}
+                      className="px-2 text-gray-400 font-medium"
+                    >
+                      ...
+                    </span>
+                  ) : (
+                    <button
+                      key={idx}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-9 h-9 sm:w-11 sm:h-11 rounded-2xl text-xs sm:text-sm font-semibold transition-all duration-300
+
+                    ${currentPage === page
+                          ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg scale-105"
+                          : "bg-white border border-gray-200 text-gray-700 hover:bg-indigo-50 hover:border-indigo-200"
+                        }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                )}
+
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) =>
+                      Math.min(prev + 1, totalPages)
+                    )
+                  }
+                  disabled={currentPage === totalPages}
+                  className="px-3 sm:px-4 py-2 text-xs sm:text-sm rounded-xl border border-gray-200 bg-white font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                >
+                  Next →
+                </button>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
+    );
+  };
+
+  /* SMALL BOX */
+  const StatBox = ({ label, value }) => (
+    <div className="bg-gray-50 rounded-lg p-3">
+      <p className="text-xs text-gray-500">{label}</p>
+      <p className="text-lg font-bold mt-1">{value}</p>
     </div>
   );
-};
-
-/* SMALL BOX */
-const StatBox = ({ label, value }) => (
-  <div className="bg-gray-50 rounded-lg p-3">
-    <p className="text-xs text-gray-500">{label}</p>
-    <p className="text-lg font-bold mt-1">{value}</p>
-  </div>
-);
 
 
   return (
@@ -1571,17 +1758,15 @@ const StatBox = ({ label, value }) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-shrink-0 py-2 px-2 sm:px-3 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`flex-shrink-0 py-2 px-2 sm:px-3 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-colors ${activeTab === tab.id
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 {tab.label}
                 {tab.count !== null && tab.count > 0 && (
-                  <span className={`ml-1 px-1.5 py-0.5 text-xs rounded-full ${
-                    activeTab === tab.id ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-600'
-                  }`}>
+                  <span className={`ml-1 px-1.5 py-0.5 text-xs rounded-full ${activeTab === tab.id ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-600'
+                    }`}>
                     {tab.count}
                   </span>
                 )}
