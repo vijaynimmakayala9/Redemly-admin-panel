@@ -123,6 +123,34 @@ export default function UserList() {
   const currentUsers = filtered.slice(indexOfFirst, indexOfLast);
   const totalPages = Math.ceil(filtered.length / usersPerPage);
 
+  // Generate pagination with ellipsis
+  const getPaginationRange = () => {
+    const delta = 2; // Number of pages to show on each side of current page
+    const range = [];
+    const rangeWithDots = [];
+    let l;
+
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+        range.push(i);
+      }
+    }
+
+    range.forEach((i) => {
+      if (l) {
+        if (i - l === 2) {
+          rangeWithDots.push(l + 1);
+        } else if (i - l !== 1) {
+          rangeWithDots.push("...");
+        }
+      }
+      rangeWithDots.push(i);
+      l = i;
+    });
+
+    return rangeWithDots;
+  };
+
   const exportData = (type) => {
     // Decide which users to export
     const exportSource = currentUsers.slice(0, downloadLimit);
@@ -148,7 +176,7 @@ export default function UserList() {
 
     const ws = utils.json_to_sheet(cleanUsers);
 
-    // ⭐ Make columns auto width (very important)
+    // Make columns auto width
     ws["!cols"] = [
       { wch: 6 },  // S.No
       { wch: 20 }, // Name
@@ -205,96 +233,107 @@ export default function UserList() {
           </button>
         </div>
       </div>
-
-      <table className="w-full table-auto border-collapse border border-gray-300 mb-4">
-        <thead>
-          <tr className="bg-blue-600 text-white">
-            <th className="p-2 border">Sl</th>
-            <th className="p-2 border">Profile</th>
-            <th className="p-2 border">Name</th>
-            <th className="p-2 border">Email</th>
-            <th className="p-2 border">Phone</th>
-            <th className="p-2 border">City</th>
-            <th className="p-2 border">DOB</th>
-            <th className="p-2 border">Coins</th>
-            <th className="p-2 border">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {currentUsers.map((u, idx) => (
-            <tr key={u.id}>
-              <td className="p-2 border">{indexOfFirst + idx + 1}</td>
-              <td className="p-2 border">
-                <img
-                  src={u.profileImage || "/default-profile-image.jpg"}
-                  alt="profile"
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-              </td>
-              <td className="p-2 border">{u.name}</td>
-              <td className="p-2 border">{u.email}</td>
-              <td className="p-2 border">{u.phone}</td>
-              <td className="p-2 border">{u.city}</td>
-              <td className="p-2 border">
-                {u.dateOfBirth ? u.dateOfBirth.split("T")[0] : ""}
-              </td>
-              <td className="p-2 border">{u.coins}</td>
-              <td className="p-2 border flex gap-2">
-                <Link to={`/users/${u.id}`}>
-                  <button
-                    className="bg-green-500 text-white p-1 rounded"
-                    title="View"
-                    onClick={() => console.log("Viewing user with ID:", u.id)}
-                  >
-                    <FaEye />
-                  </button>
-                </Link>
-                <button
-                  className="bg-blue-500 text-white p-1 rounded"
-                  title="Edit"
-                  onClick={() => openEditModal(u)}
-                >
-                  <FaEdit />
-                </button>
-                <button
-                  className="bg-red-500 text-white p-1 rounded"
-                  title="Delete"
-                  onClick={() => handleDelete(u.id)}
-                >
-                  <FaTrash />
-                </button>
-              </td>
+      <div className="overflow-x-auto w-full">
+        <table className="w-full table-auto border-collapse border border-gray-300 mb-4">
+          <thead>
+            <tr className="bg-blue-600 text-white">
+              <th className="p-2 border">Sl</th>
+              <th className="p-2 border">Profile</th>
+              <th className="p-2 border">Name</th>
+              <th className="p-2 border">Email</th>
+              <th className="p-2 border">Phone</th>
+              <th className="p-2 border">City</th>
+              <th className="p-2 border">DOB</th>
+              <th className="p-2 border">Coins</th>
+              <th className="p-2 border">Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-
-      <div className="flex justify-center gap-2 mb-4">
-        <button
-          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-          disabled={currentPage === 1}
-          className="bg-gray-300 px-4 py-2 rounded"
-        >
-          Previous
-        </button>
-        {[...Array(totalPages)].map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrentPage(i + 1)}
-            className={`px-4 py-2 rounded ${currentPage === i + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
-              }`}
-          >
-            {i + 1}
-          </button>
-        ))}
-        <button
-          onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-          disabled={currentPage === totalPages}
-          className="bg-gray-300 px-4 py-2 rounded"
-        >
-          Next
-        </button>
+          </thead>
+          <tbody>
+            {currentUsers.map((u, idx) => (
+              <tr key={u.id}>
+                <td className="p-2 border">{indexOfFirst + idx + 1}</td>
+                <td className="p-2 border">
+                  <img
+                    src={u.profileImage || "/default-profile-image.jpg"}
+                    alt="profile"
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+                </td>
+                <td className="p-2 border">{u.name}</td>
+                <td className="p-2 border">{u.email}</td>
+                <td className="p-2 border">{u.phone}</td>
+                <td className="p-2 border">{u.city}</td>
+                <td className="p-2 border">
+                  {u.dateOfBirth ? u.dateOfBirth.split("T")[0] : ""}
+                </td>
+                <td className="p-2 border">{u.coins}</td>
+                <td className="p-2 border flex gap-2">
+                  <Link to={`/users/${u.id}`}>
+                    <button
+                      className="bg-green-500 text-white p-1 rounded"
+                      title="View"
+                      onClick={() => console.log("Viewing user with ID:", u.id)}
+                    >
+                      <FaEye />
+                    </button>
+                  </Link>
+                  <button
+                    className="bg-blue-500 text-white p-1 rounded"
+                    title="Edit"
+                    onClick={() => openEditModal(u)}
+                  >
+                    <FaEdit />
+                  </button>
+                  <button
+                    className="bg-red-500 text-white p-1 rounded"
+                    title="Delete"
+                    onClick={() => handleDelete(u.id)}
+                  >
+                    <FaTrash />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
+
+      {/* Pagination with Ellipsis */}
+      {totalPages > 1 && (
+        <div className="flex justify-center gap-2 mb-4 flex-wrap">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+            disabled={currentPage === 1}
+            className="bg-gray-300 px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+
+          {getPaginationRange().map((page, index) => (
+            <button
+              key={index}
+              onClick={() => typeof page === "number" && setCurrentPage(page)}
+              className={`px-4 py-2 rounded ${currentPage === page
+                ? "bg-blue-500 text-white"
+                : page === "..."
+                  ? "bg-transparent cursor-default"
+                  : "bg-gray-200 hover:bg-gray-300"
+                }`}
+              disabled={page === "..."}
+            >
+              {page}
+            </button>
+          ))}
+
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="bg-gray-300 px-4 py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      )}
 
       {/* Edit Modal */}
       {editModal && editedUser && (
@@ -438,7 +477,6 @@ export default function UserList() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

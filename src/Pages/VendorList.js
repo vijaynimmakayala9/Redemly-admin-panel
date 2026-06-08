@@ -309,79 +309,85 @@ export default function VendorList() {
           </div>
         )}
 
-        {/* Controls */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border mb-6">
-          <div className="flex flex-col md:flex-row gap-4 justify-between">
-            <div className="flex flex-col md:flex-row gap-4 flex-1">
-              <div className="flex-1">
-                <div className="relative">
-                  <input
-                    type="text"
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Search by name, email or business..."
-                    value={search}
-                    onChange={(e) => {
-                      setSearch(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                  />
-                  <div className="absolute left-3 top-2.5">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-              
-              <select
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">All Status</option>
-                <option value="approved">Approved Only</option>
-                <option value="pending">Pending Approval</option>
-              </select>
-            </div>
-
-            <div className="flex gap-3">
-              <select
-                value={downloadLimit}
-                onChange={(e) => setDownloadLimit(Number(e.target.value))}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value={10}>Limit: 10</option>
-                <option value={50}>Limit: 50</option>
-                <option value={100}>Limit: 100</option>
-                <option value={200}>Limit: 200</option>
-                <option value={0}>All Records</option>
-              </select>
-              
-              <button
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-                onClick={() => exportData("csv")}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Export CSV
-              </button>
-              
-              <button
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                onClick={() => exportData("xlsx")}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Export Excel
-              </button>
-            </div>
+        <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border mb-6">
+  <div className="flex flex-col xl:flex-row gap-4 justify-between">
+    
+    {/* Left Side */}
+    <div className="flex flex-col lg:flex-row gap-3 flex-1">
+      <div className="flex-1 min-w-0">
+        <div className="relative">
+          <input
+            type="text"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Search by name, email or business..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
+          <div className="absolute left-3 top-2.5">
+            <svg
+              className="w-5 h-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
           </div>
         </div>
+      </div>
+
+      <select
+        value={statusFilter}
+        onChange={(e) => {
+          setStatusFilter(e.target.value);
+          setCurrentPage(1);
+        }}
+        className="w-full lg:w-auto px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="all">All Status</option>
+        <option value="approved">Approved Only</option>
+        <option value="pending">Pending Approval</option>
+      </select>
+    </div>
+
+    {/* Right Side */}
+    <div className="flex flex-col sm:flex-row flex-wrap gap-3">
+      <select
+        value={downloadLimit}
+        onChange={(e) => setDownloadLimit(Number(e.target.value))}
+        className="w-full sm:w-auto px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+      >
+        <option value={10}>Limit: 10</option>
+        <option value={50}>Limit: 50</option>
+        <option value={100}>Limit: 100</option>
+        <option value={200}>Limit: 200</option>
+        <option value={0}>All Records</option>
+      </select>
+
+      <button
+        className="w-full sm:w-auto px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+        onClick={() => exportData("csv")}
+      >
+        Export CSV
+      </button>
+
+      <button
+        className="w-full sm:w-auto px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+        onClick={() => exportData("xlsx")}
+      >
+        Export Excel
+      </button>
+    </div>
+  </div>
+</div>
 
         {/* Table */}
         <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
