@@ -12,7 +12,7 @@ const CreateVendor = () => {
   const [loading, setLoading] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [fetching, setFetching] = useState(isEditMode);
-  const [addresses, setAddresses] = useState([{ street: "", city: "", zipcode: "" }]);
+  const [addresses, setAddresses] = useState([{ street: "", city: "", state: "", zipcode: "" }]);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
@@ -77,6 +77,7 @@ const CreateVendor = () => {
         setAddresses(vendor.addresses.map(addr => ({
           street: addr.street || "",
           city: addr.city || "",
+          state: addr.state || "",
           zipcode: addr.zipcode || ""
         })));
       }
@@ -191,7 +192,7 @@ const CreateVendor = () => {
   };
 
   const addAddress = () => {
-    setAddresses([...addresses, { street: "", city: "", zipcode: "" }]);
+    setAddresses([...addresses, { street: "", city: "", state: "", zipcode: "" }]);
   };
 
   const removeAddress = (index) => {
@@ -253,7 +254,7 @@ const CreateVendor = () => {
 
     // Validate addresses
     const validAddresses = addresses.every(addr =>
-      addr.street.trim() && addr.city.trim() && addr.zipcode.trim()
+      addr.street.trim() && addr.city.trim() && addr.state.trim() && addr.zipcode.trim()
     );
 
     if (!validAddresses) {
@@ -805,6 +806,18 @@ const CreateVendor = () => {
                             placeholder="City *"
                             value={address.city}
                             onChange={(e) => handleAddressChange(index, 'city', e.target.value)}
+                            className="w-full px-4 py-3 rounded-lg border border-gray-300 
+                                     focus:ring-2 focus:ring-blue-500 focus:border-blue-600 
+                                     outline-none placeholder-gray-500"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <input
+                            type="text"
+                            placeholder="State *"
+                            value={address.state}
+                            onChange={(e) => handleAddressChange(index, 'state', e.target.value)}
                             className="w-full px-4 py-3 rounded-lg border border-gray-300 
                                      focus:ring-2 focus:ring-blue-500 focus:border-blue-600 
                                      outline-none placeholder-gray-500"

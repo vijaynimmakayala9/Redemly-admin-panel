@@ -305,7 +305,7 @@ export default function VendorDetail() {
     if (vendor?.addresses && vendor.addresses.length > 0) {
       return vendor.addresses[0];
     }
-    return { street: "", city: "", zipcode: "" };
+    return { street: "", city: "", state: "", zipcode: "" };
   };
 
   // Get status badge
@@ -504,7 +504,7 @@ export default function VendorDetail() {
                 <div className="text-right">
                   <div className="font-medium">{address.street || "N/A"}</div>
                   <div className="text-sm text-gray-500">
-                    {address.city || ""} {address.zipcode ? `, ${address.zipcode}` : ""}
+                    {address.city || ""} {address.state || ""} {address.zipcode ? `, ${address.zipcode}` : ""}
                   </div>
                 </div>
               </div>
