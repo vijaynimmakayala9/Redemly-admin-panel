@@ -108,6 +108,7 @@ import AdminNewsBulk from "./Pages/AdminNewsBulk.js";
 import BulkNewsUpload from "./Pages/AdminNewsBulk.js";
 import AdminLatestNews from "./Pages/AdminLatestNews.js";
 import AdminFeedbacksForApp from "./Pages/AdminFeedbacksForApp.js";
+import StateCityManager from "./Pages/StateCityManager.js";
 
 
 
@@ -230,6 +231,7 @@ function App() {
               <Route path="/bulknews" element={<BulkNewsUpload />} />
               <Route path="/latestnews" element={<AdminLatestNews />} />
               <Route path="/feedbacks" element={<AdminFeedbacksForApp />} />
+              <Route path="/state-cities" element={<StateCityManager />}/>
 
 
 

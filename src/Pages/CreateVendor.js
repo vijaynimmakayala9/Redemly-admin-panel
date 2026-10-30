@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 import { CloudUpload, Eye, EyeOff, MapPin, Loader2, Building, Mail, Phone, FileText, User, CheckCircle, X, Plus, Trash2 } from "lucide-react";
+
+const API_BASE = "https://api.redemly.com/api";
 
 const CreateVendor = () => {
   const navigate = useNavigate();
@@ -24,6 +26,11 @@ const CreateVendor = () => {
   const [vendorToken, setVendorToken] = useState("");
   const [otp, setOtp] = useState("");
 
+  // States & cities (from API)
+  const [statesList, setStatesList] = useState([]);
+  const [statesLoading, setStatesLoading] = useState(true);
+  const [statesError, setStatesError] = useState("");
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -40,6 +47,41 @@ const CreateVendor = () => {
     acceptTerms: false,
   });
 
+  /* ---------------- FETCH STATES ---------------- */
+  useEffect(() => {
+    const fetchStates = async () => {
+      try {
+        setStatesLoading(true);
+        setStatesError("");
+        const response = await axios.get(`${API_BASE}/states`, {
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (response.data?.success) {
+          setStatesList(response.data.data || []);
+        } else {
+          setStatesError("Failed to load states.");
+        }
+      } catch (error) {
+        console.error("Error fetching states:", error);
+        setStatesError("Failed to load states. Please refresh the page.");
+      } finally {
+        setStatesLoading(false);
+      }
+    };
+
+    fetchStates();
+  }, []);
+
+  // Quick lookup: state name -> cities[]
+  const citiesByState = useMemo(() => {
+    const map = {};
+    statesList.forEach((s) => {
+      map[s.name] = Array.isArray(s.cities) ? s.cities : [];
+    });
+    return map;
+  }, [statesList]);
+
   /* ---------------- FETCH VENDOR DETAILS FOR EDIT ---------------- */
   useEffect(() => {
     if (isEditMode) {
@@ -50,9 +92,7 @@ const CreateVendor = () => {
   const fetchVendorDetails = async () => {
     try {
       setFetching(true);
-      const response = await axios.get(
-        `https://api.redemly.com/api/vendor/getById/${vendorId}`
-      );
+      const response = await axios.get(`${API_BASE}/vendor/getById/${vendorId}`);
 
       const vendor = response.data.vendor;
 
@@ -74,19 +114,20 @@ const CreateVendor = () => {
 
       // Set addresses
       if (vendor.addresses && vendor.addresses.length > 0) {
-        setAddresses(vendor.addresses.map(addr => ({
-          street: addr.street || "",
-          city: addr.city || "",
-          state: addr.state || "",
-          zipcode: addr.zipcode || ""
-        })));
+        setAddresses(
+          vendor.addresses.map((addr) => ({
+            street: addr.street || "",
+            city: addr.city || "",
+            state: addr.state || "",
+            zipcode: addr.zipcode || "",
+          }))
+        );
       }
 
       // Set image preview
       if (vendor.businessLogo) {
         setImagePreview(vendor.businessLogo);
       }
-
     } catch (error) {
       console.error("Error fetching vendor details:", error);
       setErrorMessage("Failed to fetch vendor details. Please try again.");
@@ -137,7 +178,7 @@ const CreateVendor = () => {
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 0
+        maximumAge: 0,
       }
     );
   };
@@ -186,9 +227,18 @@ const CreateVendor = () => {
   };
 
   const handleAddressChange = (index, field, value) => {
-    const newAddresses = [...addresses];
-    newAddresses[index][field] = value;
-    setAddresses(newAddresses);
+    setAddresses((prev) =>
+      prev.map((addr, i) => {
+        if (i !== index) return addr;
+
+        // When the state changes, reset the city (it belongs to the old state)
+        if (field === "state") {
+          return { ...addr, state: value, city: "" };
+        }
+        return { ...addr, [field]: value };
+      })
+    );
+    setErrorMessage("");
   };
 
   const addAddress = () => {
@@ -230,7 +280,7 @@ const CreateVendor = () => {
       longitude,
       password,
       confirmPassword,
-      acceptTerms
+      acceptTerms,
     } = formData;
 
     // Required fields
@@ -242,7 +292,7 @@ const CreateVendor = () => {
       { field: tillNumber, name: "TIN Number" },
       { field: businessName, name: "Business Name" },
       { field: latitude, name: "Latitude" },
-      { field: longitude, name: "Longitude" }
+      { field: longitude, name: "Longitude" },
     ];
 
     for (let field of requiredFields) {
@@ -253,12 +303,13 @@ const CreateVendor = () => {
     }
 
     // Validate addresses
-    const validAddresses = addresses.every(addr =>
-      addr.street.trim() && addr.city.trim() && addr.state.trim() && addr.zipcode.trim()
+    const validAddresses = addresses.every(
+      (addr) =>
+        addr.street.trim() && addr.city.trim() && addr.state.trim() && addr.zipcode.trim()
     );
 
     if (!validAddresses) {
-      setErrorMessage("Please fill all address fields.");
+      setErrorMessage("Please fill all address fields (including state and city).");
       return false;
     }
 
@@ -330,13 +381,13 @@ const CreateVendor = () => {
       const token = localStorage.getItem("adminToken");
       const headers = {
         "Content-Type": "multipart/form-data",
-        ...(token && { Authorization: `Bearer ${token}` })
+        ...(token && { Authorization: `Bearer ${token}` }),
       };
 
       if (isEditMode) {
         // Update existing vendor
         const response = await axios.put(
-          `https://api.redemly.com/api/vendor/update/${vendorId}`,
+          `${API_BASE}/vendor/update/${vendorId}`,
           data,
           { headers }
         );
@@ -350,10 +401,10 @@ const CreateVendor = () => {
           setErrorMessage(response.data.message || "Update failed.");
         }
       } else {
-        // Create new vendor - IMPORTANT FIX HERE
+        // Create new vendor
         try {
           const response = await axios.post(
-            "https://api.redemly.com/api/vendor/register",
+            `${API_BASE}/vendor/register`,
             data,
             { headers }
           );
@@ -393,15 +444,17 @@ const CreateVendor = () => {
         } catch (postError) {
           console.error("POST error:", postError.response?.data || postError);
           // If the error is about OTP already sent, show OTP screen
-          if (postError.response?.data?.message?.includes("OTP") ||
-            postError.response?.data?.message?.includes("verification")) {
+          if (
+            postError.response?.data?.message?.includes("OTP") ||
+            postError.response?.data?.message?.includes("verification")
+          ) {
             setSuccessMessage("Vendor registered! Please enter the OTP sent to vendor's email.");
             setVendorToken(postError.response.data.token || "pending");
             setStep(2);
           } else {
             setErrorMessage(
               postError.response?.data?.message ||
-              "Failed to create vendor. Please check all fields and try again."
+                "Failed to create vendor. Please check all fields and try again."
             );
           }
         }
@@ -410,7 +463,7 @@ const CreateVendor = () => {
       console.error("General error:", error);
       setErrorMessage(
         error.response?.data?.message ||
-        `Failed to ${isEditMode ? 'update' : 'create'} vendor.`
+          `Failed to ${isEditMode ? "update" : "create"} vendor.`
       );
     } finally {
       setLoading(false);
@@ -429,7 +482,7 @@ const CreateVendor = () => {
 
     try {
       const response = await axios.post(
-        "https://api.redemly.com/api/vendor/verify-otp",
+        `${API_BASE}/vendor/verify-otp`,
         { token: vendorToken, otp },
         { headers: { "Content-Type": "application/json" } }
       );
@@ -446,7 +499,7 @@ const CreateVendor = () => {
       console.error("OTP verification error:", err.response?.data || err);
       setErrorMessage(
         err.response?.data?.message ||
-        "OTP Verification Failed! Please check the OTP and try again."
+          "OTP Verification Failed! Please check the OTP and try again."
       );
     } finally {
       setOtpLoading(false);
@@ -469,6 +522,29 @@ const CreateVendor = () => {
       setOtpLoading(false);
     }
   };
+
+  /* ---------------- STATE / CITY OPTION HELPERS ---------------- */
+  // Make sure a saved value (edit mode) still shows even if it's not in the API list
+  const getStateOptions = (currentState) => {
+    const names = statesList.map((s) => s.name);
+    if (currentState && !names.includes(currentState)) {
+      return [currentState, ...names];
+    }
+    return names;
+  };
+
+  const getCityOptions = (stateName, currentCity) => {
+    const cities = citiesByState[stateName] || [];
+    if (currentCity && !cities.includes(currentCity)) {
+      return [currentCity, ...cities];
+    }
+    return cities;
+  };
+
+  const selectClass =
+    "w-full px-4 py-3 rounded-lg border border-gray-300 bg-white " +
+    "focus:ring-2 focus:ring-blue-500 focus:border-blue-600 outline-none " +
+    "disabled:bg-gray-100 disabled:cursor-not-allowed";
 
   if (fetching) {
     return (
@@ -589,7 +665,7 @@ const CreateVendor = () => {
                         onChange={handleChange}
                         className={`w-full px-4 py-3 rounded-xl border border-gray-300 
                                  focus:ring-2 focus:ring-blue-500 focus:border-blue-600 
-                                 outline-none transition-all ${isEditMode ? 'bg-gray-100' : ''}`}
+                                 outline-none transition-all ${isEditMode ? "bg-gray-100" : ""}`}
                         placeholder="Enter email"
                         required
                         readOnly={isEditMode}
@@ -657,7 +733,7 @@ const CreateVendor = () => {
                         onChange={(e) => {
                           const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
                           handleChange({
-                            target: { name: "phone", value: digits }
+                            target: { name: "phone", value: digits },
                           });
                         }}
                         className="w-full px-4 py-3 rounded-xl border border-gray-300 
@@ -771,74 +847,131 @@ const CreateVendor = () => {
                     </button>
                   </div>
 
-                  {addresses.map((address, index) => (
-                    <div key={index} className="p-6 border border-gray-200 rounded-xl bg-gray-50">
-                      <div className="flex justify-between items-center mb-4">
-                        <span className="font-semibold text-blue-700">Address {index + 1} *</span>
-                        {addresses.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeAddress(index)}
-                            className="flex items-center gap-1 px-3 py-1 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Remove
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <input
-                            type="text"
-                            placeholder="Street *"
-                            value={address.street}
-                            onChange={(e) => handleAddressChange(index, 'street', e.target.value)}
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                     focus:ring-2 focus:ring-blue-500 focus:border-blue-600 
-                                     outline-none placeholder-gray-500"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="text"
-                            placeholder="City *"
-                            value={address.city}
-                            onChange={(e) => handleAddressChange(index, 'city', e.target.value)}
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                     focus:ring-2 focus:ring-blue-500 focus:border-blue-600 
-                                     outline-none placeholder-gray-500"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="text"
-                            placeholder="State *"
-                            value={address.state}
-                            onChange={(e) => handleAddressChange(index, 'state', e.target.value)}
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                     focus:ring-2 focus:ring-blue-500 focus:border-blue-600 
-                                     outline-none placeholder-gray-500"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="text"
-                            placeholder="Zip Code *"
-                            value={address.zipcode}
-                            onChange={(e) => handleAddressChange(index, 'zipcode', e.target.value)}
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 
-                                     focus:ring-2 focus:ring-blue-500 focus:border-blue-600 
-                                     outline-none placeholder-gray-500"
-                            required
-                          />
-                        </div>
-                      </div>
+                  {statesError && (
+                    <div className="p-3 text-red-600 bg-red-50 border border-red-200 rounded-lg text-sm font-medium">
+                      {statesError}
                     </div>
-                  ))}
+                  )}
+
+                  {addresses.map((address, index) => {
+                    const cityOptions = getCityOptions(address.state, address.city);
+                    // State has no cities in the DB -> let the admin type the city manually
+                    const stateHasNoCities =
+                      !!address.state && (citiesByState[address.state] || []).length === 0;
+
+                    return (
+                      <div key={index} className="p-6 border border-gray-200 rounded-xl bg-gray-50">
+                        <div className="flex justify-between items-center mb-4">
+                          <span className="font-semibold text-blue-700">Address {index + 1} *</span>
+                          {addresses.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeAddress(index)}
+                              className="flex items-center gap-1 px-3 py-1 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Remove
+                            </button>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {/* Street */}
+                          <div>
+                            <input
+                              type="text"
+                              placeholder="Street *"
+                              value={address.street}
+                              onChange={(e) => handleAddressChange(index, "street", e.target.value)}
+                              className="w-full px-4 py-3 rounded-lg border border-gray-300 
+                                       focus:ring-2 focus:ring-blue-500 focus:border-blue-600 
+                                       outline-none placeholder-gray-500"
+                              required
+                            />
+                          </div>
+
+                          {/* State dropdown */}
+                          <div>
+                            <select
+                              value={address.state}
+                              onChange={(e) => handleAddressChange(index, "state", e.target.value)}
+                              disabled={statesLoading}
+                              className={selectClass}
+                              required
+                            >
+                              <option value="">
+                                {statesLoading ? "Loading states..." : "Select State *"}
+                              </option>
+                              {getStateOptions(address.state).map((stateName) => (
+                                <option key={stateName} value={stateName}>
+                                  {stateName}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* City dropdown (or text input fallback) */}
+                          <div>
+                            {stateHasNoCities && !address.city ? (
+                              <input
+                                type="text"
+                                placeholder="City * (no cities listed for this state)"
+                                value={address.city}
+                                onChange={(e) => handleAddressChange(index, "city", e.target.value)}
+                                className="w-full px-4 py-3 rounded-lg border border-gray-300 
+                                         focus:ring-2 focus:ring-blue-500 focus:border-blue-600 
+                                         outline-none placeholder-gray-500"
+                                required
+                              />
+                            ) : stateHasNoCities && address.city && cityOptions.length === 1 ? (
+                              // Editing a saved address whose state has no cities listed
+                              <input
+                                type="text"
+                                placeholder="City *"
+                                value={address.city}
+                                onChange={(e) => handleAddressChange(index, "city", e.target.value)}
+                                className="w-full px-4 py-3 rounded-lg border border-gray-300 
+                                         focus:ring-2 focus:ring-blue-500 focus:border-blue-600 
+                                         outline-none placeholder-gray-500"
+                                required
+                              />
+                            ) : (
+                              <select
+                                value={address.city}
+                                onChange={(e) => handleAddressChange(index, "city", e.target.value)}
+                                disabled={!address.state || statesLoading}
+                                className={selectClass}
+                                required
+                              >
+                                <option value="">
+                                  {!address.state ? "Select state first" : "Select City *"}
+                                </option>
+                                {cityOptions.map((cityName) => (
+                                  <option key={cityName} value={cityName}>
+                                    {cityName}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+                          </div>
+
+                          {/* Zip */}
+                          <div>
+                            <input
+                              type="text"
+                              placeholder="Zip Code *"
+                              value={address.zipcode}
+                              onChange={(e) => handleAddressChange(index, "zipcode", e.target.value)}
+                              className="w-full px-4 py-3 rounded-lg border border-gray-300 
+                                       focus:ring-2 focus:ring-blue-500 focus:border-blue-600 
+                                       outline-none placeholder-gray-500"
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Password Section (Only for create mode) */}
@@ -1082,7 +1215,7 @@ const CreateVendor = () => {
                   maxLength="6"
                   placeholder="Enter 6-digit OTP"
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                   className="w-full px-4 py-4 rounded-xl border border-green-400 
                            bg-white text-center text-2xl tracking-widest 
                            focus:ring-2 focus:ring-green-500 outline-none
